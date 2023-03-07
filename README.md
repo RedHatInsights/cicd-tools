@@ -4,8 +4,8 @@
 Utilities used to run smoke tests in an ephemeral environment within a CI/CD pipeline
 
 ## Getting Started
-Grab the [Jenkinsfile template](templates/Jenkinsfile) and cater it to your specific needs. This file should reside in your git repository's root directory. That Jenkinsfile will  
-download the necessary files from this repository. It does not have a unit test file so that will need to be made in your repository. You can find a  
+Grab the [Jenkinsfile template](templates/Jenkinsfile) and cater it to your specific needs. This file should reside in your git repository's root directory. That Jenkinsfile will 
+download the necessary files from this repository. It does not have a unit test file so that will need to be made in your repository. You can find a 
 unit test template file [here](templates/unit_test_example.sh).
 
 ## Scripts
