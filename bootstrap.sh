@@ -3,7 +3,7 @@
 set -e
 
 # check that unit_test.sh complies w/ best practices
-URL="https://github.com/RedHatInsights/bonfire/tree/master/cicd/examples"
+URL="https://github.com/RedHatInsights/cicd-tools/tree/main/examples"
 if test -f unit_test.sh; then
   if grep 'exit $result' unit_test.sh; then
     echo "----------------------------"
@@ -20,8 +20,8 @@ export CICD_ROOT=${BONFIRE_ROOT}/cicd
 export IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 export BONFIRE_BOT="true"
 export BONFIRE_NS_REQUESTER="${JOB_NAME}-${BUILD_NUMBER}"
-# which branch to fetch cidd scripts from in bonfire repo
-export BONFIRE_REPO_BRANCH="${BONFIRE_REPO_BRANCH:-master}"
+# which branch to fetch cicd scripts from in bonfire repo
+export BONFIRE_REPO_BRANCH="${BONFIRE_REPO_BRANCH:-main}"
 export BONFIRE_REPO_ORG="${BONFIRE_REPO_ORG:-RedHatInsights}"
 
 set -x
@@ -72,8 +72,8 @@ python3 -m pip install --upgrade 'crc-bonfire>=4.10.4'
 
 # clone repo to download cicd scripts
 rm -fr $BONFIRE_ROOT
-echo "Fetching branch '$BONFIRE_REPO_BRANCH' of https://github.com/${BONFIRE_REPO_ORG}/bonfire.git"
-git clone --branch "$BONFIRE_REPO_BRANCH" "https://github.com/${BONFIRE_REPO_ORG}/bonfire.git" "$BONFIRE_ROOT"
+echo "Fetching branch '$BONFIRE_REPO_BRANCH' of https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git"
+git clone --branch "$BONFIRE_REPO_BRANCH" "https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git" "$BONFIRE_ROOT"
 
 # Do a docker login to ensure our later 'docker pull' calls have an auth file created
 source ${CICD_ROOT}/_common_container_logic.sh
