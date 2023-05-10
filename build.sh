@@ -11,26 +11,39 @@
 #APP_ROOT="/path/to/app/root" -- path to the cloned app repo
 
 # Env vars for local use
-IMAGE_TAG_OPTS="-t ${IMAGE}:${IMAGE_TAG}"
+CMD_OPTS="-t ${IMAGE}:${IMAGE_TAG}"
 set -e
 
 source ${CICD_ROOT}/_common_container_logic.sh
 
+is_pr_or_mr_build() {
+    [ -n "$ghprbPullId" ] || [ -n "$gitlabMergeRequestId" ]
+}
+
+is_rhel7_host() {
+
+    local RELEASE_FILE='/etc/redhat-release'
+
+    [ -f "$RELEASE_FILE" ] && grep -q -i "release 7" "$RELEASE_FILE"
+}
+
 function build {
-    if [ ! -f "$APP_ROOT/$DOCKERFILE" ]; then
-        echo "ERROR: No $DOCKERFILE found"
+
+    local IMAGE_TAG_LATEST=''
+    local DOCKERFILE_PATH="${APP_ROOT}/${DOCKERFILE}"
+
+    if [ ! -f "$DOCKERFILE_PATH" ]; then
+        echo "ERROR: Dockerfile '$DOCKERFILE_PATH' not found"
         exit 1
     fi
 
-    # if this is a PR, set the tag to expire in 3 days
-    if [ ! -z "$ghprbPullId" ] || [ ! -z "$gitlabMergeRequestIid" ]; then
-        echo "LABEL quay.expires-after=${QUAY_EXPIRE_TIME}" >> $APP_ROOT/$DOCKERFILE
-        # use IMAGE_TAG_LATEST later to detect extra tag to push
+    if is_pr_or_mr_build; then
+        add_expiry_label_to_file "$DOCKERFILE_PATH" "$QUAY_EXPIRE_TIME"
         IMAGE_TAG_LATEST="$(cut -d "-" -f 1,2 <<< $IMAGE_TAG)-latest"
-        IMAGE_TAG_OPTS+=" -t ${IMAGE}:${IMAGE_TAG_LATEST}"
+        CMD_OPTS+=" -t ${IMAGE}:${IMAGE_TAG_LATEST} --build-arg TEST_IMAGE=true"
     fi
 
-    if test -f /etc/redhat-release && grep -q -i "release 7" /etc/redhat-release; then
+    if is_rhel7_host; then
         # on RHEL7, use docker
         docker_build
     else
@@ -39,23 +52,43 @@ function build {
     fi
 }
 
+# https://github.com/RedHatInsights/bonfire/issues/291
+add_expiry_label_to_file() {
+
+    local FILE="$1"
+    local EXPIRE_TIME="$2"
+    local LABEL="quay.expires-after=${EXPIRE_TIME}"
+
+    local LINE="LABEL ${LABEL}"
+
+    if ! _file_ends_with_newline "$FILE"; then
+        LINE="\n${LINE}"
+    fi
+
+    echo -e "${LINE}" >> "$FILE"
+}
+
+_file_ends_with_newline() {
+    [ $(tail -1 "$1" | wc -l) -ne 0 ]
+}
+
 function docker_build {
     if [ "$CACHE_FROM_LATEST_IMAGE" == "true" ]; then
         echo "Attempting to build image using cache"
         {
             set -x
             docker pull "${IMAGE}" &&
-            docker build $IMAGE_TAG_OPTS $APP_ROOT -f $APP_ROOT/$DOCKERFILE --cache-from "${IMAGE}"
+            docker build $CMD_OPTS $APP_ROOT -f $APP_ROOT/$DOCKERFILE --cache-from "${IMAGE}"
             set +x
         } || {
             echo "Build from cache failed, attempting build without cache"
             set -x
-            docker build $IMAGE_TAG_OPTS $APP_ROOT -f $APP_ROOT/$DOCKERFILE
+            docker build $CMD_OPTS $APP_ROOT -f $APP_ROOT/$DOCKERFILE
             set +x
         }
     else
         set -x
-        docker build $IMAGE_TAG_OPTS $APP_ROOT -f $APP_ROOT/$DOCKERFILE
+        docker build $CMD_OPTS $APP_ROOT -f $APP_ROOT/$DOCKERFILE
         set +x
     fi
     set -x
@@ -69,7 +102,7 @@ function docker_build {
 
 function podman_build {
     set -x
-    podman build -f $APP_ROOT/$DOCKERFILE ${IMAGE_TAG_OPTS} $APP_ROOT
+    podman build -f $APP_ROOT/$DOCKERFILE ${CMD_OPTS} $APP_ROOT
     podman push "${IMAGE}:${IMAGE_TAG}"
     if  [ ! -z "$IMAGE_TAG_LATEST" ]; then
         podman push "${IMAGE}:${IMAGE_TAG_LATEST}"
