@@ -47,6 +47,9 @@ check_unit_test_script() {
     fi
 }
 
+# TODO: create custom jenkins agent image that has a lot of this stuff pre-installed
+export LANG=en_US.utf-8
+export LC_ALL=en_US.utf-8
 export APP_ROOT=$(pwd)
 export WORKSPACE=${WORKSPACE:-$APP_ROOT}  # if running in jenkins, use the build's workspace
 export CICD_ROOT=${WORKSPACE}/.cicd-tools
@@ -56,17 +59,11 @@ export BONFIRE_NS_REQUESTER="${JOB_NAME}-${BUILD_NUMBER}"
 # which branch to fetch cicd scripts from in cicd-tools repo
 export CICD_REPO_BRANCH="${CICD_REPO_BRANCH:-main}"
 export CICD_REPO_ORG="${CICD_REPO_ORG:-RedHatInsights}"
-
-# Set up docker cfg
 export DOCKER_CONFIG="$WORKSPACE/.docker"
-rm -fr $DOCKER_CONFIG
-mkdir $DOCKER_CONFIG
-
-# Set up kube cfg
 export KUBECONFIG_DIR="$WORKSPACE/.kube"
 export KUBECONFIG="$KUBECONFIG_DIR/config"
-rm -fr $KUBECONFIG_DIR
-mkdir $KUBECONFIG_DIR
+export GIT_COMMIT=$(git rev-parse HEAD)
+export ARTIFACTS_DIR="$WORKSPACE/artifacts"
 
 # if this is a PR, use a different tag, since PR tags expire
 if [ ! -z "$ghprbPullId" ]; then
@@ -77,17 +74,18 @@ if [ ! -z "$gitlabMergeRequestIid" ]; then
   export IMAGE_TAG="pr-${gitlabMergeRequestIid}-${IMAGE_TAG}"
 fi
 
-export GIT_COMMIT=$(git rev-parse HEAD)
-export ARTIFACTS_DIR="$WORKSPACE/artifacts"
-
-rm -fr $ARTIFACTS_DIR && mkdir -p $ARTIFACTS_DIR
-
-# TODO: create custom jenkins agent image that has a lot of this stuff pre-installed
-export LANG=en_US.utf-8
-export LC_ALL=en_US.utf-8
-
 # TODO: decide removal
 check_unit_test_script
+
+# Set up docker cfg
+rm -fr $DOCKER_CONFIG
+mkdir $DOCKER_CONFIG
+
+# Set up kube cfg
+rm -fr $KUBECONFIG_DIR
+mkdir $KUBECONFIG_DIR
+
+rm -fr $ARTIFACTS_DIR && mkdir -p $ARTIFACTS_DIR
 
 # clone repo to download cicd scripts
 rm -fr "$CICD_ROOT"
