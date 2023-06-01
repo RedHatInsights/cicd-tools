@@ -4,7 +4,7 @@
 Utilities used to run smoke tests in an ephemeral environment within a CI/CD pipeline
 
 ## Getting Started
-Grab the [Jenkinsfile template](templates/Jenkinsfile) and cater it to your specific needs. This file should reside in your git repository's root directory. That Jenkinsfile will 
+Grab the [Jenkinsfile template](templates/Jenkinsfile) and cater it to your specific needs. This file should reside in your git repositories root directory. That Jenkinsfile will 
 download the necessary files from this repository. It does not have a unit test file so that will need to be made in your repository. You can find a 
 unit test template file [here](templates/unit_test_example.sh).
 
@@ -20,6 +20,14 @@ unit test template file [here](templates/unit_test_example.sh).
 | post_test_results.sh    | Using artifacts fetched from `cji_smoke_test.sh`, add a GitHub status or GitLab comment linking to the relevant test results in Ibutsu.
 | smoke_test.sh           | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh) |
 | iqe_pod                 | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh) |
+
+## Template Scripts
+| Script                  | Description |  
+| ----------------------- | ----------- | 
+| example/Jenkinsfile                       |  |
+| example/pr_check_template.sh              |  |
+| example/unit_test_example.sh              |  |
+| example/unit_test_example_ephemeral_db.sh |  |
 
 ## Contributing
 
