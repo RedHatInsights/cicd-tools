@@ -34,8 +34,18 @@ set -e
 : "${IQE_SELENIUM:=false}"
 
 
+_running_in_rhel7() {
+    grep -q "Red Hat Enterprise Linux.*7\." '/etc/redhat-release'
+}
+
+# REMOVE after https://issues.redhat.com/browse/APPSRE-7886
+if _running_in_rhel7; then
+    MC_IMAGE="quay.io/cloudservices/mc:RELEASE.2023-05-30T22-41-38Z"
+else
+    MC_IMAGE="quay.io/cloudservices/mc:latest"
+fi
+
 # minio client is used to fetch test artifacts from minio in the ephemeral ns
-MC_IMAGE="quay.io/cloudservices/mc:latest"
 echo "Running: docker pull ${MC_IMAGE}"
 docker pull ${MC_IMAGE}
 
