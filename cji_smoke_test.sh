@@ -61,6 +61,26 @@ if [ "$IQE_SELENIUM" = "true" ]; then
     SELENIUM_ARG=" --selenium "
 fi
 
+# check if there is a iqe-tests container image tag with the corresponding PR
+# number if not use the default IQE_IMAGE_TAG tag which you have to set in
+# order for this to work properly
+if [ ! -z "$ghprbPullId" ]; then
+    export IQE_IMAGE_TAG_TMP="${IQE_IMAGE_TAG}-pr-${ghprbPullId}"
+fi
+
+if [ ! -z "$gitlabMergeRequestIid" ]; then
+    export IQE_IMAGE_TAG_TMP="${IQE_IMAGE_TAG}-pr-${gitlabMergeRequestIid}"
+fi
+
+if [ ! -z "$IQE_IMAGE_TAG_TMP" ]; then
+    set +e
+    if docker manifest inspect quay.io/cloudservices/iqe-tests:"$IQE_IMAGE_TAG_TMP"; then
+        echo "Found IQE_IMAGE_TAG=$IQE_IMAGE_TAG_TMP. It will be used for testing."
+        export IQE_IMAGE_TAG="$IQE_IMAGE_TAG_TMP"
+    fi
+    set -e
+fi
+
 # Invoke the CJI using the options set via env vars
 set -x
 POD=$(
