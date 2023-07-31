@@ -147,6 +147,12 @@ spec:
         value: $(params.rebuild)
       - name: skip-checks
         value: $(params.skip-checks)
+      - name: skip-optional
+        value: $(params.skip-optional)
+      - name: pipelinerun-name
+        value: $(context.pipelineRun.name)
+      - name: pipelinerun-uid
+        value: $(context.pipelineRun.uid)
       taskRef:
         params:
         - name: name
@@ -208,6 +214,10 @@ spec:
         workspace: workspace
       - name: git-basic-auth
         workspace: git-auth
+      - input: $(params.hermetic)
+        operator: in
+        values:
+        - "true"
     - name: build-container
       params:
       - name: IMAGE
@@ -224,11 +234,6 @@ spec:
         value: $(params.image-expires-after)
       - name: COMMIT_SHA
         value: $(tasks.clone-repository.results.commit)
-      - name: BUILD_ARGS
-        value:
-        - $(params.build-args[*])
-      - name: BUILD_ARGS_FILE
-        value: $(params.build-args-file)
       runAfter:
       - prefetch-dependencies
       taskRef:
@@ -301,6 +306,73 @@ spec:
         operator: in
         values:
         - "false"
+      workspaces:
+      - name: source
+        workspace: workspace
+    - name: label-check
+      runAfter:
+      - inspect-image
+      taskRef:
+        params:
+        - name: name
+          value: label-check
+        - name: bundle
+          value: quay.io/redhat-appstudio-tekton-catalog/task-label-check:0.1@sha256:0c0739fdda24cd1e3587bbab9b07d4493efc21884baac7723f4b446e95bf1fd3
+        - name: kind
+          value: task
+        resolver: bundles
+      when:
+      - input: $(params.skip-checks)
+        operator: in
+        values:
+        - "false"
+      workspaces:
+      - name: workspace
+        workspace: workspace
+    - name: optional-label-check
+      params:
+      - name: POLICY_NAMESPACE
+        value: optional_checks
+      runAfter:
+      - inspect-image
+      taskRef:
+        params:
+        - name: name
+          value: label-check
+        - name: bundle
+          value: quay.io/redhat-appstudio-tekton-catalog/task-label-check:0.1@sha256:0c0739fdda24cd1e3587bbab9b07d4493efc21884baac7723f4b446e95bf1fd3
+        - name: kind
+          value: task
+        resolver: bundles
+      when:
+      - input: $(params.skip-optional)
+        operator: in
+        values:
+        - "false"
+      workspaces:
+      - name: workspace
+        workspace: workspace
+    - name: deprecated-base-image-check
+      params:
+      - name: BASE_IMAGES_DIGESTS
+        value: $(tasks.build-container.results.BASE_IMAGES_DIGESTS)
+      taskRef:
+        params:
+        - name: name
+          value: deprecated-image-check
+        - name: bundle
+          value: quay.io/redhat-appstudio-tekton-catalog/task-deprecated-image-check:0.2@sha256:40856a6c6b4452361a2cdb17b927a35fd03edc3eec2e5bf94f96d211cc1d1d52
+        - name: kind
+          value: task
+        resolver: bundles
+      when:
+      - input: $(params.skip-checks)
+        operator: in
+        values:
+        - "false"
+      workspaces:
+      - name: test-ws
+        workspace: workspace
     - name: clair-scan
       params:
       - name: image-digest
