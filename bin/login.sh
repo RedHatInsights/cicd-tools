@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 main() {
     local server="${OC_LOGIN_SERVER:?OC_LOGIN_SERVER env var was not defined}"
