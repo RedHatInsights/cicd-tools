@@ -29,7 +29,7 @@ get_pod_logs() {
 
     mkdir -p "$logs_dir"
 
-    # get array of pod_name:container1,container2,..,containerN for all containers in all pods
+    # get array of pod_name:container1,container2,..,containerN for all containers in all pods.
     echo "Collecting container logs..."
     local pod_containers
     pod_containers=($(oc_wrapper get pods --ignore-not-found=true -n $ns -o "jsonpath={range .items[*]}{' '}{.metadata.name}{':'}{range .spec['containers', 'initContainers'][*]}{.name}{','}"))
