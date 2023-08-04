@@ -1,0 +1,79 @@
+name: Run tests
+run-name: Run tests
+on: 
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+      - run: npm install -g bats
+      - name: BATS tests
+        run: bats test
+      - name: E2E tests
+        run: |
+          for test_script in test/e2e/test_e2e_load_library*; do
+            echo "Running $test_script"
+            bash -x $test_script || exit 1
+          done
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          check_together: 'yes'
+          scandir: './src'
+
+  # https://github.com/bats-core/bats-core/blob/360c1ea5371622132ab669e9cb9687d21298699b/.github/workflows/tests.yml            
+  coverage:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+      - run: npm install -g bats
+      - run: |
+          wget https://github.com/SimonKagstrom/kcov/releases/download/v40/kcov-amd64.tar.gz
+          tar -xf kcov-amd64.tar.gz
+      - run: |
+          ./usr/local/bin/kcov --exclude-path=/tmp --include-pattern /cicd-tools/src $PWD/coverage bats --filter-tags '!no-kcov' test/
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: coverage/*
+      - name: Print the Total Coverage
+        id: coverage-percent
+        shell: bash
+        env:
+          minimum_coverage: 85.50
+        # TODO: this is a bit broken - fix and submit PR upstream
+        run: |
+          value=$(jq '.percent_covered' <coverage/bats/coverage.json)
+          fixed_point() { # <float val>
+            int=${value%.*}
+            decimals=${value#*.}
+            echo $int${decimals::2}
+          }
+          echo "Coverage: $value%" | tee "$GITHUB_STEP_SUMMARY"
+          if (( $(fixed_point $value) < $(fixed_point $expected) )); then
+            echo "  is below required minimum coverage ($minimum_coverage%)." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi            
