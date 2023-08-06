@@ -24,15 +24,16 @@ main() {
     export BONFIRE_NS_REQUESTER="$ns_requester"
 
     if [[ -n "$COMPONENTS" ]]; then
+        # shellcheck disable=SC2207
         components_arg=($(printf -- '--component %s ' $COMPONENTS))
     fi
 
     if [[ -n "$COMPONENTS_W_RESOURCES" ]]; then
+        # shellcheck disable=SC2207
         components_resources_arg=($(printf -- '--no-remove-resources %s ' $COMPONENTS_W_RESOURCES))
     fi
 
     bonfire deploy \
-        "$app_name" \
         --source=appsre \
         --ref-env "$ref_env" \
         --set-template-ref "$component_name"="$git_commit" \
@@ -43,12 +44,10 @@ main() {
         --frontends "$deploy_frontends" \
         "${components_arg[@]}" \
         "${components_resources_arg[@]}" \
-        "${extra_deploy_args[@]}"
+        "$extra_deploy_args" \
+        "$app_name"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
     main "$@"
 fi
-
-
-
