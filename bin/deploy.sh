@@ -18,18 +18,24 @@ main() {
     local ref_env="${REF_ENV:-insights-production}"
     local deploy_frontends="${DEPLOY_FRONTENDS:-false}"
     local optional_deps_method="${OPTIONAL_DEPS_METHOD:-hybrid}"
-    local extra_deploy_args="${EXTRA_DEPLOY_ARGS:-""}"
+    local extra_deploy_args=()
     local components_arg components_resources_arg
 
     export BONFIRE_NS_REQUESTER="$ns_requester"
 
+    # shellcheck disable=SC2153
+    if [[ -n "$EXTRA_DEPLOY_ARGS" ]]; then
+        # shellcheck disable=SC2206
+        extra_deploy_args+=($EXTRA_DEPLOY_ARGS)
+    fi
+
     if [[ -n "$COMPONENTS" ]]; then
-        # shellcheck disable=SC2207
+        # shellcheck disable=SC2207,SC2086
         components_arg=($(printf -- '--component %s ' $COMPONENTS))
     fi
 
     if [[ -n "$COMPONENTS_W_RESOURCES" ]]; then
-        # shellcheck disable=SC2207
+        # shellcheck disable=SC2207,SC2086
         components_resources_arg=($(printf -- '--no-remove-resources %s ' $COMPONENTS_W_RESOURCES))
     fi
 
@@ -44,7 +50,7 @@ main() {
         --frontends "$deploy_frontends" \
         "${components_arg[@]}" \
         "${components_resources_arg[@]}" \
-        "$extra_deploy_args" \
+        "${extra_deploy_args[@]}" \
         "$app_name"
 }
 
