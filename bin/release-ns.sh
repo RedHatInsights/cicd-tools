@@ -5,7 +5,6 @@ main() {
     local ns_requester="${2:?Namespace requester name was not provided}"
 
     export BONFIRE_NS_REQUESTER="$ns_requester"
-    export BONFIRE_BOT="true"
 
     bonfire namespace release "$ns" -f
 }

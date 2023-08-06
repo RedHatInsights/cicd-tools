@@ -6,6 +6,7 @@ main() {
 
     # Mandatory Arguments
     local ns="${1:?Namespace was not provided}"
+    local ns_requester="${2:?Namespace requester name was not provided}"
     local app_name="${APP_NAME:?APP_NAME was not provided}"
     local component_name="${COMPONENT_NAME:?}"
     local git_commit="${GIT_COMMIT:?}"
@@ -20,7 +21,7 @@ main() {
     local extra_deploy_args="${EXTRA_DEPLOY_ARGS:-""}"
     local components_arg components_resources_arg
 
-
+    export BONFIRE_NS_REQUESTER="$ns_requester"
 
     if [[ -n "$COMPONENTS" ]]; then
         components_arg=($(printf -- '--component %s ' $COMPONENTS))
