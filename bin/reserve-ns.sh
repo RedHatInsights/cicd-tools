@@ -9,7 +9,7 @@ main() {
     export BONFIRE_NS_REQUESTER="$ns_requester"
 
     ns="$(bonfire namespace reserve --pool "$namespace_pool")" 
-    echo "${ns//'\n'}" > "$ns_file"
+    echo -n "${ns//'\n'}" > "$ns_file"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
