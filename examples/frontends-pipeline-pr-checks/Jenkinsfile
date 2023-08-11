@@ -42,6 +42,11 @@ pipeline {
                             IMG_TAG=sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
                             TEST_CONT="${PROJECT_NAME}-unit-tests-${IMG_TAG}"
                     }
+                    when {
+                        expression {
+                            return (RUN_UNIT_TESTS_FLAG == 'true')
+                        }
+                    }
                     steps {
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
@@ -59,6 +64,11 @@ pipeline {
                         IMG_TAG=sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
                         TEST_CONT="${PROJECT_NAME}-lint-${IMG_TAG}"
                     }
+                    when {
+                        expression {
+                            return (RUN_LINT_FLAG == 'true')
+                        }
+                    }
                     steps {
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
@@ -75,6 +85,11 @@ pipeline {
                     environment {
                         IMG_TAG=sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
                         TEST_CONT="${PROJECT_NAME}-cypress-component-tests-${IMG_TAG}"
+                    }
+                    when {
+                        expression {
+                            return (RUN_CYPRESS_COMPONENT_TESTS_FLAG == 'true')
+                        }
                     }
                     steps {
                         script {
@@ -96,6 +111,11 @@ pipeline {
                         COMPONENT="insights-chrome-frontend"
                         IMAGE="quay.io/cloudservices/${COMPONENT}"
                         INCLUDE_CHROME_CONFIG="true"
+                    }
+                    when {
+                        expression {
+                            return (RUN_CYPRESS_E2E_TESTS_FLAG == 'true')
+                        }
                     }
                     steps {
                         script {
@@ -137,7 +157,11 @@ pipeline {
                         COMPONENT="rbac"
                         COMPONENT_NAME="rbac"
                     }
-
+                    when {
+                        expression {
+                            return (RUN_IQE_TESTS_FLAG == 'true')
+                        }
+                    }
                     steps {
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
@@ -162,6 +186,11 @@ pipeline {
 
                         COMPONENT="insights-chrome-frontend"
                         IMAGE="quay.io/cloudservices/${COMPONENT}"
+                    }
+                    when {
+                        expression {
+                            return (RUN_FRONTEND_BUILD_FLAG == 'true')
+                        }
                     }
                     steps {
                         withVault([configuration: configuration, vaultSecrets: secrets]) {
