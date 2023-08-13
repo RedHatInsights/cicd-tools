@@ -1,3 +1,8 @@
 #!/bin/bash
 
-pip3 install crc-bonfire --user
+dependencies=(
+    "pydantic"
+    "crc-bonfire"
+)
+
+pip3 install --user "${dependencies[@]}"

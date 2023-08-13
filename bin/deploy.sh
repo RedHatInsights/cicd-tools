@@ -42,9 +42,6 @@ main() {
     bonfire deploy \
         --source=appsre \
         --ref-env "$ref_env" \
-        --set-template-ref "$component_name"="$git_commit" \
-        --set-parameter "${component_name}/IMAGE=${image}@sha256" \
-        --set-parameter "${component_name}/IMAGE_TAG=${image_tag}" \
         --namespace "$ns" \
         --timeout "$deploy_timeout" \
         --optional-deps-method "$optional_deps_method" \
