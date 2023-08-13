@@ -1,32 +1,72 @@
 #!/usr/bin/env python3
 
-import json
 import os
-from typing import Mapping
-from textwrap import dedent
+from typing import Any, MutableMapping
+
+from pydantic import BaseModel, ConfigDict, AnyUrl, Field, model_validator
+
+
+class Git(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    url: AnyUrl
+    revision: str
+
+
+class Source(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    git: Git
+
+
+class ContainerImage(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    image: str
+    sha: str
+
+
+class Component(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    container_image: ContainerImage = Field(alias="containerImage")
+    source: Source
+
+    @model_validator(mode='before')
+    @classmethod
+    def container_image_validator(cls, data: Any) -> Any:
+        if not isinstance(data, MutableMapping):
+            raise ValueError(f"{data} is not of mapping type")
+
+        image, sha = data["containerImage"].split("sha256:")
+        data["containerImage"] = ContainerImage(image=image, sha=sha)
+        return data
+
+
+class Snapshot(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    application: str
+    components: list[Component]
 
 
 def main() -> None:
     snapshot_str = os.environ.get("SNAPSHOT")
     if snapshot_str is None:
         raise RuntimeError("SNAPSHOT environment variable wasn't declared or empty")
-    snapshot: Mapping = json.loads(snapshot_str)
-    components = snapshot.get("components")
-    if not components:
-        raise RuntimeError(f"No components found in SNAPSHOT: ${snapshot}")
-    if len(components) > 1:
-        raise RuntimeError(
-            f"Can't handle snapshot that has more than 1 component. Got SNAPSHOT: ${snapshot}"
-        )
-
-    image, sha = components[0]["containerImage"].split("@sha256:")
-    git_revision = components[0]["source"]["git"]["revision"]
-
-    print(dedent(
-        f"""
-        export IMAGE={image} IMAGE_TAG={sha} GIT_COMMIT={git_revision}
-        """
-    ))
+    snapshot: Snapshot = Snapshot.model_validate_json(snapshot_str)
+    ret = []
+    for component in snapshot.components:
+        ret.extend((
+            "--set-template-ref",
+            f"{component.name}={component.source.git.revision}",
+            "--set-parameter",
+            f"{component.name}/IMAGE={component.container_image.image}@sha256",
+            "--set-parameter",
+            f"{component.name}/IMAGE_TAG={component.container_image.sha}"
+        ))
+    print(" ".join(ret))
 
 
 if __name__ == "__main__":
