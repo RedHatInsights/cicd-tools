@@ -1,0 +1,96 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy
+spec:
+  params:
+    - name: SNAPSHOT
+      type: string
+      description: "AppStudio snapshot (see example above)"
+    - name: APP_INTERFACE_SECRET
+      type: string
+      default: app-interface
+      description: "Secret for connecting to app-interface"
+    - name: EPHEMERAL_ENV_PROVIDER_SECRET
+      type: string
+      default: ephemeral-env-provider
+      description: "Secret for connecting to ephemeral env provider cluster"
+    - name: NS
+      type: string
+      description: Namespace name to deploy the application to
+    - name: NS_REQUESTER
+      type: string
+      description: The name of the person/pipeline that requested the namespace
+    - name: APP_NAME
+      type: string
+      description: name of app-sre "application" folder this component lives in
+      default: ccx-data-pipeline
+    - name: COMPONENT_NAME
+      type: string
+      description: name of app-sre "resourceTemplate" in deploy.yaml for this component
+      # default: insights-content-template-renderer
+      default: ""
+    - name: COMPONENTS
+      type: string
+      description: space-separated list of components to load
+      # default: insights-content-template-renderer
+      default: ""
+    - name: COMPONENTS_W_RESOURCES
+      type: string
+      description: component to keep
+      # default: insights-content-template-renderer
+      default: ""
+  steps:
+    - name: deploy-application
+      image: quay.io/redhat-user-workloads/rhtap-migration-tenant/bonfire-cicd-tools/cicd-tools@sha256:08113bb84dbb9f7f947bdad14093743bfd84c70b56f3844652bcd059debdafb9
+      env:
+        - name: APP_INTERFACE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: $(params.APP_INTERFACE_SECRET)
+              key: username
+        - name: APP_INTERFACE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.APP_INTERFACE_SECRET)
+              key: password
+        - name: APP_INTERFACE_BASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: $(params.APP_INTERFACE_SECRET)
+              key: baseurl
+        - name: OC_LOGIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+              key: token
+        - name: OC_LOGIN_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+              key: url
+        - name: APP_NAME
+          value: $(params.APP_NAME)
+        - name: COMPONENT_NAME
+          value: $(params.COMPONENT_NAME)
+        - name: COMPONENTS
+          value: $(params.COMPONENTS)
+        - name: COMPONENTS_W_RESOURCES
+          value: $(params.COMPONENTS_W_RESOURCES)
+        # String interpolation is easier when injecting the SNAPSHOT to an env var.
+        - name: SNAPSHOT
+          value: $(params.SNAPSHOT)
+        - name: BONFIRE_BOT
+          value: "true"
+      script: |
+        #!/bin/bash
+        set -ex
+
+        echo "Connecting to the ephemeral namespace cluster"
+        login.sh
+
+        echo "deploying to ephemeral"
+        EXTRA_DEPLOY_ARGS="$(parse-snapshot.py)"
+        export EXTRA_DEPLOY_ARGS
+        deploy.sh "$(params.NS)" "$(params.NS_REQUESTER)" 

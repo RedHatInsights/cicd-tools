@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: reserve-namespace
+spec:
+  params:
+    - name: NS_REQUESTER
+      type: string
+      description: The name of the person/pipeline that requested the namespace
+    - name: EPHEMERAL_ENV_PROVIDER_SECRET
+      type: string
+      default: ephemeral-env-provider
+      description: "Secret for connecting to ephemeral env provider cluster"
+  results:
+    - name: NS
+      description: ""
+  steps:
+    - name: reserve-namespace
+      image: quay.io/redhat-user-workloads/rhtap-migration-tenant/bonfire-cicd-tools/cicd-tools@sha256:08113bb84dbb9f7f947bdad14093743bfd84c70b56f3844652bcd059debdafb9
+      env:
+        - name: OC_LOGIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+              key: token
+        - name: OC_LOGIN_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+              key: url
+        - name: BONFIRE_BOT
+          value: "true"
+      script: |
+        #!/bin/bash
+        set -ex
+
+        echo "Connecting to the ephemeral namespace cluster"
+        login.sh
+
+        echo "Allocating ephemeral namespace"
+        reserve-ns.sh $(results.NS.path) "$(params.NS_REQUESTER)"
