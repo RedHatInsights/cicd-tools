@@ -19,12 +19,12 @@ def main() -> None:
             f"Can't handle snapshot that has more than 1 component. Got SNAPSHOT: ${snapshot}"
         )
 
-    container_image = components[0]["containerImage"].split("@sha256")[0]
-    tag = components[0]["source"]["git"]["revision"]
+    image, sha = components[0]["containerImage"].split("@sha256")
+    git_revision = components[0]["source"]["git"]["revision"]
 
     print(dedent(
         f"""
-        export IMAGE={container_image} IMAGE_TAG={tag} GIT_COMMIT={tag}
+        export IMAGE={image} IMAGE_TAG={sha} GIT_COMMIT={git_revision}
         """
     ))
 
