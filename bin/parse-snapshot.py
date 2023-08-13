@@ -39,7 +39,7 @@ class Component(BaseModel):
         if not isinstance(data, MutableMapping):
             raise ValueError(f"{data} is not of mapping type")
 
-        image, sha = data["containerImage"].split("sha256:")
+        image, sha = data["containerImage"].split("@sha256:")
         data["containerImage"] = ContainerImage(image=image, sha=sha)
         return data
 
