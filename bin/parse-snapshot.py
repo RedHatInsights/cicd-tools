@@ -19,7 +19,7 @@ def main() -> None:
             f"Can't handle snapshot that has more than 1 component. Got SNAPSHOT: ${snapshot}"
         )
 
-    image, sha = components[0]["containerImage"].split("@sha256")
+    image, sha = components[0]["containerImage"].split("@sha256:")
     git_revision = components[0]["source"]["git"]["revision"]
 
     print(dedent(
