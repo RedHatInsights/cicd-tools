@@ -8,10 +8,6 @@ main() {
     local ns="${1:?Namespace was not provided}"
     local ns_requester="${2:?Namespace requester name was not provided}"
     local app_name="${APP_NAME:?APP_NAME was not provided}"
-    local component_name="${COMPONENT_NAME:?}"
-    local git_commit="${GIT_COMMIT:?}"
-    local image="${IMAGE:?IMAGE was not provided}"
-    local image_tag="${IMAGE_TAG:?IMAGE_TAG was not provided}"
     
     # Optional Arguments
     local deploy_timeout=${DEPLOY_TIMEOUT:-900}
