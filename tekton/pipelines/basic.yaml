@@ -1,1 +1,163 @@
-# todo
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: bonfire
+  labels:
+    build.appstudio.redhat.com/pipeline: "bonfire"
+spec:
+  params:
+    - name: SNAPSHOT
+      type: string
+      description: |
+        Spec section of an ApplicationSnapshot resource. Not all fields of the
+        resource are required. A minimal example:
+          {
+            "components": [
+              {
+                "containerImage": "quay.io/example/repo:latest"
+              }
+            ]
+          }
+        Each "containerImage" in the "components" array is validated.
+  results:
+    - name: TEST_OUTPUT
+      value: "$(tasks.run-test.results.TEST_OUTPUT)"
+      description: ""
+  finally:
+    - name: teardown
+      params:
+        - name: NS
+          value: "$(tasks.reserve-namespace.results.NS)"
+        - name: NS_REQUESTER
+          value: "rhtap-$(context.pipelineRun.name)"
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/gbenhaim/cicd-tools.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tekton/tasks/teardown.yaml
+
+
+      taskSpec:
+        params:
+          - name: NS
+            type: string
+            description: Namespace name to release
+          - name: NS_REQUESTER
+            type: string
+            description: The name of the person/pipeline that requested the namespace
+          - name: EPHEMERAL_ENV_PROVIDER_SECRET
+            type: string
+            default: ephemeral-env-provider
+            description: "Secret for connecting to ephemeral env provider cluster"
+        volumes:
+          - name: artifacts
+            emptyDir: {}
+        steps:
+          - name: collect-logs
+            image: quay.io/redhat-user-workloads/rhtap-migration-tenant/bonfire-cicd-tools/cicd-tools:69cc1f37ab224fb74c872ac01fca70010fcf6627
+            env:
+              - name: OC_LOGIN_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+                    key: token
+              - name: OC_LOGIN_SERVER
+                valueFrom:
+                  secretKeyRef:
+                    name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+                    key: url
+              - name: BONFIRE_BOT
+                value: "true"
+            onError: continue
+            volumeMounts:
+              - name: artifacts
+                mountPath: /artifacts
+            script: |
+              #!/bin/bash
+              set -ex
+              
+              echo "Connecting to the ephemeral namespace cluster"
+              login.sh
+
+              echo "Collecting logs"
+              collect-logs.sh "$(params.NS)" /artifacts
+          - name: release-namespace
+            image: quay.io/redhat-user-workloads/rhtap-migration-tenant/bonfire-cicd-tools/cicd-tools:69cc1f37ab224fb74c872ac01fca70010fcf6627
+            env:
+              - name: OC_LOGIN_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+                    key: token
+              - name: OC_LOGIN_SERVER
+                valueFrom:
+                  secretKeyRef:
+                    name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+                    key: url
+              - name: BONFIRE_BOT
+                value: "true"
+            script: |
+              #!/bin/bash
+              set -ex
+              
+              echo "Connecting to the ephemeral namespace cluster"
+              login.sh
+
+              echo "Releasing ephemeral namespace"
+              release-ns.sh "$(params.NS)" "$(params.NS_REQUESTER)"
+        
+  tasks:
+    - name: reserve-namespace
+      params:
+        - name: NS_REQUESTER
+          value: "rhtap-$(context.pipelineRun.name)"
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/gbenhaim/cicd-tools.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tekton/tasks/reserve-namespace.yaml
+    - name: deploy-application
+      params:
+        - name: SNAPSHOT
+          value: "$(params.SNAPSHOT)"
+        - name: NS
+          value: "$(tasks.reserve-namespace.results.NS)"
+        - name: NS_REQUESTER
+          value: "rhtap-$(context.pipelineRun.name)"
+      runAfter:
+        - reserve-namespace
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/gbenhaim/cicd-tools.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tekton/tasks/deploy.yaml
+    - name: run-test
+      params:
+        - name: NS
+          value: "$(tasks.reserve-namespace.results.NS)"
+        - name: NS_REQUESTER
+          value: "rhtap-$(context.pipelineRun.name)"
+      runAfter:
+        - deploy-application
+      taskRef:
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/gbenhaim/cicd-tools.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: tekton/tasks/run-test.yaml
+
