@@ -26,24 +26,19 @@ spec:
       type: string
       description: name of app-sre "application" folder this component lives in
       default: ccx-data-pipeline
-    - name: COMPONENT_NAME
-      type: string
-      description: name of app-sre "resourceTemplate" in deploy.yaml for this component
-      # default: insights-content-template-renderer
-      default: ""
     - name: COMPONENTS
       type: string
       description: space-separated list of components to load
-      # default: insights-content-template-renderer
-      default: ""
+      default: insights-content-template-renderer
+      # default: ""
     - name: COMPONENTS_W_RESOURCES
       type: string
       description: component to keep
-      # default: insights-content-template-renderer
-      default: ""
+      default: insights-content-template-renderer
+      # default: ""
   steps:
     - name: deploy-application
-      image: quay.io/redhat-user-workloads/rhtap-migration-tenant/bonfire-cicd-tools/cicd-tools@sha256:08113bb84dbb9f7f947bdad14093743bfd84c70b56f3844652bcd059debdafb9
+      image: quay.io/redhat-user-workloads/rhtap-migration-tenant/bonfire-cicd-tools/cicd-tools:69cc1f37ab224fb74c872ac01fca70010fcf6627
       env:
         - name: APP_INTERFACE_USERNAME
           valueFrom:

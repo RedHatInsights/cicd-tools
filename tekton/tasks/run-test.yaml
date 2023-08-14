@@ -1,0 +1,84 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-test
+spec:
+  params:
+    - name: EPHEMERAL_ENV_PROVIDER_SECRET
+      type: string
+      default: ephemeral-env-provider
+    - name: NS
+      type: string
+      description: Namespace name to deploy the application to
+    - name: NS_REQUESTER
+      type: string
+      description: The name of the person/pipeline that requested the namespace
+    - name: COMPONENT_NAME
+      type: string
+      description: name of app-sre "resourceTemplate" in deploy.yaml for this component
+      default: insights-content-template-renderer
+    - name: IQE_PLUGINS
+      type: string
+      description: name of the IQE plugin for this app.
+      default: ccx
+    - name: IQE_MARKER_EXPRESSION
+      type: string
+      description: This is the value passed to pytest -m
+      default: ""
+    - name: IQE_FILTER_EXPRESSION
+      type: string
+      description: This is the value passed to pytest -k
+      default: test_plugin_accessible
+    - name: IQE_REQUIREMENTS_PRIORITY
+      type: string
+      description: ""
+      default: ""
+    - name: IQE_TEST_IMPORTANCE
+      type: string
+      description: ""
+      default: ""
+    - name: IQE_CJI_TIMEOUT
+      type: string
+      description: This is the time to wait for smoke test to complete or fail
+      default: 30m
+  results:
+    - name: TEST_OUTPUT
+      description: ""
+  steps:
+    - name: run-test
+      image: quay.io/redhat-user-workloads/rhtap-migration-tenant/bonfire-cicd-tools/cicd-tools:69cc1f37ab224fb74c872ac01fca70010fcf6627
+      env:
+        - name: OC_LOGIN_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+              key: token
+        - name: OC_LOGIN_SERVER
+          valueFrom:
+            secretKeyRef:
+              name: $(params.EPHEMERAL_ENV_PROVIDER_SECRET)
+              key: url
+        - name: COMPONENT_NAME
+          value: $(params.COMPONENT_NAME)
+        - name: IQE_PLUGINS
+          value: $(params.IQE_PLUGINS)
+        - name: IQE_MARKER_EXPRESSION
+          value: $(params.IQE_MARKER_EXPRESSION)
+        - name: IQE_FILTER_EXPRESSION
+          value: $(params.IQE_FILTER_EXPRESSION)
+        - name: IQE_REQUIREMENTS_PRIORITY
+          value: $(params.IQE_REQUIREMENTS_PRIORITY)
+        - name: IQE_CJI_TIMEOUT
+          value: $(params.IQE_CJI_TIMEOUT)
+        - name: BONFIRE_BOT
+          value: "true"
+      script: |
+        #!/bin/bash
+        set -ex
+
+        echo "Connecting to the ephemeral namespace cluster"
+        login.sh
+
+        echo "Running the test"
+        oc_wrapper project "$(params.NS)"
+        oc_wrapper get deployments > "$(results.TEST_OUTPUT.path)"
