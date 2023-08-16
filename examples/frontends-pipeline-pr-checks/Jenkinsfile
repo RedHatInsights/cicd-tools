@@ -67,7 +67,7 @@ pipeline {
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
                                 sh '''
-                                    ./ci/unit_tests.sh
+                                    ./examples/frontends-pipeline-pr-checks/unit_tests.sh
                                 '''
                             }
                         }
@@ -89,7 +89,7 @@ pipeline {
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
                                 sh '''
-                                    ./ci/lint.sh
+                                    ./examples/frontends-pipeline-pr-checks/lint.sh
                                 '''
                             }
                         }
@@ -111,7 +111,7 @@ pipeline {
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
                                 sh '''
-                                    ./ci/cypress_component_tests.sh
+                                    ./examples/frontends-pipeline-pr-checks/cypress_component_tests.sh
                                 '''
                             }
                         }
@@ -137,7 +137,7 @@ pipeline {
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
                                 sh '''
-                                    ./ci/cypress_e2e_tests.sh
+                                    ./examples/frontends-pipeline-pr-checks/cypress_e2e_tests.sh
                                 '''
                             }
                         }
@@ -182,7 +182,7 @@ pipeline {
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
                                 sh '''
-                                    ./ci/iqe_tests.sh
+                                    ./examples/frontends-pipeline-pr-checks/iqe_tests.sh
                                 '''
                             }
                         }
@@ -211,7 +211,7 @@ pipeline {
                     steps {
                         withVault([configuration: configuration, vaultSecrets: secrets]) {
                             sh '''
-                                ./ci/frontend-build.sh
+                                ./examples/frontends-pipeline-pr-checks/frontend-build.sh
                             '''
                         }
                     }
