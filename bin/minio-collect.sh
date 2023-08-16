@@ -9,7 +9,7 @@ main() {
     # Set up port-forward for minio
     local local_svc_port
     local_svc_port=$(python -c 'import socket; s=socket.socket(); s.bind(("", 0)); print(s.getsockname()[1]); s.close()')
-    oc_wrapper "port-forward svc/env-$ns-minio" "$local_svc_port:9000" -n "$ns" &
+    oc_wrapper port-forward "svc/env-$ns-minio" "$local_svc_port:9000" -n "$ns" &
     sleep 5
 
     # Get the secret from the env
