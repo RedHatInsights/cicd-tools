@@ -20,7 +20,9 @@ main() {
     local iqe_env="${IQE_ENV:-clowder_smoke}"
     local iqe_cji_timeout="${IQE_CJI_TIMEOUT:-10m}"
 
-    local selenium_arg=$([ $selenium == "true" ] && " --selenium" || :)
+    if [[ "$selenium" == "true" ]]; then
+        selenium_arg="--selenium"
+    fi
 
     export BONFIRE_NS_REQUESTER="$ns_requester"
     local pod
