@@ -4,7 +4,6 @@ main() {
     # Mandatory arguments
     local ns="${1:?Namespace was not provided}"
     local ns_requester="${2:?Namespace requester name was not provided}"
-    local pod_file="${3:?Pod file was not provided}"
     local component_name="${COMPONENT_NAME:?Component name not provided}"
     local cji_name=$component_name
 
@@ -26,10 +25,9 @@ main() {
     fi
 
     export BONFIRE_NS_REQUESTER="$ns_requester"
-    local pod
 
     # Invoke the CJI using the options set via env vars
-    pod=$(bonfire deploy-iqe-cji $component_name \
+    bonfire deploy-iqe-cji "$component_name" \
     --marker "$iqe_marker_expression" \
     --filter "$iqe_filter_expression" \
     --image-tag "${iqe_image_tag}" \
@@ -40,9 +38,7 @@ main() {
     --env "$iqe_env" \
     --cji-name "$cji_name" \
     $selenium_arg \
-    --namespace "$ns")
-
-    echo -n "${pod//'\n'}"  > "$pod_file"
+    --namespace "$ns"
 
     oc_wrapper wait "--timeout=$iqe_cji_timeout" --for=condition=JobInvocationComplete -n "$ns" "cji/$cji_name"
 }
