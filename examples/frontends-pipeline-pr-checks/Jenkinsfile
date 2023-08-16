@@ -44,8 +44,8 @@ pipeline {
                 }
 
                 checkout scmGit(
-                    branches: [[name: '$GIT_REPO_BRANCH']],
-                    userRemoteConfigs: [[url: '$GIT_REPO_URL']])
+                    branches: [[name: '$ghprbSourceBranch']],
+                    userRemoteConfigs: [[url: '$ghprbAuthorRepoGitUrl']])
             }
 
         }
