@@ -5,7 +5,7 @@ set -o pipefail
 main() {
     # Mandatory arguments
     local ns="${1:?Namespace was not provided}"
-    local artifacts_dir="${3:? Artifacts dir was not provided}"
+    local artifacts_dir="${2:? Artifacts dir was not provided}"
     local pod
 
     pod="$(get_iqe_pod_or_die "$ns")"
