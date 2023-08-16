@@ -37,9 +37,15 @@ pipeline {
         stage('Clone Git Repository') {
             agent { label 'insights' }
             steps {
+                script {
+                    sh '''
+                        env
+                    '''
+                }
+
                 checkout scmGit(
-                    branches: [[name: '$GIT_BRANCH']],
-                    userRemoteConfigs: [[url: '$GIT_URL']])
+                    branches: [[name: '$GIT_REPO_BRANCH']],
+                    userRemoteConfigs: [[url: '$GIT_REPO_URL']])
             }
 
         }
