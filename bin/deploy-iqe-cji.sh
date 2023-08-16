@@ -20,6 +20,7 @@ main() {
     local iqe_env="${IQE_ENV:-clowder_smoke}"
     local iqe_cji_timeout="${IQE_CJI_TIMEOUT:-10m}"
 
+    local selenium_arg=""
     if [[ "$selenium" == "true" ]]; then
         selenium_arg="--selenium"
     fi
@@ -38,7 +39,7 @@ main() {
     --plugins "$iqe_plugins" \
     --env "$iqe_env" \
     --cji-name "$cji_name" \
-    "$selenium_arg" \
+    $selenium_arg \
     --namespace "$ns")
 
     echo -n "${pod//'\n'}"  > "$pod_file"
