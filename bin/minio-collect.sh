@@ -33,7 +33,7 @@ main() {
     local bucket_name="${pod}-artifacts"
 
     mc --no-color --quiet alias set minio "http://${minio_host}:${local_svc_port}" "${minio_access}" "${minio_secret}"
-    mc --no-color --quiet mirror "--overwrite minio/${bucket_name}" "$artifacts_dir"
+    mc --no-color --quiet mirror --overwrite "minio/${bucket_name}" "$artifacts_dir"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
