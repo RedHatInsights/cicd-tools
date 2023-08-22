@@ -8,7 +8,7 @@ docker run --name $TEST_CONT -d -i --rm  "${CYPRESS_TEST_IMAGE}" /bin/bash
 
 docker cp -a . "${TEST_CONT}:/e2e/"
 
-docker exec -i $TEST_CONT sh -c "npm ci"
+docker exec -i $TEST_CONT sh -c "npm i"
 docker exec -i $TEST_CONT sh -c "npm run test:ct"
 
 RESULT=$?

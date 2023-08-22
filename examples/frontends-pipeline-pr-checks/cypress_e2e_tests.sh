@@ -16,7 +16,7 @@ docker run \
 
 docker cp -a . "${TEST_CONT}:/e2e/"
 
-docker exec -i $TEST_CONT sh -c "npm ci"
+docker exec -i $TEST_CONT sh -c "npm i"
 docker exec -i $TEST_CONT sh -c "npm run test:e2e"
 
 RESULT=$?
