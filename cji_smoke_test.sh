@@ -12,7 +12,8 @@
 #IQE_PLUGINS="plugin1,plugin2" -- IQE plugins to run tests for, leave unset to use ClowdApp's iqePlugin value
 #IQE_ENV="something" -- value to set for ENV_FOR_DYNACONF, default is "clowder_smoke"
 #IQE_SELENIUM="true" -- whether to run IQE pod with a selenium container, default is "false"
-
+#IQE_RP_ARGS=True -- Turn on reporting to reportportal
+#IQE_IBUTSU_SOURCE="post_stage" -- update the ibutsu source for the current run
 #NAMESPACE="mynamespace" -- namespace to deploy iqe pod into, usually already set by 'deploy_ephemeral_env.sh'
 
 # Env vars set by 'bootstrap.sh':
@@ -32,6 +33,10 @@ set -e
 : "${IQE_PLUGINS:='""'}"
 : "${IQE_ENV:=clowder_smoke}"
 : "${IQE_SELENIUM:=false}"
+: "${IQE_PARALLEL_ENABLED:='""'}"
+: "${IQE_PARALLEL_WORKER_COUNT:='""'}"
+: "${IQE_RP_ARGS:='""'}"
+: "${IQE_IBUTSU_SOURCE:='""'}"
 
 
 _running_in_rhel7() {
@@ -95,6 +100,10 @@ POD=$(
     --env "$IQE_ENV" \
     --cji-name $CJI_NAME \
     $SELENIUM_ARG \
+    --parallel-enabled $IQE_PARALLEL_ENABLED \
+    --parallel-worker-count $IQE_PARALLEL_WORKER_COUNT \
+    --rp-args $IQE_RP_ARGS \
+    --ibutsu-source $IQE_IBUTSU_SOURCE \
     --namespace $NAMESPACE)
 set +x
 
