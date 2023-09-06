@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+set -o pipefail
+
 main() {
     # Mandatory arguments
     local ns="${1:?Namespace was not provided}"
@@ -41,6 +43,7 @@ main() {
     --namespace "$ns"
 
     oc_wrapper wait "--timeout=$iqe_cji_timeout" --for=condition=JobInvocationComplete -n "$ns" "cji/$cji_name"
+    oc_wrapper get -o json -n "$ns" "cji/$cji_name" | check_cji_jobs.py
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
