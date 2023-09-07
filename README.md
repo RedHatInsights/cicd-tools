@@ -66,7 +66,7 @@ The bootstrap script will download the selected version of the CICD scripts (or 
 the `CICD_TOOLS_WORKDIR` variable (defaults to `.cicd_tools` in the current directory). 
 
 **Please note** that when cloning the repo, the directory defined by the `CICD_TOOLS_WORKDIR` will be deleted!
-You can disable recreation feature by setting the `CICD_TOOLS_SKIP_RECREATE` variable
+You can disable running the `git clone` by setting the `CICD_TOOLS_SKIP_GIT_CLONE` variable
 
 The bootstrap.sh can be invoked multiple times but it has a status control to ensure each
 of the libraries is loaded only once. This is to prevent potential issues with collections 
