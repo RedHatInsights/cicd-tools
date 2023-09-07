@@ -24,12 +24,12 @@ bonfire deploy \
     ${APP_NAME} \
     --source=appsre \
     --ref-env ${REF_ENV} \
-    --set-template-ref ${COMPONENT_NAME}=${GIT_COMMIT} \
     --set-image-tag ${IMAGE}=${IMAGE_TAG} \
     --namespace ${NAMESPACE} \
     --timeout ${DEPLOY_TIMEOUT} \
     --optional-deps-method ${OPTIONAL_DEPS_METHOD} \
     --frontends ${DEPLOY_FRONTENDS} \
+    ${TEMPLATE_REF_ARG} \
     ${COMPONENTS_ARG} \
     ${COMPONENTS_RESOURCES_ARG} \
     ${EXTRA_DEPLOY_ARGS}

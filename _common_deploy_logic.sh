@@ -119,6 +119,21 @@ function transform_arg {
     echo "$options"
 }
 
+function transform_template_ref {
+    # transform set-template-ref to "$1" options for bonfire
+    options=""
+    option="$1"; shift;
+    components="$@"
+    for c in $components; do
+        options="$options $option $c=$GIT_COMMIT"
+    done
+    echo "$options"
+}
+
+if [ ! -z "$COMPONENT_NAME" ]; then
+    export TEMPLATE_REF_ARG=$(transform_template_ref --set-template-ref $COMPONENT_NAME)
+fi
+
 if [ ! -z "$COMPONENTS" ]; then
     export COMPONENTS_ARG=$(transform_arg --component $COMPONENTS)
 fi
