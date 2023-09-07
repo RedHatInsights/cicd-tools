@@ -65,7 +65,7 @@ source bootstrap.sh container_engine
 The bootstrap script will download the selected version of the CICD scripts (or `latest` if none specified) into the directory defined by
 the `CICD_TOOLS_WORKDIR` variable (defaults to `.cicd_tools` in the current directory). 
 
-**Please note** that the directory defined by the `CICD_TOOLS_WORKDIR` will be deleted !
+**Please note** that when cloning the repo, the directory defined by the `CICD_TOOLS_WORKDIR` will be deleted!
 You can disable recreation feature by setting the `CICD_TOOLS_SKIP_RECREATE` variable
 
 The bootstrap.sh can be invoked multiple times but it has a status control to ensure each
