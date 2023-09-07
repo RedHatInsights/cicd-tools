@@ -6,7 +6,7 @@ CICD_TOOLS_ROOTDIR="${CICD_TOOLS_ROOTDIR:-.cicd_tools}"
 CICD_TOOLS_SCRIPTS_DIR="${CICD_TOOLS_ROOTDIR}/src"
 CICD_TOOLS_SKIP_CLEANUP=${CICD_TOOLS_SKIP_CLEANUP:-}
 
-recreate_cicd_tools_repo() {
+clone_cicd_tools_repo() {
 
     if [ -d "${CICD_TOOLS_ROOTDIR}" ]; then
         _delete_cicd_tools_rootdir
