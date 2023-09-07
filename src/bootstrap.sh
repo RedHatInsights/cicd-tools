@@ -27,7 +27,7 @@ cleanup() {
 }
 
 if [ -z "$CICD_TOOLS_SKIP_GIT_CLONE" ]; then
-    if ! recreate_cicd_tools_repo; then
+    if ! clone_cicd_tools_repo; then
         echo "couldn't clone cicd-tools repository!"
         exit 1
     fi
