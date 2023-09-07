@@ -21,6 +21,61 @@ unit test template file [here](templates/unit_test_example.sh).
 | smoke_test.sh           | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh) |
 | iqe_pod                 | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh) |
 
+## Bash script helper scripts usage
+
+The collection of helper scripts are expected to be loaded using the provided [src/bootstrap.sh](bootstrap) script.
+
+Currently there is 1 collection available:
+
+- Container helper scripts: provides wrapper functions for invoking container engine agnostic commands
+
+To use any of the provided libraries, you must source the [src/bootstrap.sh](bootstrap.sh) script.
+One can simply either source the [src/bootstrap.sh](bootstrap) script directly:
+
+```
+$ source <(curl -sSL https://raw.githubusercontent.com/RedHatInsights/cicd-tools/main/src/bootstrap.sh)
+$ container_engine_cmd --version
+  podman version 4.6.1
+
+```
+
+In case you want to refactor some of your scripts using this library, here's a snippet you can use:
+
+```
+load_cicd_helper_functions() {
+
+    local LIBRARY_TO_LOAD=${1:-all}
+    local CICD_TOOLS_REPO_BRANCH='main'
+    local CICD_TOOLS_REPO_ORG='RedHatInsights'
+    local CICD_TOOLS_URL="https://raw.githubusercontent.com/${CICD_TOOLS_REPO_ORG}/cicd-tools/${CICD_TOOLS_REPO_BRANCH}/src/bootstrap.sh"
+    set -e
+    source <(curl -sSL "$CICD_TOOLS_URL") "$LIBRARY_TO_LOAD"
+    set +e
+}
+
+load_cicd_helper_functions
+```
+
+you can select which collection needs to load independently as a parameter:
+
+```
+source bootstrap.sh container_engine
+```
+
+The bootstrap script will download the selected version of the CICD scripts (or `latest` if none specified) into the directory defined by
+the `CICD_TOOLS_WORKDIR` variable (defaults to `.cicd_tools` in the current directory). 
+
+**Please note** that when cloning the repo, the directory defined by the `CICD_TOOLS_WORKDIR` will be deleted!
+You can disable running the `git clone` by setting the `CICD_TOOLS_SKIP_GIT_CLONE` variable
+
+The bootstrap.sh can be invoked multiple times but it has a status control to ensure each
+of the libraries is loaded only once. This is to prevent potential issues with collections 
+that are not supposed to be loaded many times.
+
+An example of this is the _container_engine_ library, where the selected container engine
+is **set only once the first command using the library helper function `container_engine_cmd` is used**.
+
+
 ## Template Scripts
 | Script                  | Description |  
 | ----------------------- | ----------- | 
