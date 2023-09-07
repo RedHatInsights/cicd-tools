@@ -26,7 +26,7 @@ cleanup() {
     _delete_cicd_tools_rootdir
 }
 
-if [ -z "$CICD_TOOLS_SKIP_RECREATE" ]; then
+if [ -z "$CICD_TOOLS_SKIP_GIT_CLONE" ]; then
     if ! recreate_cicd_tools_repo; then
         echo "couldn't recreate cicd_tools repository!"
         exit 1
