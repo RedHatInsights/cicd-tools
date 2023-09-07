@@ -16,7 +16,7 @@ load_cicd_helper_functions() {
     
     if [ "CI" != "true" ]; then
         CICD_TOOLS_ROOTDIR=.
-        CICD_TOOLS_SKIP_RECREATE=1
+        CICD_TOOLS_SKIP_GIT_CLONE=1
         CICD_TOOLS_SKIP_CLEANUP=1
         source src/bootstrap.sh "$LIBRARY_TO_LOAD"
     else
