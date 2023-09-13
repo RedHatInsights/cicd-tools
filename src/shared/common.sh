@@ -21,12 +21,20 @@ command_is_present() {
     command -v "$1" > /dev/null 2>&1
 }
 
-get_7_chars_commit_hash() {
-    git rev-parse --short=7 HEAD
+_get_n_chars_commit_hash() {
+    git rev-parse --short="$1" HEAD
+}
+
+cicd_tools::common::get_7_chars_commit_hash() {
+    _get_n_chars_commit_hash 7
 }
 
 local_build() {
     [[ "$LOCAL_BUILD" = true ||  "$CI" != "true" ]]
+}
+
+cicd_tools::common::err() {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
 
 CICD_TOOLS_COMMON_LOADED=0
