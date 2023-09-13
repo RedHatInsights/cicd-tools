@@ -9,6 +9,7 @@ if [[ "$CICD_TOOLS_CONTAINER_ENGINE_LOADED" -eq 0 ]]; then
     return 0
 fi
 
+# TODO: consider remove
 if [ -z "$CICD_TOOLS_SCRIPTS_DIR" ]; then
     echo "scripts directory not defined, please load through main.sh script"
     return 1

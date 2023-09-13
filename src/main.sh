@@ -18,6 +18,9 @@ load_library() {
         container_engine)
             _load_container_engine
             ;;
+        image_builder)
+            _load_image_builder
+            ;;
         *) echo "Unsupported library: '$LIB_TO_LOAD'"
             return 1
 
@@ -31,8 +34,16 @@ _load_all() {
 _load_container_engine() {
     # shellcheck source=src/shared/common.sh
     source "${CICD_TOOLS_SCRIPTS_DIR}/shared/common.sh"
-    # shellcheck source=src/shared/container-engine-lib.sh
-    source "${CICD_TOOLS_SCRIPTS_DIR}/shared/container-engine-lib.sh"
+    # shellcheck source=src/shared/container_engine_lib.sh
+    source "${CICD_TOOLS_SCRIPTS_DIR}/shared/container_engine_lib.sh"
+}
+
+_load_image_builder() {
+    # shellcheck source=src/shared/container_engine_lib.sh
+    source "${CICD_TOOLS_SCRIPTS_DIR}/shared/container_engine_lib.sh"
+    # shellcheck source=src/shared/container_image_builder_lib.sh
+    source "${CICD_TOOLS_SCRIPTS_DIR}/shared/container_image_builder_lib.sh"
+
 }
 
 load_library "$LIB_TO_LOAD"

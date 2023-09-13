@@ -55,12 +55,13 @@ setup() {
 @test "local build check" {
 
     assert [ -z "$LOCAL_BUILD" ]
+    assert [ -z "$CI" ]
     source "src/shared/common.sh"
-    refute local_build
-    LOCAL_BUILD='1'
+    assert local_build
+    CI='true'
     refute local_build
     LOCAL_BUILD='true'
     assert local_build
-    LOCAL_BUILD='false'
+    unset LOCAL_BUILD
     refute local_build
 }

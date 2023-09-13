@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Common functions that are shared across the different libraries
+
 CICD_TOOLS_COMMON_LOADED=${CICD_TOOLS_COMMON_LOADED:-1}
 LOCAL_BUILD=${LOCAL_BUILD:-false}
 
