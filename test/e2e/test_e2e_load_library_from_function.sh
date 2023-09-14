@@ -16,9 +16,9 @@ load_common_helper_cicd_tools() {
     local LIBRARY_TO_LOAD=${1:-all}
     local MAIN_SCRIPT='./src/main.sh'
     source "$MAIN_SCRIPT" "$LIBRARY_TO_LOAD"
-    container_engine_cmd --version
+    cicd_tools::container::cmd --version
 }
-load_common_helper_cicd_tools container_engine
+load_common_helper_cicd_tools container
 
 EXPECTED_OUTPUT=$(container_engine_cmd --version)
 
@@ -31,12 +31,12 @@ fi
 load_cicd_helper_functions
 
 # Assert output doesn't change 
-if ! [ "$(container_engine_cmd --version)" == "$EXPECTED_OUTPUT" ]; then
+if ! [ "$(cicd_tools::container::cmd --version)" == "$EXPECTED_OUTPUT" ]; then
     echo "Container command not preserved between runs!"
     exit 1
 fi
 
-if ! [ "$(container_engine_cmd --version)" == "$EXPECTED_OUTPUT" ]; then
+if ! [ "$(cicd_tools::container::cmd --version)" == "$EXPECTED_OUTPUT" ]; then
     echo "Container command not preserved between runs!"
     exit 1
 fi
