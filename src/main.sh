@@ -10,7 +10,7 @@ LIB_TO_LOAD=${1:-all}
 
 cicd_tools::debug() {
   if cicd_tools::_debug_mode; then
-    cicd_tools::log $*
+    cicd_tools::log "$*"
   fi
 }
 
@@ -31,7 +31,7 @@ cicd_tools::load_library() {
   case $LIB_TO_LOAD in
     all) cicd_tools::_load_all ;;
     common) cicd_tools::_load_common_lib ;;
-    container) cicd_tools::_load_container_lib;;
+    container) cicd_tools::_load_container_lib ;;
     image_builder) cicd_tools::_load_image_builder_lib ;;
     *) cicd_tools::err "Unsupported library: '$LIB_TO_LOAD'" && return 1 ;;
   esac
@@ -57,7 +57,7 @@ cicd_tools::_load_container_lib() {
 cicd_tools::_load_image_builder_lib() {
   cicd_tools::_load_common_lib
   cicd_tools::_load_container_lib
-  # shellcheck source=src/shared/image_builder.sh
+  # shellcheck source=src/shared/image_builder_lib.sh
   source "${CICD_TOOLS_SCRIPTS_DIR}/shared/image_builder_lib.sh"
 }
 
