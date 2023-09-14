@@ -63,17 +63,16 @@ cicd_tools::image_builder::build() {
     labels="${labels} $(cicd_tools::image_builder::_get_expiry_label)"
   fi
 
-
   for tag in ${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG} ${additional_tags}; do
     tags="$tags ${image}:${tag}"
   done
 
-  labels_param="$(cicd_tools::image_builder::_get_build_param '--label' "$labels")"
-  build_args_param="$(cicd_tools::image_builder::_get_build_param '--build_arg' "$build_args")"
-  tags_param="$(cicd_tools::image_builder::_get_build_param '-t' "$tags")"
+  IFS=" " read -r -a labels_param <<< "$(cicd_tools::image_builder::_get_build_param '--label' "$labels")"
+  IFS=" " read -r -a build_args_param <<< "$(cicd_tools::image_builder::_get_build_param '--build_arg' "$build_args")"
+  IFS=" " read -r -a tags_param <<< "$(cicd_tools::image_builder::_get_build_param '-t' "$tags")"
 
-  if ! cicd_tools::container::cmd build -f "$containerfile" $tags_param $build_args_param $labels_param \
-      "$context"; then
+  if ! cicd_tools::container::cmd build -f "$containerfile" "${tags_param[@]}" \
+    "${build_args_param[@]}" "${labels_param[@]}" "$context"; then
     cicd_tools::err "Error building image"
     return 1
   fi
