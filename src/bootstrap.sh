@@ -18,14 +18,13 @@ clone_cicd_tools_repo() {
 }
 
 _delete_cicd_tools_rootdir() {
-    if _debug_mode; then
-        echo "Removing existing CICD tools directory: '${CICD_TOOLS_ROOTDIR}'"
-    fi
+    cicd_tools::debug "Removing existing CICD tools directory: '${CICD_TOOLS_ROOTDIR}'"
     rm -rf "${CICD_TOOLS_ROOTDIR}"
 }
 
 cleanup() {
     _delete_cicd_tools_rootdir
+    unset clone_cicd_tools_repo _delete_cicd_tools_rootdir cleanup
 }
 
 if [ -z "$CICD_TOOLS_SKIP_GIT_CLONE" ]; then
