@@ -29,7 +29,7 @@ setup() {
     source main.sh image_builder
     run cicd_tools::image_builder::get_image_tag
     assert_success
-    assert_output --regexp '^\b[0-9a-f]{7}\b$'
+    assert_output --regexp '^[0-9a-f]{7}$'
 
     assert [ -n "$CICD_TOOLS_CONTAINER_IMAGE_BUILDER_IMAGE_TAG" ]
 }
@@ -40,18 +40,18 @@ setup() {
     source main.sh image_builder
     run cicd_tools::image_builder::get_image_tag
     assert_success
-    assert_output --regexp '^pr-\d+-\b[0-9a-f]{7}\b$'
+    assert_output --regexp '^pr-[0-9]+-[0-9a-f]{7}$'
 
     assert [ -n "$CICD_TOOLS_CONTAINER_IMAGE_BUILDER_IMAGE_TAG" ]
 }
 
 @test "Image tag is set appropriately in a Merge Request context" {
 
-    $gitlabMergeRequestId=4321
+    gitlabMergeRequestId=4321
     source main.sh image_builder
     run cicd_tools::image_builder::get_image_tag
     assert_success
-    assert_output --regexp '^mr-\d+-\b[0-9a-f]{7}\b$'
+    assert_output --regexp '^pr-[0-9]+-[0-9a-f]{7}$'
 
     assert [ -n "$CICD_TOOLS_CONTAINER_IMAGE_BUILDER_IMAGE_TAG" ]
 }

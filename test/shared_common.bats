@@ -47,9 +47,9 @@ setup() {
 @test "get_7_chars_commit_hash works" {
 
     source "src/shared/common.sh"
-    run get_7_chars_commit_hash
+    run cicd_tools::common::get_7_chars_commit_hash
     assert_success
-    assert_output --regexp '^\b[0-9a-f]{7}\b$'
+    assert_output --regexp '^[0-9a-f]{7}$'
 }
 
 @test "local build check" {
