@@ -54,6 +54,8 @@ setup() {
 
 @test "local build check" {
 
+    unset CI
+
     assert [ -z "$LOCAL_BUILD" ]
     assert [ -z "$CI" ]
     source src/main.sh common
