@@ -16,7 +16,7 @@ setup() {
     run source src/main.sh ''
     assert_success
     assert_output --partial "loading common"
-    assert_output --partial "loading container engine"
+    assert_output --partial "loading container lib"
 }
 
 @test "loading all work successfully" {
@@ -24,8 +24,9 @@ setup() {
     CICD_TOOLS_DEBUG=1
     run source main.sh all
     assert_success
-    assert_output --partial "loading common"
-    assert_output --partial "loading container engine"
+    assert_output --partial "loading common lib"
+    assert_output --partial "loading container lib"
+    assert_output --partial "loading image builder lib"
 }
 
 @test "loading container helper functions work successfully" {
@@ -33,14 +34,14 @@ setup() {
     podman() {
         echo "podman here"
     }
-    run ! container_engine_cmd
+    run ! cicd_tools::container::cmd
     assert_failure
     CICD_TOOLS_DEBUG=1
-    run source main.sh container_engine
+    run source main.sh container
     assert_success
-    assert_output --partial "loading container engine"
-    source main.sh container_engine
-    run container_engine_cmd
+    assert_output --partial "loading container lib"
+    source main.sh container
+    run cicd_tools::container::cmd
     assert_success
     assert_output --partial "podman here"
 }
@@ -52,9 +53,9 @@ setup() {
     assert [ "$CICD_TOOLS_COMMON_LOADED" -eq 0 ]
     CICD_TOOLS_DEBUG=1
     run source main.sh ""
-    refute_output --partial "loading common"
+    refute_output --partial "loading common lib"
     run source main.sh all
-    refute_output --partial "loading common"
-    run source main.sh container_engine
-    refute_output --partial "loading container engine"
+    refute_output --partial "loading common lib"
+    run source main.sh container
+    refute_output --partial "loading container lib"
 }

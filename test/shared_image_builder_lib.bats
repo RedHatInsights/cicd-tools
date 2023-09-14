@@ -6,7 +6,7 @@ setup() {
 
 @test "Load directly results in error" {
 
-    run ! source "src/shared/container_image_builder_lib.sh"
+    run ! source "src/shared/container_lib.sh"
     assert_failure
     assert_output --partial "load through main.sh"
 }

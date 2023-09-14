@@ -4,18 +4,18 @@ setup() {
     _common_setup
 }
 
-@test "Common can be sourced directly" {
+@test "Load directly results in error" {
 
-    run source "src/shared/common.sh"
-    assert_success
+    run ! source "src/shared/common_lib.sh"
+    assert_failure
+    assert_output --partial "load through main.sh"
 }
-
 
 @test "Sets expected loaded flags" {
 
     assert [ -z "$CICD_TOOLS_COMMON_LOADED" ]
 
-    source "src/shared/common.sh"
+    source main.sh common
 
     assert [ "$CICD_TOOLS_COMMON_LOADED" -eq 0 ]
 }
@@ -24,9 +24,9 @@ setup() {
 @test "Loading common message is displayed" {
 
     CICD_TOOLS_DEBUG=1
-    run source 'src/shared/common.sh'
+    run source main.sh common
     assert_success
-    assert_output "loading common"
+    assert_output --partial "loading common"
 }
 
 @test "command is present works" {
@@ -35,18 +35,18 @@ setup() {
         echo "cat exists"
     }
 
-    source "src/shared/common.sh"
-    run ! command_is_present foo
+    source main.sh common
+    run ! cicd_tools::common::command_is_present foo
     assert_failure
 
-    run command_is_present cat
+    run cicd_tools::common::command_is_present cat
     assert_success
     assert_output ""
 }
 
 @test "get_7_chars_commit_hash works" {
 
-    source "src/shared/common.sh"
+    source main.sh common
     run cicd_tools::common::get_7_chars_commit_hash
     assert_success
     assert_output --regexp '^[0-9a-f]{7}$'
@@ -56,12 +56,19 @@ setup() {
 
     assert [ -z "$LOCAL_BUILD" ]
     assert [ -z "$CI" ]
-    source "src/shared/common.sh"
-    assert local_build
+    source src/main.sh common
+    run cicd_tools::common::local_build
+    assert_success
     CI='true'
-    refute local_build
+    run cicd_tools::common::local_build
+    assert_failure
+    assert_output ""
     LOCAL_BUILD='true'
-    assert local_build
+    run cicd_tools::common::local_build
+    assert_output ""
+    assert_success
     unset LOCAL_BUILD
-    refute local_build
+    run ! cicd_tools::common::local_build
+    assert_output ""
+    assert_failure
 }
