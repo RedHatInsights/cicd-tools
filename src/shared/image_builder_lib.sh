@@ -50,7 +50,7 @@ cicd_tools::image_builder::build() {
   context="${context:-.}"
 
   if [ -z "$image" ]; then
-      cicd_tools::err "you must specify an image name"
+      cicd_tools::err "you must specify an image name to build with -i"
       return 1
   fi
 
@@ -59,8 +59,8 @@ cicd_tools::image_builder::build() {
       return 1
   fi
 
-  if _is_change_request_context; then
-    labels="${labels} $(_get_expiry_label)"
+  if cicd_tools::image_builder::is_change_request_context; then
+    labels="${labels} $(cicd_tools::image_builder::_get_expiry_label)"
   fi
 
 
@@ -68,9 +68,9 @@ cicd_tools::image_builder::build() {
     tags="$tags ${image}:${tag}"
   done
 
-  labels_param="$(_get_build_param '--label' "$labels")"
-  build_args_param="$(_get_build_param '--build_arg' "$build_args")"
-  tags_param="$(_get_build_param '-t' "$tags")"
+  labels_param="$(cicd_tools::image_builder::_get_build_param '--label' "$labels")"
+  build_args_param="$(cicd_tools::image_builder::_get_build_param '--build_arg' "$build_args")"
+  tags_param="$(cicd_tools::image_builder::_get_build_param '-t' "$tags")"
 
   if ! cicd_tools::container::cmd build -f "$containerfile" $tags_param $build_args_param $labels_param \
       "$context"; then
@@ -79,31 +79,31 @@ cicd_tools::image_builder::build() {
   fi
 }
 
-_get_build_param() {
+cicd_tools::image_builder::_get_build_param() {
 
   local option_key="$1"
   local raw_params="$2"
   local build_param
 
   for raw_param in $raw_params; do
-    build_param="${build_param} ${option_key} ${raw_param}"
+      build_param=$(echo -n "${build_param} ${option_key} ${raw_param}")
   done
 
   echo -n "$build_param"
 }
 
-_get_expiry_label() {
-  echo "--label quay.expires-after=${CICD_TOOLS_IMAGE_BUILDER_QUAY_EXPIRE_TIME}"
+cicd_tools::image_builder::_get_expiry_label() {
+  echo "quay.expires-after=${CICD_TOOLS_IMAGE_BUILDER_QUAY_EXPIRE_TIME}"
 }
 
-_set_image_tag() {
+cicd_tools::image_builder::_set_image_tag() {
 
   local image_tag commit_hash build_id
 
   commit_hash=$(cicd_tools::common::get_7_chars_commit_hash)
 
-  if _is_change_request_context; then
-    build_id=$(_get_build_id)
+  if cicd_tools::image_builder::is_change_request_context; then
+    build_id=$(cicd_tools::image_builder::get_build_id)
     image_tag="pr-${build_id}-${commit_hash}"
   else
     image_tag="$commit_hash"
@@ -113,11 +113,11 @@ _set_image_tag() {
   readonly CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG
 }
 
-_is_change_request_context() {
+cicd_tools::image_builder::is_change_request_context() {
   [ -n "$ghprbPullId" ] || [ -n "$gitlabMergeRequestId" ]
 }
 
-_get_build_id() {
+cicd_tools::image_builder::get_build_id() {
 
   local build_id
 
@@ -130,33 +130,42 @@ _get_build_id() {
   echo -n "$build_id"
 }
 
-_image_builder_setup() {
-  _try_log_in_to_image_registries 
-  _set_image_tag
+cicd_tools::image_builder::_image_builder_setup() {
+  if ! cicd_tools::image_builder::_try_log_in_to_image_registries; then
+      cicd_tools::err "Error trying to log into the image registries!"
+      return 1
+  fi
+  cicd_tools::image_builder::_set_image_tag
 }
 
-_try_log_in_to_image_registries() {
+cicd_tools::image_builder::_try_log_in_to_image_registries() {
 
-  if _quay_credentials_found; then
-    _log_in_to_quay
+  if cicd_tools::image_builder::_quay_credentials_found; then
+    if ! cicd_tools::image_builder::_log_in_to_quay_registry; then
+        cicd_tools::err "Error logging in to Quay.io!"
+        return 1
+    fi
   fi
 
-  if _redhat_registry_credentials_found; then
-    _log_in_to_redhat_registry
+  if cicd_tools::image_builder::_redhat_registry_credentials_found; then
+    if ! cicd_tools::image_builder::_log_in_to_redhat_registry; then
+        cicd_tools::err "Error logging in to Red Hat Registry!"
+        return 1
+    fi 
   fi
 }
 
-_quay_credentials_found() {
+cicd_tools::image_builder::_quay_credentials_found() {
   [ -n "$CICD_TOOLS_IMAGE_BUILDER_QUAY_USER" ] && \
     [ -n "$CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD" ]
 }
 
-_redhat_registry_credentials_found() {
+cicd_tools::image_builder::_redhat_registry_credentials_found() {
   [ -n "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER" ] && \
     [ -n "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD" ]
 }
 
-_log_in_to_container_registry() {
+cicd_tools::image_builder::_log_in_to_container_registry() {
 
   local username="$1"
   local password="$2"
@@ -165,21 +174,23 @@ _log_in_to_container_registry() {
   cicd_tools::container::cmd login "-u=${username}" "--password-stdin" "$registry" <<< "$password"
 }
 
-_log_in_to_quay_registry() {
-  _log_in_to_container_registry "$CICD_TOOLS_IMAGE_BUILDER_QUAY_USER" \
+cicd_tools::image_builder::_log_in_to_quay_registry() {
+  cicd_tools::image_builder::_log_in_to_container_registry "$CICD_TOOLS_IMAGE_BUILDER_QUAY_USER" \
     "$CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD" \
     "$CICD_TOOLS_IMAGE_BUILDER_QUAY_REGISTRY"
 }
 
-_log_in_to_redhat_registry() {
-  _log_in_to_container_registry "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER" \
+cicd_tools::image_builder::_log_in_to_redhat_registry() {
+  cicd_tools::image_builder::_log_in_to_container_registry "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER" \
     "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD" \
     "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_REGISTRY"
 }
 
-if ! _image_builder_setup; then
+if ! cicd_tools::image_builder::_image_builder_setup; then
   cicd_tools::err "Image builder setup failed!"
   return 1
 fi
+
+cicd_tools::debug "Image builder lib loaded"
 
 CICD_TOOLS_IMAGE_BUILDER_LOADED=0
