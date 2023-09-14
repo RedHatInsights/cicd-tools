@@ -20,7 +20,7 @@ load_common_helper_cicd_tools() {
 }
 load_common_helper_cicd_tools container
 
-EXPECTED_OUTPUT=$(container_engine_cmd --version)
+EXPECTED_OUTPUT=$(cicd_tools::container::cmd --version)
 
 # Assert there's an actual output
 if ! [ "Docker version 99" == "$EXPECTED_OUTPUT" ]; then
