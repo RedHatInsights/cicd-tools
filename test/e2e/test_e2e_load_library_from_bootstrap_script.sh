@@ -42,7 +42,7 @@ if ! [ "Docker version 99" == "$EXPECTED_OUTPUT" ]; then
     exit 1
 fi
 
-load_cicd_helper_functions
+load_cicd_helper_functions container
 
 # Assert output doesn't change 
 if ! [ "$(cicd_tools::container::cmd --version)" == "$EXPECTED_OUTPUT" ]; then
