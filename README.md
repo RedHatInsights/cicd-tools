@@ -4,9 +4,7 @@
 Utilities used to run smoke tests in an ephemeral environment within a CI/CD pipeline
 
 ## Getting Started
-Grab the [Jenkinsfile template](templates/Jenkinsfile) and cater it to your specific needs. This file should reside in your git repositories root directory. That Jenkinsfile will 
-download the necessary files from this repository. It does not have a unit test file so that will need to be made in your repository. You can find a 
-unit test template file [here](templates/unit_test_example.sh).
+Grab the Jenkinsfile template for your [backend](examples/backend-pipeline-pr-checks/Jenkinsfile) or [frontend](examples/frontends-pipeline-pr-checks/Jenkinsfile) and cater it to your specific needs. This file should reside in your git repositories root directory. That Jenkinsfile will download the necessary files from this repository. It does not have a unit test file so that will need to be made in your repository. You can find a unit test template file [here](examples/unit_test_example.sh).
 
 ## Scripts
 
@@ -79,10 +77,11 @@ is **set only once the first command using the library helper function `containe
 ## Template Scripts
 | Script                  | Description |  
 | ----------------------- | ----------- | 
-| example/Jenkinsfile                       |  |
-| example/pr_check_template.sh              |  |
-| example/unit_test_example.sh              |  |
-| example/unit_test_example_ephemeral_db.sh |  |
+| examples/backend-pipeline-pr-checks/Jenkinsfile | Templated example of the pr-check pipeline for backend apps |
+| examples/frontends-pipeline-pr-checks/Jenkinsfile | Templated example of the pr-check pipeline for frontend apps |
+| examples/pr_check_template.sh                   |  |
+| examples/unit_test_example.sh                   |  |
+| examples/unit_test_example_ephemeral_db.sh      |  |
 
 ## Contributing
 
