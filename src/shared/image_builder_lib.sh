@@ -102,10 +102,6 @@ cicd_tools::image_builder::_get_expiry_label() {
   echo "quay.expires-after=${CICD_TOOLS_IMAGE_BUILDER_QUAY_EXPIRE_TIME}"
 }
 
-cicd_tools::image_builder::get_main_tag() {
-  echo -n "${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS[0]}"
-}
-
 cicd_tools::image_builder::_array_empty() {
     local arr=("$1")
 
@@ -237,15 +233,13 @@ cicd_tools::image_builder::_log_in_to_container_registry() {
 }
 
 cicd_tools::image_builder::_log_in_to_quay_registry() {
-  cicd_tools::image_builder::_log_in_to_container_registry \
-    "$CICD_TOOLS_IMAGE_BUILDER_QUAY_USER" \
+  cicd_tools::image_builder::_log_in_to_container_registry "$CICD_TOOLS_IMAGE_BUILDER_QUAY_USER" \
     "$CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD" \
     "$CICD_TOOLS_IMAGE_BUILDER_QUAY_REGISTRY"
 }
 
 cicd_tools::image_builder::_log_in_to_redhat_registry() {
-  cicd_tools::image_builder::_log_in_to_container_registry \
-    "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER" \
+  cicd_tools::image_builder::_log_in_to_container_registry "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER" \
     "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD" \
     "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_REGISTRY"
 }

@@ -49,14 +49,21 @@ setup() {
 
 @test "Loading multiple times don't reload libraries multiple times" {
 
+    IMAGE_REPOSITORY='FOO'
     assert [ -z "$CICD_TOOLS_COMMON_LOADED" ]
-    source main.sh
+    source main.sh all
     assert [ "$CICD_TOOLS_COMMON_LOADED" -eq 0 ]
     CICD_TOOLS_DEBUG=1
     run source main.sh ""
+    assert_success
     refute_output --partial "loading common lib"
     run source main.sh all
+    assert_success
     refute_output --partial "loading common lib"
-    run source main.sh container
+    run source main.sh container 
+    assert_success
     refute_output --partial "loading container lib"
+    run source main.sh image_builder
+    assert_success
+    refute_output --partial "loading image_builder lib"
 }

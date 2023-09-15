@@ -161,7 +161,7 @@ setup() {
     git() {
         echo "1abcdef"
     }
-    
+
     IMAGE_REPOSITORY="someimage"
     source main.sh image_builder
     run cicd_tools::image_builder::build
@@ -184,7 +184,7 @@ setup() {
 
     run source main.sh image_builder
     assert_success
-    assert_output --regexp "^login.*quay.io" 
+    assert_output --regexp "^login.*quay.io"
     assert_output --partial "-u=username1"
 
     CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER="username2"
@@ -192,7 +192,7 @@ setup() {
 
     run source main.sh image_builder
     assert_success
-    assert_output --regexp "^login.*registry.redhat.io" 
+    assert_output --regexp "^login.*registry.redhat.io"
     assert_output --partial "-u=username2"
 }
 
@@ -206,7 +206,7 @@ setup() {
     CICD_TOOLS_IMAGE_BUILDER_QUAY_USER="wrong-user"
     CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
     IMAGE_REPOSITORY="someimage"
-    
+
     run ! source main.sh image_builder
     assert_failure
     assert_output --partial "Image builder setup failed!"
@@ -230,4 +230,78 @@ setup() {
     assert_failure
     assert_output --partial "Image builder setup failed!"
     assert_output --partial "Error logging in to Red Hat Registry"
+}
+
+
+@test "Get default image tag" {
+
+    # git mock
+    git() {
+        echo "1abcdef"
+    }
+    IMAGE_REPOSITORY="someimage"
+
+    source main.sh image_builder
+    run cicd_tools::image_builder::get_default_image_tag
+    assert_success
+    assert_output "someimage:1abcdef"
+}
+
+@test "Get all image tags" {
+
+    # git mock
+    git() {
+        echo "1abcdef"
+    }
+    IMAGE_REPOSITORY="someimage"
+    ADDITIONAL_TAGS=("foo" "bar" "baz")
+
+    source main.sh image_builder
+    run cicd_tools::image_builder::get_image_tags
+    assert_success
+    assert_output --partial "someimage:1abcdef"
+    assert_output --partial "someimage:foo"
+    assert_output --partial "someimage:bar"
+}
+
+@test "tag all images" {
+
+    # git mock
+    git() {
+        echo "source"
+    }
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+    IMAGE_REPOSITORY="someimage"
+    ADDITIONAL_TAGS=("target1" "target2" "target3")
+
+    source main.sh image_builder
+    run cicd_tools::image_builder::tag
+    # TODO: fix - this tries to tag source and source
+    refute_output --partial "tag someimage:source someimage:source"
+    assert_output --partial "tag someimage:source someimage:target1"
+    assert_output --partial "tag someimage:source someimage:target1"
+    assert_output --partial "tag someimage:source someimage:target1"
+}
+
+@test "push all images" {
+
+    # git mock
+    git() {
+        echo "abcdef1"
+    }
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+    IMAGE_REPOSITORY="someimage"
+    ADDITIONAL_TAGS=("tag1" "tag2")
+
+    source main.sh image_builder
+    run cicd_tools::image_builder::push
+    assert_output --partial "push someimage:abcdef1"
+    assert_output --partial "push someimage:tag1"
+    assert_output --partial "push someimage:tag2"
 }
