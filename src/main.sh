@@ -6,7 +6,7 @@ CICD_TOOLS_DEBUG="${CICD_TOOLS_DEBUG:-}"
 # https://stackoverflow.com/a/246128
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CICD_TOOLS_SCRIPTS_DIR="${CICD_TOOLS_SCRIPTS_DIR:-$SCRIPT_DIR}"
-LIB_TO_LOAD=${1:-all}
+LIB_TO_LOAD=${1:-container}
 
 cicd_tools::debug() {
   if cicd_tools::_debug_mode; then

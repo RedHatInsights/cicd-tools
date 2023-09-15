@@ -17,6 +17,7 @@ setup() {
     assert [ -z "$CICD_TOOLS_CONTAINER_ENGINE_LOADED" ]
     assert [ -z "$CICD_TOOLS_IMAGE_BUILDER_LOADED" ]
 
+    IMAGE_REPOSITORY='foo'
     source main.sh image_builder
 
     assert [ -n "$CICD_TOOLS_COMMON_LOADED" ]
@@ -24,17 +25,16 @@ setup() {
     assert [ -n "$CICD_TOOLS_IMAGE_BUILDER_LOADED" ]
 }
 
-@test "Image tag is set appropriately outside of a change request context" {
+@test "Default image tag is set appropriately outside of a change request context" {
 
+    IMAGE_REPOSITORY='foo/bar'
     source main.sh image_builder
-    run cicd_tools::image_builder::get_image_tag
+    run cicd_tools::image_builder::get_default_image_tag
     assert_success
-    assert_output --regexp '^[0-9a-f]{7}$'
-
-    assert [ -n "$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG" ]
+    assert_output --regexp '^foo/bar:[0-9a-f]{7}$'
 }
 
-@test "Image tag is set appropriately in a Pull Request context" {
+@test "Default image tag is set appropriately in a Pull Request context" {
 
     # git mock
     git() {
@@ -42,15 +42,14 @@ setup() {
     }
 
     ghprbPullId=123
+    IMAGE_REPOSITORY='pull/request'
     source main.sh image_builder
-    run cicd_tools::image_builder::get_image_tag
+    run cicd_tools::image_builder::get_default_image_tag
     assert_success
-    assert_output --regexp '^pr-[0-9]+-[0-9a-f]{7}$'
-
-    assert [ -n "$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG" ]
+    assert_output --regexp '^pull/request:pr-[0-9]+-[0-9a-f]{7}$'
 }
 
-@test "Image tag is set appropriately in a Merge Request context" {
+@test "Default image tag is set appropriately in a Merge Request context" {
 
     # git mock
     git() {
@@ -58,15 +57,21 @@ setup() {
     }
 
     gitlabMergeRequestId=4321
+    IMAGE_REPOSITORY='merge/request'
     source main.sh image_builder
-    run cicd_tools::image_builder::get_image_tag
+    run cicd_tools::image_builder::get_default_image_tag
     assert_success
-    assert_output --regexp '^pr-[0-9]+-[0-9a-f]{7}$'
-
-    assert [ -n "$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG" ]
+    assert_output --regexp '^merge/request:pr-[0-9]+-[0-9a-f]{7}$'
 }
 
-@test "Image build works as expected" {
+@test "fails if no image repository is defined" {
+
+    run ! source main.sh image_builder
+    assert_failure
+    assert_output --partial "Image repository not defined, please set IMAGE_REPOSITORY"
+}
+
+@test "Image build works as expected with default values" {
 
     # podman mock
     podman() {
@@ -78,49 +83,49 @@ setup() {
         echo "1abcdef"
     }
 
+    IMAGE_REPOSITORY='foo'
     source main.sh image_builder
-    run ! cicd_tools::image_builder::build
-    assert_failure
-    assert_output --partial "you must specify an image name to build"
-
-    run ! cicd_tools::image_builder::build -i "foobar" -f "non-existent-Containerfile"
-    assert_failure
-    assert_output --partial "non-existent-Containerfile not found "
-
-    run ! cicd_tools::image_builder::build -i "defaults" 
-    assert_output --partial "Dockerfile not found"
-
-    run ! cicd_tools::image_builder::build -i foo -f "test/data/Containerfile.test" -X
-    assert_output --partial "X"
-    assert_output --partial "cannot handle parameter"
-
-    run cicd_tools::image_builder::build -i "someimage"  -f "test/data/Containerfile.test"
+    run cicd_tools::image_builder::build
     assert_success
-    assert_output --partial ""
+    assert_output --regexp "^build"
+    assert_output --partial "-f Dockerfile"
+    assert_output --partial "-t foo:1abcdef"
     assert_output --regexp "\.$"
+}
 
-    run cicd_tools::image_builder::build \
-      -l "LABEL1=FOO LABEL2=bar" \
-      -i "quay.io/my-awesome-org/my-awesome-app" \
-      -t "test1 additional-label-2 security" \
-      -b "BUILD_ARG1=foobar BUILD_ARG2=bananas" \
-      -c "another/context" \
-      -f "test/data/Containerfile.test"
+@test "Image build works as expected with all custom values set" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    # git mock
+    git() {
+        echo "1abcdef"
+    }
+
+    IMAGE_REPOSITORY='quay.io/my-awesome-org/my-awesome-app'
+    CICD_TOOLS_IMAGE_BUILDER_LABELS=("LABEL1=FOO" "LABEL2=bar")
+    CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS=("test1" "additional-label-2" "security")
+    CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS=("BUILD_ARG1=foobar" "BUILD_ARG2=bananas")
+    CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT='another/context'
+    CICD_TOOLS_IMAGE_BUILDER_CONTAINER_FILE='test/data/Containerfile.test'
+
+    source main.sh image_builder
+    run cicd_tools::image_builder::build
     assert_success
     assert_output --regexp "^build.*"
     assert_output --regexp "another/context$"
     assert_output --partial "-f test/data/Containerfile.test"
     assert_output --regexp "-t quay.io/my-awesome-org/my-awesome-app:[0-9a-f]{7}"
-    assert_output --regexp "--label LABEL1=FOO --label LABEL2=bar"
-    assert_output --regexp "-t quay.io/my-awesome-org/my-awesome-app:additional-label-2"
-    assert_output --regexp "-t quay.io/my-awesome-org/my-awesome-app:security"
-    assert_output --regexp "-t quay.io/my-awesome-org/my-awesome-app:test1"
-    assert_output --regexp "--build_arg BUILD_ARG1=foobar"
-    assert_output --regexp "--build_arg BUILD_ARG2=bananas"
-
-
-    run cicd_tools::image_builder::build -i "someimage"  -f "test/data/Containerfile.test"
-    assert_success
+    assert_output --partial "--label LABEL1=FOO"
+    assert_output --partial "--label LABEL2=bar"
+    assert_output --partial "-t quay.io/my-awesome-org/my-awesome-app:additional-label-2"
+    assert_output --partial "-t quay.io/my-awesome-org/my-awesome-app:security"
+    assert_output --partial "-t quay.io/my-awesome-org/my-awesome-app:test1"
+    assert_output --partial "--build-arg BUILD_ARG1=foobar"
+    assert_output --partial "--build-arg BUILD_ARG2=bananas"
 }
 
 @test "Image builds gets expiry label in change request context" {
@@ -136,9 +141,9 @@ setup() {
     }
 
     ghprbPullId="123"
-
+    IMAGE_REPOSITORY="someimage"
     source main.sh image_builder
-    run cicd_tools::image_builder::build -i "someimage"  -f "test/data/Containerfile.test"
+    run cicd_tools::image_builder::build
     assert_success
     assert_output --partial "-t someimage:pr-123-1abcdef"
     assert_output --partial "--label quay.expires-after=3d"
@@ -157,8 +162,9 @@ setup() {
         echo "1abcdef"
     }
     
+    IMAGE_REPOSITORY="someimage"
     source main.sh image_builder
-    run cicd_tools::image_builder::build -i "someimage"  -f "test/data/Containerfile.test"
+    run cicd_tools::image_builder::build
     assert_failure
     assert_output --partial "went really wrong"
     assert_output --partial "Error building image"
@@ -174,7 +180,8 @@ setup() {
 
     CICD_TOOLS_IMAGE_BUILDER_QUAY_USER="username1"
     CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
-    
+    IMAGE_REPOSITORY="someimage"
+
     run source main.sh image_builder
     assert_success
     assert_output --regexp "^login.*quay.io" 
@@ -198,6 +205,7 @@ setup() {
 
     CICD_TOOLS_IMAGE_BUILDER_QUAY_USER="wrong-user"
     CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
+    IMAGE_REPOSITORY="someimage"
     
     run ! source main.sh image_builder
     assert_failure
@@ -216,6 +224,7 @@ setup() {
 
     CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER="wrong-user"
     CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD="wrong-password"
+    IMAGE_REPOSITORY="someimage"
 
     run ! source main.sh image_builder
     assert_failure

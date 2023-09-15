@@ -22,6 +22,7 @@ setup() {
 @test "loading all work successfully" {
 
     CICD_TOOLS_DEBUG=1
+    IMAGE_REPOSITORY='foobar'
     run source main.sh all
     assert_success
     assert_output --partial "loading common lib"
