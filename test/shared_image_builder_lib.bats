@@ -346,3 +346,47 @@ setup() {
     assert_output --partial "push someimage:source"
     assert_output --partial "Error pushing image"
 }
+
+@test "build deploy does not push if not on change request context" {
+
+    # git mock
+    git() {
+      echo "source"
+    }
+    # podman mock
+    podman() {
+      echo "$@"
+    }
+    IMAGE_REPOSITORY="someimage"
+    ADDITIONAL_TAGS=("target1")
+
+    source main.sh image_builder
+    run cicd_tools::image_builder::build_deploy
+    assert_success
+    assert_output --regexp "^build.*?-t someimage:source -t someimage:target1"
+    refute_output --partial "push"
+}
+
+@test "build deploy pushes if on change request context" {
+
+    # git mock
+    git() {
+      echo "source"
+    }
+    # podman mock
+    podman() {
+      echo "$@"
+    }
+    IMAGE_REPOSITORY="someimage"
+    ADDITIONAL_TAGS=("target1")
+    ghprbPullId='123'
+
+    source main.sh image_builder
+
+    run cicd_tools::image_builder::build_deploy
+    assert_success
+    assert_output --regexp "^build.*?-t someimage:pr-123-source -t someimage:target1"
+    assert_output --regexp "^build.*?--label quay.expires-after"
+    assert_output --partial "push someimage:pr-123-source"
+    assert_output --partial "push someimage:target1"
+}
