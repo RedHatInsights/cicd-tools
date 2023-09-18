@@ -21,18 +21,26 @@ Grab the Jenkinsfile template for your [backend](examples/backend-pipeline-pr-ch
 
 ## Bash script helper scripts usage
 
-The collection of helper scripts are expected to be loaded using the provided [src/bootstrap.sh](bootstrap) script.
+The collection of helper libraries are expected to be loaded using the provided [src/bootstrap.sh](bootstrap) script.
 
-Currently there is 1 collection available:
+Currently there are 2 supported libraries:
 
-- Container helper scripts: provides wrapper functions for invoking container engine agnostic commands
+|Library ID|Description|
+|----------|-----------|
+|container | Provides wrapper functions for invoking container engine agnostic commands|
+|image_builder| Provides helper functions to simplify the image building process|
 
-To use any of the provided libraries, you must source the [src/bootstrap.sh](bootstrap.sh) script.
+### How to use the helper libraries
+
+To use any of the provided libraries, you must source the [src/bootstrap.sh](bootstrap.sh) script and pass
+the unique library ID to be loaded as a paramter.
+
 One can simply either source the [src/bootstrap.sh](bootstrap) script directly:
 
 ```
-$ source <(curl -sSL https://raw.githubusercontent.com/RedHatInsights/cicd-tools/main/src/bootstrap.sh)
-$ container_engine_cmd --version
+$ source <(curl -sSL https://raw.githubusercontent.com/RedHatInsights/cicd-tools/main/src/bootstrap.sh) container
+
+$ cicd_tools::container::cmd --version
   podman version 4.6.1
 
 ```
@@ -42,22 +50,20 @@ In case you want to refactor some of your scripts using this library, here's a s
 ```
 load_cicd_helper_functions() {
 
-    local LIBRARY_TO_LOAD=${1:-all}
+    local LIBRARY_TO_LOAD="$1"
     local CICD_TOOLS_REPO_BRANCH='main'
     local CICD_TOOLS_REPO_ORG='RedHatInsights'
     local CICD_TOOLS_URL="https://raw.githubusercontent.com/${CICD_TOOLS_REPO_ORG}/cicd-tools/${CICD_TOOLS_REPO_BRANCH}/src/bootstrap.sh"
-    set -e
     source <(curl -sSL "$CICD_TOOLS_URL") "$LIBRARY_TO_LOAD"
-    set +e
 }
 
-load_cicd_helper_functions
+load_cicd_helper_functions container
 ```
 
 you can select which collection needs to load independently as a parameter:
 
 ```
-source bootstrap.sh container_engine
+source bootstrap.sh container
 ```
 
 The bootstrap script will download the selected version of the CICD scripts (or `latest` if none specified) into the directory defined by
@@ -70,8 +76,19 @@ The bootstrap.sh can be invoked multiple times but it has a status control to en
 of the libraries is loaded only once. This is to prevent potential issues with collections 
 that are not supposed to be loaded many times.
 
-An example of this is the _container_engine_ library, where the selected container engine
-is **set only once the first command using the library helper function `container_engine_cmd` is used**.
+An example of this is the _container_ library, where the selected container engine
+is **set only once the first command using the library helper function `cicd_tools::container::cmd` is used**.
+
+Each of the libraries will export to the shell sourcing the bootstrap script the helper functions.
+These functions are all namespaced, meaning the names follow the naming format:
+
+```
+cicd_tools::library::function
+```
+
+where:
+- cicd_tools represents the namespace root, which is shared by all functions
+- library would match with each of the imported library IDs.
 
 
 ## Template Scripts
