@@ -279,11 +279,31 @@ setup() {
 
     source main.sh image_builder
     run cicd_tools::image_builder::tag
-    # TODO: fix - this tries to tag source and source
     refute_output --partial "tag someimage:source someimage:source"
     assert_output --partial "tag someimage:source someimage:target1"
+    assert_output --partial "tag someimage:source someimage:target2"
+    assert_output --partial "tag someimage:source someimage:target3"
+}
+
+@test "tag error is caught" {
+
+    # git mock
+    git() {
+        echo "source"
+    }
+    # podman mock
+    podman() {
+      echo "$@"
+      return 1
+    }
+    IMAGE_REPOSITORY="someimage"
+    ADDITIONAL_TAGS=("target1")
+
+    source main.sh image_builder
+    run ! cicd_tools::image_builder::tag
+    assert_failure
     assert_output --partial "tag someimage:source someimage:target1"
-    assert_output --partial "tag someimage:source someimage:target1"
+    assert_output --partial "Error tagging image"
 }
 
 @test "push all images" {
@@ -304,4 +324,25 @@ setup() {
     assert_output --partial "push someimage:abcdef1"
     assert_output --partial "push someimage:tag1"
     assert_output --partial "push someimage:tag2"
+}
+
+@test "push error is caught" {
+
+    # git mock
+    git() {
+      echo "source"
+    }
+    # podman mock
+    podman() {
+      echo "$@"
+      return 1
+    }
+    IMAGE_REPOSITORY="someimage"
+    ADDITIONAL_TAGS=("target1")
+
+    source main.sh image_builder
+    run ! cicd_tools::image_builder::push
+    assert_failure
+    assert_output --partial "push someimage:source"
+    assert_output --partial "Error pushing image"
 }

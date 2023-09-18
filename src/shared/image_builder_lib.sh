@@ -54,7 +54,13 @@ cicd_tools::image_builder::tag() {
   source_image=$(cicd_tools::image_builder::get_default_image_tag)
 
   for target_image in "${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS[@]}"; do
-      cicd_tools::container::cmd tag "$source_image" "$target_image"
+      if [ "$target_image" = "$source_image" ]; then
+          continue
+      fi
+      if ! cicd_tools::container::cmd tag "$source_image" "$target_image"; then
+          cicd_tools::err "Error tagging image: '$source_image' as '$target_image'"
+          return 1
+      fi
   done
 }
 
