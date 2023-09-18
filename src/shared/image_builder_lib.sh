@@ -76,15 +76,15 @@ cicd_tools::image_builder::build() {
   build_context="${CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT}"
 
   for label in "${CICD_TOOLS_IMAGE_BUILDER_LABELS[@]}"; do
-    label_params+=("--label ${label}")
+    label_params+=('--label' "${label}")
   done
 
   for image_tag in "${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS[@]}"; do
-    image_tag_params+=("-t ${image_tag}")
+    image_tag_params+=('-t' "${image_tag}")
   done
 
   for build_arg in "${CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS[@]}"; do
-      build_arg_params+=("--build-arg ${build_arg}")
+      build_arg_params+=('--build-arg' "${build_arg}")
   done
 
   if ! cicd_tools::container::cmd build -f "$containerfile" "${image_tag_params[@]}" \
