@@ -322,7 +322,7 @@ setup() {
 
     assert_failure
     assert_output --partial "tag someimage:source someimage:target1"
-    assert_output --partial "Error tagging image"
+    assert_output --regexp "Error tagging.*someimage:source.*someimage:target1"
 }
 
 @test "push all images" {
@@ -411,6 +411,7 @@ setup() {
 
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
+    CONTAINER_FILE='test/data/Containerfile.test'
     run cicd_tools::image_builder::build_deploy
     assert_success
     assert_output --regexp "^build.*?-t someimage:source -t someimage:target1"
@@ -433,6 +434,7 @@ setup() {
     ghprbPullId='123'
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
+    CONTAINER_FILE='test/data/Containerfile.test'
 
     run cicd_tools::image_builder::build_deploy
     assert_success 

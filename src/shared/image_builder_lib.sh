@@ -242,16 +242,24 @@ cicd_tools::image_builder::_get_image_name() {
 
 cicd_tools::image_builder::push() {
 
-  local image_name image_tags
+  local image_name image_tag
 
   if ! image_name="$(cicd_tools::image_builder::_get_image_name)"; then
     cicd_tools::err "Could not get Image name to push"
     return 1
   fi
 
-  if ! image_tags=("$(cicd_tools::image_builder::get_image_tags)"); then
-    cicd_tools::err "Could not get Image tags to push!"
+  if ! image_tag=$(cicd_tools::image_builder::get_image_tag); then
+    cicd_tools::err "Could not get Image tag to push!"
     return 1
+  fi
+
+  image_tags=("$image_tag")
+
+  if ! $(cicd_tools::image_builder::is_change_request_context); then
+    for additional_tag in $(cicd_tools::image_builder::get_additional_tags); do
+      image_tags+=("${additional_tag}")
+    done
   fi
 
 #  tags=("$image_tag")
