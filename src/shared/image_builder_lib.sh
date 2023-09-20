@@ -13,11 +13,6 @@ fi
 
 cicd_tools::debug "loading image builder library"
 
-# TODO: reconsider namespaced variables
-CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS=()
-readonly CICD_TOOLS_IMAGE_BUILDER_CONTAINER_FILE="${CICD_TOOLS_IMAGE_BUILDER_CONTAINER_FILE:-Dockerfile}"
-readonly CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT="${CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT:-.}"
-readonly CICD_TOOLS_IMAGE_BUILDER_REPOSITORY="${CICD_TOOLS_IMAGE_BUILDER_REPOSITORY:-$IMAGE_REPOSITORY}"
 readonly CICD_TOOLS_IMAGE_BUILDER_REDHAT_REGISTRY='registry.redhat.io'
 readonly CICD_TOOLS_IMAGE_BUILDER_QUAY_REGISTRY='quay.io'
 readonly CICD_TOOLS_IMAGE_BUILDER_QUAY_EXPIRE_TIME=${CICD_TOOLS_IMAGE_BUILDER_QUAY_EXPIRE_TIME:-3d}
@@ -25,20 +20,6 @@ readonly CICD_TOOLS_IMAGE_BUILDER_QUAY_USER="${CICD_TOOLS_IMAGE_BUILDER_QUAY_USE
 readonly CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD="${CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD:-$QUAY_TOKEN}"
 readonly CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER="${CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER:-$RH_REGISTRY_USER}"
 readonly CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD="${CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD:-$RH_REGISTRY_TOKEN}"
-CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS=("${CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS[@]:-${ADDITIONAL_TAGS[@]}}")
-#readonly CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS=("${CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS[@]:-}")
-CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS=("${CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS[@]:-${BUILD_ARGS[@]}}")
-#readonly CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS=("${CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS[@]:-}")
-CICD_TOOLS_IMAGE_BUILDER_LABELS=("${CICD_TOOLS_IMAGE_BUILDER_LABELS[@]:-${LABELS[@]}}")
-#CICD_TOOLS_IMAGE_BUILDER_LABELS=("${CICD_TOOLS_IMAGE_BUILDER_LABELS[@]:-}")
-
-cicd_tools::image_builder::get_default_image_tag() {
-  echo -n "${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS[0]}"
-}
-
-cicd_tools::image_builder::get_image_tags() {
-  echo -n "${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS[@]}"
-}
 
 cicd_tools::image_builder::build_deploy() {
 
@@ -50,15 +31,18 @@ cicd_tools::image_builder::build_deploy() {
 
 cicd_tools::image_builder::tag() {
 
-  local source_image
-  source_image=$(cicd_tools::image_builder::get_default_image_tag)
+  local source_tag target_tag image_name
 
-  for target_image in "${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS[@]}"; do
-      if [ "$target_image" = "$source_image" ]; then
-          continue
-      fi
-      if ! cicd_tools::container::cmd tag "$source_image" "$target_image"; then
-          cicd_tools::err "Error tagging image: '$source_image' as '$target_image'"
+  if ! image_name="$(cicd_tools::image_builder::_get_image_name)"; then
+    cicd_tools::err "Error getting Image name to tag"
+    return 1
+  fi
+
+  source_tag="$(cicd_tools::image_builder::get_image_tag)"
+
+  for target_tag in $(cicd_tools::image_builder::get_additional_tags); do
+      if ! cicd_tools::container::cmd tag "${image_name}:${source_tag}" "${image_name}:${target_tag}"; then
+          cicd_tools::err "Error tagging '${image_name}:${source_tag}' as '${image_name}:${target_tag}'"
           return 1
       fi
   done
@@ -66,25 +50,51 @@ cicd_tools::image_builder::tag() {
 
 cicd_tools::image_builder::build() {
 
-  declare -a label_params
-  declare -a image_tag_params
-  declare -a build_arg_params
+#  declare -a image_tag_params
+#  declare -a build_arg_params
 
-  local containerfile build_context
+  local containerfile build_context image_name image_tags
+  declare -a label_params image_tag_params build_arg_params
 
-  containerfile="${CICD_TOOLS_IMAGE_BUILDER_CONTAINER_FILE}"
-  build_context="${CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT}"
+  containerfile="$(cicd_tools::image_builder::get_containerfile)"
+  build_context="$(cicd_tools::image_builder::get_build_context)"
 
-  for label in "${CICD_TOOLS_IMAGE_BUILDER_LABELS[@]}"; do
+  if ! image_name="$(cicd_tools::image_builder::_get_image_name)"; then
+    cicd_tools::err "Could not get Image name to build"
+    return 1
+  fi
+
+  if ! image_tag=$(cicd_tools::image_builder::get_image_tag); then
+    cicd_tools::err "Could not get Image tag to build!"
+    return 1
+  fi
+
+  if ! [ -r "$containerfile" ]; then
+    cicd_tools::err "Containerfile '$containerfile' does not exist or is not readable!"
+    return 1
+  fi
+
+  image_tag_params=('-t' "${image_name}:${image_tag}")
+
+  if ! cicd_tools::image_builder::is_change_request_context; then
+      for additional_tag in $(cicd_tools::image_builder::get_additional_tags); do
+        image_tag_params+=('-t' "${image_name}:${additional_tag}")
+      done
+  fi
+  
+#  image_tag_params=('-t' "${image_name}:${image_tag}")
+
+#  for additional_tag in $(cicd_tools::image_builder::get_additional_tags); do
+#  for tag in $(cicd_tools::image_builder::get_all_tags); do
+#    image_tag_params=('-t' "${image_name}:${tag}")
+#  done
+
+  for label in $(cicd_tools::image_builder::get_labels); do
     label_params+=('--label' "${label}")
   done
 
-  for image_tag in "${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS[@]}"; do
-    image_tag_params+=('-t' "${image_tag}")
-  done
-
-  for build_arg in "${CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS[@]}"; do
-      build_arg_params+=('--build-arg' "${build_arg}")
+  for build_arg in $(cicd_tools::image_builder::get_build_args); do
+    build_arg_params+=('--build-arg' "${build_arg}")
   done
 
   if ! cicd_tools::container::cmd build -f "$containerfile" "${image_tag_params[@]}" \
@@ -94,15 +104,190 @@ cicd_tools::image_builder::build() {
   fi
 }
 
+cicd_tools::image_builder::get_additional_tags() {
+
+  declare -a additional_tags=("${CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS[@]:-${ADDITIONAL_TAGS[@]}}")
+
+  if cicd_tools::image_builder::_array_empty "${additional_tags[@]}"; then
+    additional_tags=()
+  fi
+
+  echo -n "${additional_tags[@]}"
+}
+
+cicd_tools::image_builder::get_build_args() {
+
+  declare -a build_args=("${CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS[@]:-${BUILD_ARGS[@]}}")
+
+  if cicd_tools::image_builder::_array_empty "${build_args[@]}"; then
+    build_args=()
+  fi
+
+  echo -n "${build_args[@]}"
+}
+
+cicd_tools::image_builder::get_containerfile() {
+
+  local containerfile="${CICD_TOOLS_IMAGE_BUILDER_CONTAINER_FILE:-"$CONTAINER_FILE"}"
+
+  if [ -z "$containerfile" ]; then
+     containerfile='Dockerfile'
+  fi
+
+  echo -n "$containerfile"
+}
+
+cicd_tools::image_builder::get_build_context() {
+
+  local build_context="${CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT:-"$BUILD_CONTEXT"}"
+
+  if [ -z "$build_context" ]; then
+     build_context='.'
+  fi
+
+  echo -n "$build_context"
+}
+
+
+cicd_tools::image_builder::get_labels() {
+
+  declare -a labels=("${CICD_TOOLS_IMAGE_BUILDER_LABELS[@]:-${LABELS[@]}}")
+
+  if cicd_tools::image_builder::_array_empty "${labels[@]}"; then
+    labels=()
+  fi
+
+  if cicd_tools::image_builder::is_change_request_context; then
+    labels+=("$(cicd_tools::image_builder::_get_expiry_label)")
+  fi
+
+  echo -n "${labels[@]}"
+}
+
+cicd_tools::image_builder::get_image_tag() {
+
+  local commit_hash build_id tag
+
+  if ! commit_hash=$(cicd_tools::common::get_7_chars_commit_hash); then
+    echo "Cannot retrieve commit hash!"
+    return 1
+  fi
+
+  if cicd_tools::image_builder::is_change_request_context; then
+    build_id=$(cicd_tools::image_builder::get_build_id)
+    tag="pr-${build_id}-${commit_hash}"
+  else
+    tag="${commit_hash}"
+  fi
+
+  echo -n "${tag}"
+}
+
+
+#cicd_tools::image_builder::get_() {
+#
+#  local image_name main_tag image_names
+#  image_name=$(cicd_tools::image_builder::_get_image_name)
+#  main_tag="$(cicd_tools::image_builder::get_image_tag_from_context)"
+#
+#  image_names=("${image_name}:${main_tag}")
+#
+#  if ! cicd_tools::image_builder::is_change_request_context; then
+#    for additional_tag in $(cicd_tools::image_builder::get_additional_tags); do
+#      image_names+=("${image_name}:${additional_tag}")
+#    done
+#  fi
+#
+#  echo "${image_names[@]}"
+#}
+
+cicd_tools::image_builder::_get_image_name() {
+
+  local image_name="${CICD_TOOLS_IMAGE_BUILDER_IMAGE_NAME:-$IMAGE_NAME}"
+
+  if [ -z "$image_name" ]; then
+      cicd_tools::err "Image name not defined, please set IMAGE_NAME environment variable"
+      return 1
+  fi
+
+  echo -n "$image_name"
+}
+
+#cicd_tools::image_builder::get_image_tag() {
+#
+#  if ! commit_hash=$(cicd_tools::common::get_7_chars_commit_hash); then
+#    echo "Cannot retrieve commit hash!"
+#    return 1
+#  fi
+#
+# if cicd_tools::image_builder::is_change_request_context; then
+#   build_id=$(cicd_tools::image_builder::get_build_id)
+#   tag="pr-${build_id}-${commit_hash}"
+# else
+#   tag="$commit_hash"
+# fi
+#
+# echo -n "$tag"
+#}
+
+
+#cicd_tools::image_builder::get_main_image_name() {
+#
+#  local repository tag
+#  repository=$(cicd_tools::image_builder::_get_image_repository)
+#  tag=$(cicd_tools::image_builder::get_image_tag_from_context)
+#
+#  echo -n "${repository}:${tag}"
+#}
+
 cicd_tools::image_builder::push() {
 
-  for image_tag in "${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS[@]}"; do
-    if ! cicd_tools::container::cmd push "${image_tag}"; then
-        cicd_tools::err "Error pushing image: '$image_tag'"
-        return 1
+  local image_name image_tags
+
+  if ! image_name="$(cicd_tools::image_builder::_get_image_name)"; then
+    cicd_tools::err "Could not get Image name to push"
+    return 1
+  fi
+
+  if ! image_tags=("$(cicd_tools::image_builder::get_image_tags)"); then
+    cicd_tools::err "Could not get Image tags to push!"
+    return 1
+  fi
+
+#  tags=("$image_tag")
+#
+#  for additional_tag in $(cicd_tools::image_builder::get_additional_tags); do
+#    tags+=("$additional_tag")
+#  done
+  
+#  for tag in "${tags[@]}"; do
+
+  for tag in "${image_tags[@]}"; do
+    if ! cicd_tools::container::cmd push "${image_name}:${tag}"; then
+      cicd_tools::err "Error pushing image: '${image_name}:${tag}'"
+      return 1
     fi
   done
 }
+
+#cicd_tools::image_builder::get_all_tags() {
+#
+#  local image_tag tags
+#
+#  if ! image_tag="$(cicd_tools::image_builder::get_image_tag)"; then
+#    cicd_tools::err "Could not get Image tag to build!"
+#    return 1
+#  fi
+#
+#  tags=("$image_tag")
+#
+#  for additional_tag in $(cicd_tools::image_builder::get_additional_tags); do
+#    tags+=("$additional_tag")
+#  done
+#
+#  echo -n "${tags[@]}"
+#}
+
 
 cicd_tools::image_builder::_get_expiry_label() {
   echo "quay.expires-after=${CICD_TOOLS_IMAGE_BUILDER_QUAY_EXPIRE_TIME}"
@@ -112,52 +297,6 @@ cicd_tools::image_builder::_array_empty() {
     local arr=("$1")
 
     [[ "${#arr[@]}" -eq 1 && -z "${arr[0]}" ]]
-}
-
-cicd_tools::image_builder::_sanitize_arrays() {
-
-    if cicd_tools::image_builder::_array_empty "${CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS[@]}";then
-        CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS=()
-    fi
-    if cicd_tools::image_builder::_array_empty "${CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS[@]}";then
-        CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS=()
-    fi
-    if cicd_tools::image_builder::_array_empty "${CICD_TOOLS_IMAGE_BUILDER_LABELS[@]}";then
-        CICD_TOOLS_IMAGE_BUILDER_LABELS=()
-    fi
-}
-
-cicd_tools::image_builder::_set_image_tags() {
-
-  local main_tag commit_hash build_id
-  local repository="$CICD_TOOLS_IMAGE_BUILDER_REPOSITORY"
-
-  # TODO: handle if not in a `git` repository, git not available, etc
-  commit_hash=$(cicd_tools::common::get_7_chars_commit_hash)
-
-  if cicd_tools::image_builder::is_change_request_context; then
-    build_id=$(cicd_tools::image_builder::get_build_id)
-    main_tag="pr-${build_id}-${commit_hash}"
-  else
-    main_tag="$commit_hash"
-  fi
-
-  CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS=("${repository}:${main_tag}")
-
-  for additional_tag in "${CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS[@]}"; do
-    CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS+=("${repository}:${additional_tag}")
-  done
-
-  cicd_tools::debug "Image tags: ${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS[*]}"
-  readonly CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAGS
-}
-
-cicd_tools::image_builder::_add_expiry_label() {
-
-    local expiry_label
-    expiry_label=$(cicd_tools::image_builder::_get_expiry_label)
-
-    CICD_TOOLS_IMAGE_BUILDER_LABELS+=("${expiry_label}")
 }
 
 cicd_tools::image_builder::is_change_request_context() {
@@ -184,22 +323,6 @@ cicd_tools::image_builder::_image_builder_setup() {
       cicd_tools::err "Error trying to log into the image registries!"
       return 1
   fi
-
-  if [ -z "$CICD_TOOLS_IMAGE_BUILDER_REPOSITORY" ]; then
-      cicd_tools::err "Image repository not defined, please set IMAGE_REPOSITORY"
-      return 1
-  fi
-
-  cicd_tools::image_builder::_sanitize_arrays
-  cicd_tools::image_builder::_set_image_tags
-
-  if cicd_tools::image_builder::is_change_request_context; then
-    cicd_tools::image_builder::_add_expiry_label
-  fi
-
-  readonly CICD_TOOLS_IMAGE_BUILDER_LABELS
-  readonly CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS
-  readonly CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS
 }
 
 cicd_tools::image_builder::_try_log_in_to_image_registries() {
