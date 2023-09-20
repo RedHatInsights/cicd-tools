@@ -439,6 +439,7 @@ setup() {
     CONTAINER_FILE='test/data/Containerfile.test'
 
     run cicd_tools::image_builder::build_deploy
+
     assert_success 
     assert_output --regexp "^build.*?-t someimage:pr-123-source"
     refute_output --regexp "^build.*?-t someimage:target1"
