@@ -416,14 +416,14 @@ setup() {
     ADDITIONAL_TAGS=("target1")
     CONTAINERFILE_PATH='test/data/Containerfile.test'
 
-    run cicd_tools::image_builder::build_deploy
+    run cicd_tools::image_builder::build_and_push
 
     assert_success
     assert_output --regexp "^build.*?-t someimage:source -t someimage:target1"
     refute_output --partial "push"
 }
 
-@test "build deploy pushes only default tag if on change request context" {
+@test "build_and_push pushes only default tag if on change request context" {
 
     # git mock
     git() {
@@ -441,7 +441,7 @@ setup() {
     ADDITIONAL_TAGS=("target1")
     CONTAINERFILE_PATH='test/data/Containerfile.test'
 
-    run cicd_tools::image_builder::build_deploy
+    run cicd_tools::image_builder::build_and_push
 
     assert_success 
     assert_output --regexp "^build.*?-t someimage:pr-123-source"

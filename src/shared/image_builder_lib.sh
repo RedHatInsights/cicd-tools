@@ -23,7 +23,7 @@ readonly CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD="${CICD_TOOLS_IMAGE_BUILDER_RE
 readonly CICD_TOOLS_IMAGE_BUILDER_DEFAULT_BUILD_CONTEXT='.'
 readonly CICD_TOOLS_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH='Dockerfile'
 
-cicd_tools::image_builder::build_deploy() {
+cicd_tools::image_builder::build_and_push() {
 
   cicd_tools::image_builder::build || return 1
   if cicd_tools::image_builder::is_change_request_context; then
