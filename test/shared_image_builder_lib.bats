@@ -412,7 +412,9 @@ setup() {
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
     CONTAINER_FILE='test/data/Containerfile.test'
+
     run cicd_tools::image_builder::build_deploy
+
     assert_success
     assert_output --regexp "^build.*?-t someimage:source -t someimage:target1"
     refute_output --partial "push"

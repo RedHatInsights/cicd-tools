@@ -256,7 +256,7 @@ cicd_tools::image_builder::push() {
 
   image_tags=("$image_tag")
 
-  if ! $(cicd_tools::image_builder::is_change_request_context); then
+  if ! cicd_tools::image_builder::is_change_request_context; then
     for additional_tag in $(cicd_tools::image_builder::get_additional_tags); do
       image_tags+=("${additional_tag}")
     done
