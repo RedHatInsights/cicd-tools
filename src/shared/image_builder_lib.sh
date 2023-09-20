@@ -20,6 +20,8 @@ readonly CICD_TOOLS_IMAGE_BUILDER_QUAY_USER="${CICD_TOOLS_IMAGE_BUILDER_QUAY_USE
 readonly CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD="${CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD:-$QUAY_TOKEN}"
 readonly CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER="${CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER:-$RH_REGISTRY_USER}"
 readonly CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD="${CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD:-$RH_REGISTRY_TOKEN}"
+readonly CICD_TOOLS_IMAGE_BUILDER_DEFAULT_BUILD_CONTEXT='.'
+readonly CICD_TOOLS_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH='Dockerfile'
 
 cicd_tools::image_builder::build_deploy() {
 
@@ -32,11 +34,12 @@ cicd_tools::image_builder::build_deploy() {
 cicd_tools::image_builder::tag() {
 
   local source_tag target_tag image_name
+  image_name="$(cicd_tools::image_builder::_get_image_name)" || return 1
 
-  if ! image_name="$(cicd_tools::image_builder::_get_image_name)"; then
-    cicd_tools::err "Error getting Image name to tag"
-    return 1
-  fi
+#  if ! image_name="$(cicd_tools::image_builder::_get_image_name)"; then
+#    cicd_tools::err "Error getting Image name to tag"
+#    return 1
+#  fi
 
   source_tag="$(cicd_tools::image_builder::get_image_tag)"
 
@@ -58,16 +61,18 @@ cicd_tools::image_builder::build() {
 
   containerfile="$(cicd_tools::image_builder::get_containerfile)"
   build_context="$(cicd_tools::image_builder::get_build_context)"
+  image_name="$(cicd_tools::image_builder::_get_image_name)" || return 1
+  image_tag=$(cicd_tools::image_builder::get_image_tag) || return 1
 
-  if ! image_name="$(cicd_tools::image_builder::_get_image_name)"; then
-    cicd_tools::err "Could not get Image name to build"
-    return 1
-  fi
-
-  if ! image_tag=$(cicd_tools::image_builder::get_image_tag); then
-    cicd_tools::err "Could not get Image tag to build!"
-    return 1
-  fi
+#  if ! image_name="$(cicd_tools::image_builder::_get_image_name)"; then
+#    cicd_tools::err "Could not get Image name to build"
+#    return 1
+#  fi
+#
+#  if ! image_tag=$(cicd_tools::image_builder::get_image_tag); then
+#    cicd_tools::err "Could not get Image tag to build!"
+#    return 1
+#  fi
 
   if ! [ -r "$containerfile" ]; then
     cicd_tools::err "Containerfile '$containerfile' does not exist or is not readable!"
@@ -128,10 +133,10 @@ cicd_tools::image_builder::get_build_args() {
 
 cicd_tools::image_builder::get_containerfile() {
 
-  local containerfile="${CICD_TOOLS_IMAGE_BUILDER_CONTAINER_FILE:-"$CONTAINER_FILE"}"
+  local containerfile="${CICD_TOOLS_IMAGE_BUILDER_CONTAINERFILE_PATH:-"$CONTAINERFILE_PATH"}"
 
   if [ -z "$containerfile" ]; then
-     containerfile='Dockerfile'
+     containerfile=$CICD_TOOLS_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH
   fi
 
   echo -n "$containerfile"

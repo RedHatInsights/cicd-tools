@@ -89,16 +89,14 @@ setup() {
         echo "1abcdef"
     }
 
-    EXPECTED_CONTAINERFILE_NAME='Dockerfile'
-
     source main.sh image_builder
 
+    EXPECTED_CONTAINERFILE_PATH='Dockerfile'
     IMAGE_NAME='quay.io/foo/bar'
-    touch "${EXPECTED_CONTAINERFILE_NAME}"
 
+    touch "${EXPECTED_CONTAINERFILE_PATH}"
     run cicd_tools::image_builder::build
-
-    rm "${EXPECTED_CONTAINERFILE_NAME}"
+    rm "${EXPECTED_CONTAINERFILE_PATH}"
 
     assert_success
     assert_output --regexp "^build"
@@ -126,7 +124,7 @@ setup() {
     CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS=("test1" "additional-label-2" "security")
     CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS=("BUILD_ARG1=foobar" "BUILD_ARG2=bananas")
     CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT='another/context'
-    CICD_TOOLS_IMAGE_BUILDER_CONTAINER_FILE='test/data/Containerfile.test'
+    CICD_TOOLS_IMAGE_BUILDER_CONTAINERFILE_PATH='test/data/Containerfile.test'
 
     run cicd_tools::image_builder::build
 
@@ -160,7 +158,7 @@ setup() {
 
     ghprbPullId="123"
     IMAGE_NAME="someimage"
-    CONTAINER_FILE='test/data/Containerfile.test'
+    CONTAINERFILE_PATH='test/data/Containerfile.test'
 
     run cicd_tools::image_builder::build
 
@@ -185,7 +183,7 @@ setup() {
     source main.sh image_builder
 
     IMAGE_NAME="someimage"
-    CONTAINER_FILE='test/data/Containerfile.test'
+    CONTAINERFILE_PATH='test/data/Containerfile.test'
 
     run cicd_tools::image_builder::build
 
@@ -274,6 +272,8 @@ setup() {
 
 
     run cicd_tools::image_builder::get_additional_tags
+
+    assert_success
     assert_output "foo bar baz"
 }
 
@@ -294,6 +294,7 @@ setup() {
     ADDITIONAL_TAGS=("target1" "target2" "target3")
 
     run cicd_tools::image_builder::tag
+    assert_success
 
     refute_output --partial "tag someimage:source someimage:source"
     assert_output --partial "tag someimage:source someimage:target1"
@@ -343,6 +344,7 @@ setup() {
 
     run cicd_tools::image_builder::push
 
+    assert_success
     assert_output --partial "push someimage:abcdef1"
     assert_output --partial "push someimage:tag1"
     assert_output --partial "push someimage:tag2"
@@ -367,6 +369,7 @@ setup() {
 
     run cicd_tools::image_builder::push
 
+    assert_success
     assert_output --partial "push someimage:pr-123-abcdef1"
     refute_output --partial "push someimage:tag1"
     refute_output --partial "push someimage:tag2"
@@ -411,7 +414,7 @@ setup() {
 
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
-    CONTAINER_FILE='test/data/Containerfile.test'
+    CONTAINERFILE_PATH='test/data/Containerfile.test'
 
     run cicd_tools::image_builder::build_deploy
 
@@ -436,7 +439,7 @@ setup() {
     ghprbPullId='123'
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
-    CONTAINER_FILE='test/data/Containerfile.test'
+    CONTAINERFILE_PATH='test/data/Containerfile.test'
 
     run cicd_tools::image_builder::build_deploy
 
