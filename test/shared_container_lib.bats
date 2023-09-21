@@ -140,6 +140,7 @@ setup() {
 
     OLDPATH="$PATH"
     PATH=':'
+
     run cicd_tools::container::cmd --version
     PATH="$OLDPATH"
     assert_output --regexp "WARNING.*podman.*not present"
@@ -152,6 +153,9 @@ setup() {
 
     docker() {
         echo 'podman version 1'
+    }
+    date() {
+       echo -n "Thu Sep 21 06:25:51 PM CEST 2023"
     }
     source main.sh container
 

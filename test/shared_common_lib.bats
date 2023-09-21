@@ -74,3 +74,20 @@ setup() {
     assert_output ""
     assert_failure
 }
+
+@test "is_ci_context" {
+
+    source src/main.sh common
+
+    unset CI
+    assert [ -z "$CI" ]
+
+    run cicd_tools::common::is_ci_context
+    assert_failure
+    assert_output ""
+
+    export CI='true'
+    run cicd_tools::common::is_ci_context
+    assert_success
+    assert_output ""
+}
