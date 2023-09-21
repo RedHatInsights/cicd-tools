@@ -109,8 +109,8 @@ cicd_tools::image_builder::get_image_tag() {
   local commit_hash build_id tag
 
   if ! commit_hash=$(cicd_tools::common::get_7_chars_commit_hash); then
-  echo "Cannot retrieve commit hash!"
-  return 1
+    cicd_tools::err "Cannot retrieve commit hash!"
+    return 1
   fi
 
   if cicd_tools::image_builder::is_change_request_context; then

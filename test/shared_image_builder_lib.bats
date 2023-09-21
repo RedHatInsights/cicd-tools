@@ -77,6 +77,71 @@ setup() {
 }
 
 
+@test "Image build fails if Dockerfile doesn't exist" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    # git mock
+    git() {
+        echo "1abcdef"
+    }
+
+    source main.sh image_builder
+
+    EXPECTED_CONTAINERFILE_PATH='Dockerfile'
+    IMAGE_NAME='quay.io/foo/bar'
+
+    refute [ -r "$EXPECTED_CONTAINERFILE_PATH" ]
+    run ! cicd_tools::image_builder::build
+    assert_failure
+    assert_output --regexp "$EXPECTED_CONTAINERFILE_PATH.*does not exist"
+    refute_output --regexp "build"
+}
+
+@test "Image build fails if no image name is defined" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    # git mock
+    git() {
+        echo "1abcdef"
+    }
+
+    source main.sh image_builder
+
+    run ! cicd_tools::image_builder::build
+    assert_failure
+    assert_output --partial "Image name not defined"
+    refute_output --partial "build"
+}
+
+@test "Image build fails if git hash cannot be retrieved" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    # git mock
+    git() {
+        return 1
+    }
+
+    IMAGE_NAME='quay.io/foo/bar'
+    source main.sh image_builder
+
+    run ! cicd_tools::image_builder::build
+    assert_failure
+    assert_output --partial "Cannot retrieve commit hash"
+    refute_output --partial "build"
+}
+
 @test "Image build works as expected with default values" {
 
     # podman mock
