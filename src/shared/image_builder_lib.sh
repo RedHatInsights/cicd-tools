@@ -26,7 +26,7 @@ readonly CICD_TOOLS_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH='Dockerfile'
 cicd_tools::image_builder::build_and_push() {
   cicd_tools::image_builder::build || return 1
   if cicd_tools::image_builder::is_change_request_context; then
-  cicd_tools::image_builder::push || return 1
+    cicd_tools::image_builder::push || return 1
   fi
 }
 
@@ -41,8 +41,8 @@ cicd_tools::image_builder::build() {
   default_image_name=$(cicd_tools::image_builder::get_full_image_name) || return 1
 
   if ! [ -r "$containerfile" ]; then
-  cicd_tools::err "Containerfile '$containerfile' does not exist or is not readable!"
-  return 1
+    cicd_tools::err "Containerfile '$containerfile' does not exist or is not readable!"
+    return 1
   fi
 
   image_tag_params=('-t' "$default_image_name")
@@ -52,19 +52,19 @@ cicd_tools::image_builder::build() {
       image_tag_params+=('-t' "${image_name}:${additional_tag}")
     done
   fi
-  
+
   for label in $(cicd_tools::image_builder::get_labels); do
-  label_params+=('--label' "${label}")
+    label_params+=('--label' "${label}")
   done
 
   for build_arg in $(cicd_tools::image_builder::get_build_args); do
-  build_arg_params+=('--build-arg' "${build_arg}")
+    build_arg_params+=('--build-arg' "${build_arg}")
   done
 
   if ! cicd_tools::container::cmd build -f "$containerfile" "${image_tag_params[@]}" \
-  "${build_arg_params[@]}" "${label_params[@]}" "$build_context"; then
-  cicd_tools::err "Error building image"
-  return 1
+    "${build_arg_params[@]}" "${label_params[@]}" "$build_context"; then
+    cicd_tools::err "Error building image"
+    return 1
   fi
 }
 
@@ -73,7 +73,7 @@ cicd_tools::image_builder::get_containerfile() {
   local containerfile="${CICD_TOOLS_IMAGE_BUILDER_CONTAINERFILE_PATH:-"$CONTAINERFILE_PATH"}"
 
   if [ -z "$containerfile" ]; then
-   containerfile=$CICD_TOOLS_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH
+    containerfile=$CICD_TOOLS_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH
   fi
 
   echo -n "$containerfile"
@@ -84,13 +84,11 @@ cicd_tools::image_builder::get_build_context() {
   local build_context="${CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT:-"$BUILD_CONTEXT"}"
 
   if [ -z "$build_context" ]; then
-   build_context="$CICD_TOOLS_IMAGE_BUILDER_DEFAULT_BUILD_CONTEXT"
+    build_context="$CICD_TOOLS_IMAGE_BUILDER_DEFAULT_BUILD_CONTEXT"
   fi
 
   echo -n "$build_context"
 }
-
-
 
 cicd_tools::image_builder::_get_image_name() {
 
@@ -114,10 +112,10 @@ cicd_tools::image_builder::get_image_tag() {
   fi
 
   if cicd_tools::image_builder::is_change_request_context; then
-  build_id=$(cicd_tools::image_builder::get_build_id)
-  tag="pr-${build_id}-${commit_hash}"
+    build_id=$(cicd_tools::image_builder::get_build_id)
+    tag="pr-${build_id}-${commit_hash}"
   else
-  tag="${commit_hash}"
+    tag="${commit_hash}"
   fi
 
   echo -n "${tag}"
@@ -132,9 +130,9 @@ cicd_tools::image_builder::get_build_id() {
   local build_id
 
   if [ -n "$ghprbPullId" ]; then
-  build_id="$ghprbPullId"
+    build_id="$ghprbPullId"
   elif [ -n "$gitlabMergeRequestId" ]; then
-  build_id="$gitlabMergeRequestId"
+    build_id="$gitlabMergeRequestId"
   fi
 
   echo -n "$build_id"
@@ -145,7 +143,7 @@ cicd_tools::image_builder::get_additional_tags() {
   declare -a additional_tags=("${CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS[@]:-${ADDITIONAL_TAGS[@]}}")
 
   if cicd_tools::image_builder::_array_empty "${additional_tags[@]}"; then
-  additional_tags=()
+    additional_tags=()
   fi
 
   echo -n "${additional_tags[@]}"
@@ -162,11 +160,11 @@ cicd_tools::image_builder::get_labels() {
   declare -a labels=("${CICD_TOOLS_IMAGE_BUILDER_LABELS[@]:-${LABELS[@]}}")
 
   if cicd_tools::image_builder::_array_empty "${labels[@]}"; then
-  labels=()
+    labels=()
   fi
 
   if cicd_tools::image_builder::is_change_request_context; then
-  labels+=("$(cicd_tools::image_builder::_get_expiry_label)")
+    labels+=("$(cicd_tools::image_builder::_get_expiry_label)")
   fi
 
   echo -n "${labels[@]}"
@@ -181,7 +179,7 @@ cicd_tools::image_builder::get_build_args() {
   declare -a build_args=("${CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS[@]:-${BUILD_ARGS[@]}}")
 
   if cicd_tools::image_builder::_array_empty "${build_args[@]}"; then
-  build_args=()
+    build_args=()
   fi
 
   echo -n "${build_args[@]}"
@@ -195,8 +193,8 @@ cicd_tools::image_builder::tag() {
 
   for target_tag in $(cicd_tools::image_builder::get_additional_tags); do
     if ! cicd_tools::container::cmd tag "$source_image" "${image_name}:${target_tag}"; then
-        cicd_tools::err "Error tagging '$source_image' as '${image_name}:${target_tag}'"
-        return 1
+      cicd_tools::err "Error tagging '$source_image' as '${image_name}:${target_tag}'"
+      return 1
     fi
   done
 }
@@ -210,16 +208,16 @@ cicd_tools::image_builder::push() {
   image_tags=("$image_tag")
 
   if ! cicd_tools::image_builder::is_change_request_context; then
-  for additional_tag in $(cicd_tools::image_builder::get_additional_tags); do
-    image_tags+=("${additional_tag}")
-  done
+    for additional_tag in $(cicd_tools::image_builder::get_additional_tags); do
+      image_tags+=("${additional_tag}")
+    done
   fi
 
   for tag in "${image_tags[@]}"; do
-  if ! cicd_tools::container::cmd push "${image_name}:${tag}"; then
-    cicd_tools::err "Error pushing image: '${image_name}:${tag}'"
-    return 1
-  fi
+    if ! cicd_tools::container::cmd push "${image_name}:${tag}"; then
+      cicd_tools::err "Error pushing image: '${image_name}:${tag}'"
+      return 1
+    fi
   done
 }
 
@@ -232,7 +230,6 @@ cicd_tools::image_builder::get_full_image_name() {
   echo -n "${image_name}:${image_tag}"
 }
 
-
 cicd_tools::image_builder::_image_builder_setup() {
 
   if ! cicd_tools::image_builder::_try_log_in_to_image_registries; then
@@ -244,29 +241,29 @@ cicd_tools::image_builder::_image_builder_setup() {
 cicd_tools::image_builder::_try_log_in_to_image_registries() {
 
   if cicd_tools::image_builder::_quay_credentials_found; then
-  if ! cicd_tools::image_builder::_log_in_to_quay_registry; then
+    if ! cicd_tools::image_builder::_log_in_to_quay_registry; then
       cicd_tools::err "Error logging in to Quay.io!"
       return 1
-  fi
+    fi
   fi
 
   if cicd_tools::image_builder::_redhat_registry_credentials_found; then
-  if ! cicd_tools::image_builder::_log_in_to_redhat_registry; then
+    if ! cicd_tools::image_builder::_log_in_to_redhat_registry; then
       cicd_tools::err "Error logging in to Red Hat Registry!"
       return 1
-  fi 
+    fi
   fi
 }
 
 cicd_tools::image_builder::_quay_credentials_found() {
-  [ -n "$CICD_TOOLS_IMAGE_BUILDER_QUAY_USER" ] && \
-  [ -n "$CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD" ]
+  [ -n "$CICD_TOOLS_IMAGE_BUILDER_QUAY_USER" ] &&
+    [ -n "$CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD" ]
 }
 
 cicd_tools::image_builder::_log_in_to_quay_registry() {
   cicd_tools::image_builder::_log_in_to_container_registry "$CICD_TOOLS_IMAGE_BUILDER_QUAY_USER" \
-  "$CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD" \
-  "$CICD_TOOLS_IMAGE_BUILDER_QUAY_REGISTRY"
+    "$CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD" \
+    "$CICD_TOOLS_IMAGE_BUILDER_QUAY_REGISTRY"
 }
 
 cicd_tools::image_builder::_log_in_to_container_registry() {
@@ -279,14 +276,14 @@ cicd_tools::image_builder::_log_in_to_container_registry() {
 }
 
 cicd_tools::image_builder::_redhat_registry_credentials_found() {
-  [ -n "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER" ] && \
-  [ -n "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD" ]
+  [ -n "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER" ] &&
+    [ -n "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD" ]
 }
 
 cicd_tools::image_builder::_log_in_to_redhat_registry() {
   cicd_tools::image_builder::_log_in_to_container_registry "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER" \
-  "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD" \
-  "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_REGISTRY"
+    "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD" \
+    "$CICD_TOOLS_IMAGE_BUILDER_REDHAT_REGISTRY"
 }
 
 if ! cicd_tools::image_builder::_image_builder_setup; then
