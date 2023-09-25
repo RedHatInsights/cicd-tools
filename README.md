@@ -1,39 +1,47 @@
 # CI/CD Tools
 
 ## Description
+
 Utilities used to run smoke tests in an ephemeral environment within a CI/CD pipeline
 
 ## Getting Started
-Grab the Jenkinsfile template for your [backend](examples/backend-pipeline-pr-checks/Jenkinsfile) or [frontend](examples/frontends-pipeline-pr-checks/Jenkinsfile) and cater it to your specific needs. This file should reside in your git repositories root directory. That Jenkinsfile will download the necessary files from this repository. It does not have a unit test file so that will need to be made in your repository. You can find a unit test template file [here](examples/unit_test_example.sh).
+
+Grab the Jenkinsfile template for your [backend](examples/backend-pipeline-pr-checks/Jenkinsfile)
+or [frontend](examples/frontends-pipeline-pr-checks/Jenkinsfile) and cater it to your specific
+needs. This file should reside in your git repositories root directory. That Jenkinsfile will
+download the necessary files from this repository. It does not have a unit test file so that will
+need to be made in your repository. You can find a unit test template
+file [here](examples/unit_test_example.sh).
 
 ## Scripts
 
-| Script                  | Description |  
-| ----------------------- | ----------- | 
-| bootstrap.sh            | Clone bonfire into workspace, setup python venv, modify PATH, login to container registries, login to Kube/OCP,  and set envvars used by following scripts. |
+| Script                  | Description                                                                                                                                                                                                                                                      |  
+|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| 
+| bootstrap.sh            | Clone bonfire into workspace, setup python venv, modify PATH, login to container registries, login to Kube/OCP,  and set envvars used by following scripts.                                                                                                      |
 | build.sh                | Using docker (rhel7) or podman (else) build, tag, and push an image to Quay and Red Hat registries. If its a GitHub or GitLab PR/MR triggered script execution, tag image with `pr-123-SHA` and `pr-123-testing`, else use a short SHA for the target repo HEAD. |
-| deploy_ephemeral_db.sh  | Deploy using `bonfire process` and `<oc_wrapper> apply`, removing dependencies and setting up database envvars. |
-| deploy_ephemeral_env.sh | Deploy using `bonfire deploy` into ephemeral, specifying app, component, and relevant image tag args.  Passes `EXTRA_DEPLOY_ARGS` which can be set by the caller via pr_checks.sh.
-| cji_smoke_test.sh       | Run iqe-tests container for the relevant app plugin using `bonfire deploy-iqe-cji`. Waits for tests to complete, and fetches artifacts using minio.
-| post_test_results.sh    | Using artifacts fetched from `cji_smoke_test.sh`, add a GitHub status or GitLab comment linking to the relevant test results in Ibutsu.
-| smoke_test.sh           | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh) |
-| iqe_pod                 | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh) |
+| deploy_ephemeral_db.sh  | Deploy using `bonfire process` and `<oc_wrapper> apply`, removing dependencies and setting up database envvars.                                                                                                                                                  |
+| deploy_ephemeral_env.sh | Deploy using `bonfire deploy` into ephemeral, specifying app, component, and relevant image tag args.  Passes `EXTRA_DEPLOY_ARGS` which can be set by the caller via pr_checks.sh.                                                                               |
+| cji_smoke_test.sh       | Run iqe-tests container for the relevant app plugin using `bonfire deploy-iqe-cji`. Waits for tests to complete, and fetches artifacts using minio.                                                                                                              |
+| post_test_results.sh    | Using artifacts fetched from `cji_smoke_test.sh`, add a GitHub status or GitLab comment linking to the relevant test results in Ibutsu.                                                                                                                          |
+| smoke_test.sh           | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh)                                                                                                                                                                                                       |
+| iqe_pod                 | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh)                                                                                                                                                                                                       |
 
 ## Bash script helper scripts usage
 
-The collection of helper libraries are expected to be loaded using the provided [src/bootstrap.sh](bootstrap) script.
+The collection of helper libraries are expected to be loaded using the
+provided [src/bootstrap.sh](bootstrap) script.
 
-Currently there are 2 supported libraries:
+Currently, there are 2 supported libraries:
 
-|Library ID|Description|
-|----------|-----------|
-|container | Provides wrapper functions for invoking container engine agnostic commands|
-|image_builder| Provides helper functions to simplify the image building process|
+| Library ID    | Description                                                                |
+|---------------|----------------------------------------------------------------------------|
+| container     | Provides wrapper functions for invoking container engine agnostic commands |
+| image_builder | Provides helper functions to simplify the image building process           |
 
 ### How to use the helper libraries
 
-To use any of the provided libraries, you must source the [src/bootstrap.sh](bootstrap.sh) script and pass
-the unique library ID to be loaded as a paramter.
+To use any of the provided libraries, you must source the [src/bootstrap.sh](bootstrap.sh) script
+and pass the unique library ID to be loaded as a paramter.
 
 One can simply either source the [src/bootstrap.sh](bootstrap) script directly:
 
@@ -66,20 +74,24 @@ you can select which collection needs to load independently as a parameter:
 source bootstrap.sh container
 ```
 
-The bootstrap script will download the selected version of the CICD scripts (or `latest` if none specified) into the directory defined by
-the `CICD_TOOLS_WORKDIR` variable (defaults to `.cicd_tools` in the current directory). 
+The bootstrap script will download the selected version of the CICD scripts (or `latest` if none
+specified) into the directory defined by the `CICD_TOOLS_WORKDIR` variable (defaults
+to `.cicd_tools` in the current directory).
 
-**Please note** that when cloning the repo, the directory defined by the `CICD_TOOLS_WORKDIR` will be deleted!
+**Please note** that when cloning the repo, the directory defined by the `CICD_TOOLS_WORKDIR` will
+be deleted!
 You can disable running the `git clone` by setting the `CICD_TOOLS_SKIP_GIT_CLONE` variable
 
 The bootstrap.sh can be invoked multiple times but it has a status control to ensure each
-of the libraries is loaded only once. This is to prevent potential issues with collections 
+of the libraries is loaded only once. This is to prevent potential issues with collections
 that are not supposed to be loaded many times.
 
 An example of this is the _container_ library, where the selected container engine
-is **set only once the first command using the library helper function `cicd_tools::container::cmd` is used**.
+is **set only once the first command using the library helper function `cicd_tools::container::cmd`
+is used**.
 
-Each of the libraries will export to the shell sourcing the bootstrap script the helper functions.
+Each of the libraries will export their functions and variables to the shell when sourcing the
+bootstrap script the helper functions.
 These functions are all namespaced, meaning the names follow the naming format:
 
 ```
@@ -87,23 +99,25 @@ cicd_tools::library::function
 ```
 
 where:
+
 - cicd_tools represents the namespace root, which is shared by all functions
 - library would match with each of the imported library IDs.
 
-
 ## Template Scripts
-| Script                  | Description |  
-| ----------------------- | ----------- | 
-| examples/backend-pipeline-pr-checks/Jenkinsfile | Templated example of the pr-check pipeline for backend apps |
+
+| Script                                            | Description                                                  |  
+|---------------------------------------------------|--------------------------------------------------------------| 
+| examples/backend-pipeline-pr-checks/Jenkinsfile   | Templated example of the pr-check pipeline for backend apps  |
 | examples/frontends-pipeline-pr-checks/Jenkinsfile | Templated example of the pr-check pipeline for frontend apps |
-| examples/pr_check_template.sh                   |  |
-| examples/unit_test_example.sh                   |  |
-| examples/unit_test_example_ephemeral_db.sh      |  |
+| examples/pr_check_template.sh                     |                                                              |
+| examples/unit_test_example.sh                     |                                                              |
+| examples/unit_test_example_ephemeral_db.sh        |                                                              |
 
 ## Contributing
 
 Suggested method for testing changes to these scripts:
+
 - Modify `bootstrap.sh` to `git clone` your fork and branch of bonfire.
-- Open a PR in a repo using bonfire pr_checks and the relevant scripts, modifying `pr_check` script to clone your fork and branch of bonfire.
+- Open a PR in a repo using bonfire pr_checks and the relevant scripts, modifying `pr_check` script
+  to clone your fork and branch of bonfire.
 - Observe modified scripts running in the relevant CI/CD pipeline.
-# 
