@@ -61,6 +61,10 @@ if [[ -z $IQE_CJI_TIMEOUT ]]; then
     exit 1
 fi
 
+if [ "$DEBUG_POD" = "true" ]; then
+    DEBUG_POD=" --debug-pod "
+fi
+
 SELENIUM_ARG=""
 if [ "$IQE_SELENIUM" = "true" ]; then
     SELENIUM_ARG=" --selenium "
@@ -99,6 +103,7 @@ POD=$(
     --plugins "$IQE_PLUGINS" \
     --env "$IQE_ENV" \
     --cji-name $CJI_NAME \
+    $DEBUG_POD \
     $SELENIUM_ARG \
     --parallel-enabled $IQE_PARALLEL_ENABLED \
     --parallel-worker-count $IQE_PARALLEL_WORKER_COUNT \
