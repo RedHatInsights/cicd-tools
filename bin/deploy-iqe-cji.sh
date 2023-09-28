@@ -2,6 +2,13 @@
 
 set -o pipefail
 
+cleanup() {
+
+    local pid="${1:?}"
+    kill -9 "$pid" || :
+
+}
+
 main() {
     # Mandatory arguments
     local ns="${1:?Namespace was not provided}"
@@ -44,6 +51,8 @@ main() {
 
     container=$(oc_wrapper get pod $pod -n $ns -o jsonpath="{.status.containerStatuses[0].name}")
     oc_wrapper logs -n $ns $pod -c $container -f &
+    pid=$!
+    trap "cleanup $pid" EXIT
 
     oc_wrapper wait "--timeout=$iqe_cji_timeout" --for=condition=JobInvocationComplete -n "$ns" "cji/$cji_name"
     oc_wrapper get -o json -n "$ns" "cji/$cji_name" | check_cji_jobs.py
