@@ -242,7 +242,7 @@ cicd::image_builder::_image_builder_setup() {
 
 cicd::image_builder::_try_log_in_to_image_registries() {
 
-  if cicd::common::is_ci_context; then
+  if ! cicd::common::local_build; then
     DOCKER_CONFIG="$(mktemp -d)"
     export DOCKER_CONFIG
     echo -n '{}' > "${DOCKER_CONFIG}/config.json"
