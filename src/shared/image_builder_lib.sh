@@ -25,7 +25,7 @@ readonly CICD_TOOLS_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH='Dockerfile'
 
 cicd::image_builder::build_and_push() {
   cicd::image_builder::build || return 1
-  if cicd::image_builder::is_change_request_context; then
+  if ! cicd::common::local_build; then
     cicd::image_builder::push || return 1
   fi
 }
@@ -241,6 +241,12 @@ cicd::image_builder::_image_builder_setup() {
 }
 
 cicd::image_builder::_try_log_in_to_image_registries() {
+
+  if cicd::common::is_ci_context; then
+    DOCKER_CONFIG="$(mktemp -d)"
+    export DOCKER_CONFIG
+    echo -n '{}' > "${DOCKER_CONFIG}/config.json"
+  fi
 
   if cicd::image_builder::_quay_credentials_found; then
     if ! cicd::image_builder::_log_in_to_quay_registry; then

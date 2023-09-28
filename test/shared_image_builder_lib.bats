@@ -512,6 +512,24 @@ setup() {
     assert_output --regexp "^build.*?-t someimage:pr-123-source"
     refute_output --regexp "^build.*?-t someimage:target1"
     assert_output --regexp "^build.*?--label quay.expires-after"
-    assert_output --partial "push someimage:pr-123-source"
-    refute_output --partial "push someimage:target1"
+    assert_output --regexp "^build.*?-t someimage:pr-123-source"
+    refute_output --regexp "^build.*?-t someimage:target1"
+}
+
+@test "Image build setup does not  forces fresh DOCKER_CONF if not in CI context" {
+
+    assert [ -z "$DOCKER_CONFIG" ]
+    source main.sh image_builder
+    assert [ -z "$DOCKER_CONFIG" ]
+}
+
+@test "build on CI forces fresh DOCKER_CONF creds in CI context" {
+
+    CI="true"
+
+    assert [ -z "$DOCKER_CONFIG" ]
+    source main.sh image_builder
+    assert [ -n "$DOCKER_CONFIG" ]
+    assert [ -w "${DOCKER_CONFIG}/config.json" ]
+
 }
