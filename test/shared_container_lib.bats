@@ -41,21 +41,21 @@ setup() {
 
     PREFER_CONTAINER_ENGINE="docker"
 
-    run ! cicd_tools::container::cmd
+    run ! cicd::container::cmd
     assert_failure
-    assert_output --partial "cicd_tools::container::cmd: command not found"
+    assert_output --partial "cicd::container::cmd: command not found"
 
     source src/main.sh container
 
-    cicd_tools::container::cmd --version
-    run cicd_tools::container::cmd --version
+    cicd::container::cmd --version
+    run cicd::container::cmd --version
 
     assert_success 
     assert_output "docker version 1"
 
     unset PREFER_container
     source main.sh container
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     assert_success 
     assert_output "docker version 1"
 }
@@ -69,22 +69,22 @@ setup() {
         echo "podman version 1"
     }
 
-    run ! cicd_tools::container::cmd
+    run ! cicd::container::cmd
     assert_failure
-    assert_output --partial "cicd_tools::container::cmd: command not found"
+    assert_output --partial "cicd::container::cmd: command not found"
 
     source src/main.sh container
 
-    cicd_tools::container::cmd --version
+    cicd::container::cmd --version
 
     PREFER_CONTAINER_ENGINE="docker"
 
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     assert_success 
     assert_output "podman version 1"
 
     source main.sh container
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     assert_success 
     assert_output "podman version 1"
 }
@@ -96,7 +96,7 @@ setup() {
     }
 
     source main.sh container
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     assert_output --partial "podman version 1"
 }
 
@@ -113,7 +113,7 @@ setup() {
     }
 
     source main.sh container
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     assert_output --regexp "WARNING.*docker.*seems emulated"
     assert_output --partial "podman version 1"
 }
@@ -123,7 +123,7 @@ setup() {
     source main.sh container
     OLDPATH="$PATH"
     PATH=':'
-    run ! cicd_tools::container::cmd --version
+    run ! cicd::container::cmd --version
     PATH="$OLDPATH"
     assert_failure
     assert_output --partial "ERROR, no container engine found"
@@ -141,7 +141,7 @@ setup() {
     OLDPATH="$PATH"
     PATH=':'
 
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     PATH="$OLDPATH"
     assert_output --regexp "WARNING.*podman.*not present"
     assert_output --partial "docker version 1"
@@ -161,7 +161,7 @@ setup() {
 
     OLDPATH="$PATH"
     PATH=':'
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     PATH="$OLDPATH"
     assert [ $status -eq 1 ]
     assert_output --regexp "WARNING.*docker seems emulated"
@@ -179,7 +179,7 @@ setup() {
     }
     source main.sh container
 
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     assert_success
     assert_output --partial "podman version 1"
 }
@@ -195,7 +195,7 @@ setup() {
         echo 'docker version 1'
     }
     source main.sh container
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     assert_success
     assert_output --partial "docker version 1"
 }
@@ -212,7 +212,7 @@ setup() {
         echo 'podman version 1'
     }
     source main.sh container
-    run cicd_tools::container::cmd --version
+    run cicd::container::cmd --version
     assert_success
     assert_output --regexp "WARNING.*'cat'.*isn't supported"
     assert_output --partial "podman version 1"

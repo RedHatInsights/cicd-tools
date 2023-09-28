@@ -38,7 +38,7 @@ setup() {
     }
 
     source main.sh image_builder
-    run cicd_tools::image_builder::get_image_tag
+    run cicd::image_builder::get_image_tag
     assert_success
     assert_output '1abcdef'
 }
@@ -53,7 +53,7 @@ setup() {
     ghprbPullId=123
     source main.sh image_builder
 
-    run cicd_tools::image_builder::get_image_tag
+    run cicd::image_builder::get_image_tag
 
     assert_success
     assert_output 'pr-123-1abcdef'
@@ -70,7 +70,7 @@ setup() {
 
     source main.sh image_builder
 
-    run cicd_tools::image_builder::get_image_tag
+    run cicd::image_builder::get_image_tag
 
     assert_success
     assert_output 'pr-4321-1abcdef'
@@ -95,7 +95,7 @@ setup() {
     IMAGE_NAME='quay.io/foo/bar'
 
     refute [ -r "$EXPECTED_CONTAINERFILE_PATH" ]
-    run ! cicd_tools::image_builder::build
+    run ! cicd::image_builder::build
     assert_failure
     assert_output --regexp "$EXPECTED_CONTAINERFILE_PATH.*does not exist"
     refute_output --regexp "build"
@@ -115,7 +115,7 @@ setup() {
 
     source main.sh image_builder
 
-    run ! cicd_tools::image_builder::build
+    run ! cicd::image_builder::build
     assert_failure
     assert_output --partial "Image name not defined"
     refute_output --partial "build"
@@ -136,7 +136,7 @@ setup() {
     IMAGE_NAME='quay.io/foo/bar'
     source main.sh image_builder
 
-    run ! cicd_tools::image_builder::build
+    run ! cicd::image_builder::build
     assert_failure
     assert_output --partial "Cannot retrieve commit hash"
     refute_output --partial "build"
@@ -160,7 +160,7 @@ setup() {
     IMAGE_NAME='quay.io/foo/bar'
 
     touch "${EXPECTED_CONTAINERFILE_PATH}"
-    run cicd_tools::image_builder::build
+    run cicd::image_builder::build
     rm "${EXPECTED_CONTAINERFILE_PATH}"
 
     assert_success
@@ -191,7 +191,7 @@ setup() {
     CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT='another/context'
     CICD_TOOLS_IMAGE_BUILDER_CONTAINERFILE_PATH='test/data/Containerfile.test'
 
-    run cicd_tools::image_builder::build
+    run cicd::image_builder::build
 
     assert_success
     assert_output --regexp "^build.*"
@@ -225,7 +225,7 @@ setup() {
     IMAGE_NAME="someimage"
     CONTAINERFILE_PATH='test/data/Containerfile.test'
 
-    run cicd_tools::image_builder::build
+    run cicd::image_builder::build
 
     assert_success
     assert_output --partial "-t someimage:pr-123-1abcdef"
@@ -250,7 +250,7 @@ setup() {
     IMAGE_NAME="someimage"
     CONTAINERFILE_PATH='test/data/Containerfile.test'
 
-    run cicd_tools::image_builder::build
+    run cicd::image_builder::build
 
     assert_failure
     assert_output --partial "went really wrong"
@@ -330,13 +330,13 @@ setup() {
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("foo" "bar" "baz")
 
-    run cicd_tools::image_builder::get_image_tag
+    run cicd::image_builder::get_image_tag
 
     assert_success
     assert_output "1abcdef"
 
 
-    run cicd_tools::image_builder::get_additional_tags
+    run cicd::image_builder::get_additional_tags
 
     assert_success
     assert_output "foo bar baz"
@@ -358,7 +358,7 @@ setup() {
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1" "target2" "target3")
 
-    run cicd_tools::image_builder::tag
+    run cicd::image_builder::tag
     assert_success
 
     refute_output --partial "tag someimage:source someimage:source"
@@ -384,7 +384,7 @@ setup() {
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
 
-    run ! cicd_tools::image_builder::tag
+    run ! cicd::image_builder::tag
 
     assert_failure
     assert_output --partial "tag someimage:source someimage:target1"
@@ -407,7 +407,7 @@ setup() {
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("tag1" "tag2")
 
-    run cicd_tools::image_builder::push
+    run cicd::image_builder::push
 
     assert_success
     assert_output --partial "push someimage:abcdef1"
@@ -432,7 +432,7 @@ setup() {
     ghprbPullId="123"
     ADDITIONAL_TAGS=("tag1" "tag2")
 
-    run cicd_tools::image_builder::push
+    run cicd::image_builder::push
 
     assert_success
     assert_output --partial "push someimage:pr-123-abcdef1"
@@ -457,7 +457,7 @@ setup() {
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
 
-    run ! cicd_tools::image_builder::push
+    run ! cicd::image_builder::push
 
     assert_failure
     assert_output --partial "push someimage:source"
@@ -481,7 +481,7 @@ setup() {
     ADDITIONAL_TAGS=("target1")
     CONTAINERFILE_PATH='test/data/Containerfile.test'
 
-    run cicd_tools::image_builder::build_and_push
+    run cicd::image_builder::build_and_push
 
     assert_success
     assert_output --regexp "^build.*?-t someimage:source -t someimage:target1"
@@ -506,7 +506,7 @@ setup() {
     ADDITIONAL_TAGS=("target1")
     CONTAINERFILE_PATH='test/data/Containerfile.test'
 
-    run cicd_tools::image_builder::build_and_push
+    run cicd::image_builder::build_and_push
 
     assert_success 
     assert_output --regexp "^build.*?-t someimage:pr-123-source"

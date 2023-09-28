@@ -35,14 +35,14 @@ setup() {
     podman() {
         echo "podman here"
     }
-    run ! cicd_tools::container::cmd
+    run ! cicd::container::cmd
     assert_failure
     CICD_TOOLS_DEBUG=1
     run source main.sh container
     assert_success
     assert_output --partial "loading container lib"
     source main.sh container
-    run cicd_tools::container::cmd
+    run cicd::container::cmd
     assert_success
     assert_output --partial "podman here"
 }

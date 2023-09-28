@@ -15,7 +15,7 @@ MAIN_SCRIPT='./src/main.sh'
 
 source "$MAIN_SCRIPT" "image_builder"
 
-EXPECTED_OUTPUT=$(cicd_tools::image_builder::build_and_push)
+EXPECTED_OUTPUT=$(cicd::image_builder::build_and_push)
 
 if ! [ "build -f ${CICD_TOOLS_IMAGE_BUILDER_CONTAINER_FILE} -t ${IMAGE_REPOSITORY}:abcdef1 ." = "$EXPECTED_OUTPUT" ]; then
     echo "Build and Push script not working!"
@@ -25,4 +25,4 @@ fi
 unset podman
 
 
-cicd_tools::image_builder::build_and_push
+cicd::image_builder::build_and_push

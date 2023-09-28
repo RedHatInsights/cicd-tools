@@ -36,10 +36,10 @@ setup() {
     }
 
     source main.sh common
-    run ! cicd_tools::common::command_is_present foo
+    run ! cicd::common::command_is_present foo
     assert_failure
 
-    run cicd_tools::common::command_is_present cat
+    run cicd::common::command_is_present cat
     assert_success
     assert_output ""
 }
@@ -47,7 +47,7 @@ setup() {
 @test "get_7_chars_commit_hash works" {
 
     source main.sh common
-    run cicd_tools::common::get_7_chars_commit_hash
+    run cicd::common::get_7_chars_commit_hash
     assert_success
     assert_output --regexp '^[0-9a-f]{7}$'
 }
@@ -59,18 +59,18 @@ setup() {
     assert [ -z "$LOCAL_BUILD" ]
     assert [ -z "$CI" ]
     source src/main.sh common
-    run cicd_tools::common::local_build
+    run cicd::common::local_build
     assert_success
     CI='true'
-    run cicd_tools::common::local_build
+    run cicd::common::local_build
     assert_failure
     assert_output ""
     LOCAL_BUILD='true'
-    run cicd_tools::common::local_build
+    run cicd::common::local_build
     assert_output ""
     assert_success
     unset LOCAL_BUILD
-    run ! cicd_tools::common::local_build
+    run ! cicd::common::local_build
     assert_output ""
     assert_failure
 }
@@ -82,12 +82,12 @@ setup() {
     unset CI
     assert [ -z "$CI" ]
 
-    run cicd_tools::common::is_ci_context
+    run cicd::common::is_ci_context
     assert_failure
     assert_output ""
 
     export CI='true'
-    run cicd_tools::common::is_ci_context
+    run cicd::common::is_ci_context
     assert_success
     assert_output ""
 }

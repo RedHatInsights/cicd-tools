@@ -29,12 +29,12 @@ load_cicd_helper_functions() {
     fi
 
     # required to persist container preferrence
-    cicd_tools::container::cmd --version
+    cicd::container::cmd --version
 }
 
 load_cicd_helper_functions container
 
-EXPECTED_OUTPUT=$(cicd_tools::container::cmd --version)
+EXPECTED_OUTPUT=$(cicd::container::cmd --version)
 
 # Assert there's an actual output
 if ! [ "Docker version 99" == "$EXPECTED_OUTPUT" ]; then
@@ -45,12 +45,12 @@ fi
 load_cicd_helper_functions container
 
 # Assert output doesn't change 
-if ! [ "$(cicd_tools::container::cmd --version)" == "$EXPECTED_OUTPUT" ]; then
+if ! [ "$(cicd::container::cmd --version)" == "$EXPECTED_OUTPUT" ]; then
     echo "Container command not preserved between runs!"
     exit 1
 fi
 
-if ! [ "$(cicd_tools::container::cmd --version)" == "$EXPECTED_OUTPUT" ]; then
+if ! [ "$(cicd::container::cmd --version)" == "$EXPECTED_OUTPUT" ]; then
     echo "Container command not preserved between runs!"
     exit 1
 fi

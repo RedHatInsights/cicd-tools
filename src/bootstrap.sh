@@ -18,7 +18,7 @@ clone_cicd_tools_repo() {
 }
 
 _delete_cicd_tools_rootdir() {
-  cicd_tools::debug "Removing existing CICD tools directory: '${CICD_TOOLS_ROOTDIR}'"
+  cicd::debug "Removing existing CICD tools directory: '${CICD_TOOLS_ROOTDIR}'"
   rm -rf "${CICD_TOOLS_ROOTDIR}"
 }
 

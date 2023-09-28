@@ -48,7 +48,7 @@ One can simply either source the [src/bootstrap.sh](bootstrap) script directly:
 ```
 $ source <(curl -sSL https://raw.githubusercontent.com/RedHatInsights/cicd-tools/main/src/bootstrap.sh) container
 
-$ cicd_tools::container::cmd --version
+$ cicd::container::cmd --version
   podman version 4.6.1
 
 ```
@@ -87,7 +87,7 @@ of the libraries is loaded only once. This is to prevent potential issues with c
 that are not supposed to be loaded many times.
 
 An example of this is the _container_ library, where the selected container engine
-is **set only once the first command using the library helper function `cicd_tools::container::cmd`
+is **set only once the first command using the library helper function `cicd::container::cmd`
 is used**.
 
 Each of the libraries will export their functions and variables to the shell when sourcing the
@@ -97,7 +97,7 @@ This library follows [Google's Shell style guide](https://google.github.io/style
 so the functions are all namespaced, meaning the names follow the naming format:
 
 ```
-cicd_tools::library::function
+cicd::library::function
 ```
 
 where:
