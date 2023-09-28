@@ -464,7 +464,7 @@ setup() {
     assert_output --partial "Error pushing image"
 }
 
-@test "build deploy does not push if not on change request context" {
+@test "build and push does not push if not on local build context" {
 
     # git mock
     git() {
@@ -474,6 +474,10 @@ setup() {
     podman() {
       echo "$@"
     }
+
+    if [ -n "$CI" ]; then
+        unset CI
+    fi
 
     source main.sh image_builder
 
@@ -487,6 +491,35 @@ setup() {
     assert_output --regexp "^build.*?-t someimage:source -t someimage:target1"
     refute_output --partial "push"
 }
+
+@test "build and push pushes if not on local build context" {
+
+    # git mock
+    git() {
+      echo "source"
+    }
+    # podman mock
+    podman() {
+      echo "$@"
+    }
+
+    if [ -n "CI" ]; then
+        CI="true"
+    fi
+
+    source main.sh image_builder
+
+    IMAGE_NAME="someimage"
+    ADDITIONAL_TAGS=("target1")
+    CONTAINERFILE_PATH='test/data/Containerfile.test'
+
+    run cicd::image_builder::build_and_push
+
+    assert_success
+    assert_output --regexp "^build.*?-t someimage:source -t someimage:target1"
+    assert_output --partial "push"
+}
+
 
 @test "build_and_push pushes only default tag if on change request context" {
 
@@ -516,9 +549,11 @@ setup() {
     refute_output --regexp "^build.*?-t someimage:target1"
 }
 
-@test "Image build setup does not  forces fresh DOCKER_CONF if not in CI context" {
+@test "Image build setup doesn't force fresh DOCKER_CONF if not in CI context" {
 
-    assert [ -z "$DOCKER_CONFIG" ]
+    unset DOCKER_CONFIG
+    unset CI
+
     source main.sh image_builder
     assert [ -z "$DOCKER_CONFIG" ]
 }
@@ -526,8 +561,8 @@ setup() {
 @test "build on CI forces fresh DOCKER_CONF creds in CI context" {
 
     CI="true"
+    unset DOCKER_CONFIG
 
-    assert [ -z "$DOCKER_CONFIG" ]
     source main.sh image_builder
     assert [ -n "$DOCKER_CONFIG" ]
     assert [ -w "${DOCKER_CONFIG}/config.json" ]
