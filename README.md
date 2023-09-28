@@ -92,7 +92,9 @@ is used**.
 
 Each of the libraries will export their functions and variables to the shell when sourcing the
 bootstrap script the helper functions.
-These functions are all namespaced, meaning the names follow the naming format:
+
+This library follows [Google's Shell style guide](https://google.github.io/styleguide/shellguide.html),
+so the functions are all namespaced, meaning the names follow the naming format:
 
 ```
 cicd_tools::library::function
