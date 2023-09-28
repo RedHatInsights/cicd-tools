@@ -33,7 +33,7 @@ cicd::image_builder::build_and_push() {
 cicd::image_builder::build() {
 
   local containerfile build_context image_name image_tags default_image_name
-  declare -a label_params image_tag_params build_arg_params
+  declare -a build_params
 
   containerfile="$(cicd::image_builder::get_containerfile)"
   build_context="$(cicd::image_builder::get_build_context)"
@@ -45,24 +45,26 @@ cicd::image_builder::build() {
     return 1
   fi
 
-  image_tag_params=('-t' "$default_image_name")
+  build_params=("-f" "$containerfile")
+  build_params+=('-t' "$default_image_name")
 
   if ! cicd::image_builder::is_change_request_context; then
     for additional_tag in $(cicd::image_builder::get_additional_tags); do
-      image_tag_params+=('-t' "${image_name}:${additional_tag}")
+      build_params+=('-t' "${image_name}:${additional_tag}")
     done
   fi
 
   for label in $(cicd::image_builder::get_labels); do
-    label_params+=('--label' "${label}")
+    build_params+=('--label' "${label}")
   done
 
   for build_arg in $(cicd::image_builder::get_build_args); do
-    build_arg_params+=('--build-arg' "${build_arg}")
+    build_params+=('--build-arg' "${build_arg}")
   done
 
-  if ! cicd::container::cmd build -f "$containerfile" "${image_tag_params[@]}" \
-    "${build_arg_params[@]}" "${label_params[@]}" "$build_context"; then
+  build_params+=("$build_context")
+
+  if ! cicd::container::cmd build "${build_params[@]}"; then
     cicd::err "Error building image"
     return 1
   fi
