@@ -40,8 +40,35 @@ Currently, there are 2 supported libraries:
 
 ### How to use the helper libraries
 
-To use any of the provided libraries, you must source the [src/bootstrap.sh](bootstrap.sh) script
-and pass the unique library ID to be loaded as a paramter.
+This library is intended to be used to gather the most common shell scripts used in pipelines in a
+centralized way. This should be helpful to reduce the amount of code needed to write the most common
+operations in a pipeline for routine tasks, such as operating with containers or building container
+images.
+
+The [src/main.sh](main.sh) script is the main entrypoint and should be used to load the modules 
+included in this library. This script requires all the other scripts available in a local directory
+following the same structure in this repository.
+
+To use any of the provided libraries, you must source the [src/main.sh](main.sh) script
+and pass the unique library ID to be loaded as a parameter.
+
+There's two different approaches for loading these scripts, depending on if you're a contributor or 
+an end user.
+
+#### Contributing to the repository
+
+This is the intended way when developing new modules for this library. The recommended approach for
+contributing is to create a new fork and then open a pull request against the `main` branch.
+
+When working with a local copy of the repository, you should source the [src/main.sh](main.sh)
+script directly.
+
+#### Using the library from other scripts 
+
+There is an existing helper script named [src/bootstrap.sh](bootstrap) to help with sourcing the
+[src/main.sh](main.sh) script if you're not contributing to this repo.
+
+**This is the intended way of using this library from external projects**.
 
 One can simply either source the [src/bootstrap.sh](bootstrap) script directly:
 
@@ -53,7 +80,11 @@ $ cicd::container::cmd --version
 
 ```
 
-In case you want to refactor some of your scripts using this library, here's a snippet you can use:
+Or choose to be more specific and select a specific repository and branch name (useful for working
+with forks and testing new WIP features)
+
+The following is a snippet you can use to place on top of a script to load the helper module you
+need:
 
 ```
 load_cicd_helper_functions() {
@@ -82,9 +113,12 @@ to `.cicd_tools` in the current directory).
 be deleted!
 You can disable running the `git clone` by setting the `CICD_TOOLS_SKIP_GIT_CLONE` variable
 
-The bootstrap.sh can be invoked multiple times but it has a status control to ensure each
-of the libraries is loaded only once. This is to prevent potential issues with collections
-that are not supposed to be loaded many times.
+After loading the requested module the `CICD_TOOLS_WORKDIR` directory will be automatically removed
+by the [src/bootstrap.sh](bootstrap) script.
+
+the [src/bootstrap.sh](bootstrap) script can be invoked multiple times, but it has a status control
+to ensure each of the libraries is loaded only once. This is to prevent potential issues with
+collections that are not supposed to be loaded many times.
 
 An example of this is the _container_ library, where the selected container engine
 is **set only once the first command using the library helper function `cicd::container::cmd`
@@ -93,8 +127,10 @@ is used**.
 Each of the libraries will export their functions and variables to the shell when sourcing the
 bootstrap script the helper functions.
 
-This library follows [Google's Shell style guide](https://google.github.io/styleguide/shellguide.html),
-so the functions are all namespaced, meaning the names follow the naming format:
+This library
+follows [Google's Shell style guide](https://google.github.io/styleguide/shellguide.html), and the
+functions are all namespaced to its corresponding module, meaning the names follow the naming
+format:
 
 ```
 cicd::library::function
@@ -102,8 +138,8 @@ cicd::library::function
 
 where:
 
-- cicd_tools represents the namespace root, which is shared by all functions
-- library would match with each of the imported library IDs.
+- *cicd* represents the namespace root, which is shared by all functions
+- *library* would match with each of the imported library IDs.
 
 ## Template Scripts
 
