@@ -25,3 +25,8 @@ fi
     "$BATS_CMD" \
     --filter-tags "$IGNORE_TAGS" \
     "$TESTS_DIRECTORY"
+
+
+if [ "$CI" != 'true' ]; then
+  echo "Report ready at: file://${COVERAGE_DIRECTORY}/bats/index.html"
+fi

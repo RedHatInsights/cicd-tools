@@ -8,36 +8,37 @@ CICD_TOOLS_SKIP_CLEANUP=${CICD_TOOLS_SKIP_CLEANUP:-}
 
 clone_cicd_tools_repo() {
 
-    if [ -d "${CICD_TOOLS_ROOTDIR}" ]; then
-        _delete_cicd_tools_rootdir
-    fi
+  if [ -d "${CICD_TOOLS_ROOTDIR}" ]; then
+    _delete_cicd_tools_rootdir
+  fi
 
-    git clone -q \
-        --branch "$CICD_TOOLS_REPO_BRANCH" \
-        "https://github.com/${CICD_TOOLS_REPO_ORG}/cicd-tools.git" "$CICD_TOOLS_ROOTDIR"
+  git clone -q \
+    --branch "$CICD_TOOLS_REPO_BRANCH" \
+    "https://github.com/${CICD_TOOLS_REPO_ORG}/cicd-tools.git" "$CICD_TOOLS_ROOTDIR"
 }
 
 _delete_cicd_tools_rootdir() {
-    echo "Removing existing CICD tools directory: '${CICD_TOOLS_ROOTDIR}'"
-    rm -rf "${CICD_TOOLS_ROOTDIR}"
+  cicd::debug "Removing existing CICD tools directory: '${CICD_TOOLS_ROOTDIR}'"
+  rm -rf "${CICD_TOOLS_ROOTDIR}"
 }
 
 cleanup() {
-    _delete_cicd_tools_rootdir
+  _delete_cicd_tools_rootdir
+  unset clone_cicd_tools_repo _delete_cicd_tools_rootdir cleanup
 }
 
 if [ -z "$CICD_TOOLS_SKIP_GIT_CLONE" ]; then
-    if ! clone_cicd_tools_repo; then
-        echo "couldn't clone cicd-tools repository!"
-        exit 1
-    fi
+  if ! clone_cicd_tools_repo; then
+    echo "couldn't clone cicd-tools repository!"
+    exit 1
+  fi
 fi
 
 # shellcheck source=src/main.sh
 source "$CICD_TOOLS_SCRIPTS_DIR/main.sh" "$@" || exit 1
 if [ -z "$CICD_TOOLS_SKIP_CLEANUP" ]; then
-    if ! cleanup; then
-        echo "couldn't perform cicd tools cleanup!"
-        exit 1
-    fi
+  if ! cleanup; then
+    echo "couldn't perform cicd tools cleanup!"
+    exit 1
+  fi
 fi
