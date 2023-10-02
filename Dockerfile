@@ -16,3 +16,9 @@ COPY Pipfile.lock /opt/app-root/src/
 RUN cd /opt/app-root/src && pip install -r <(pipenv requirements)
 
 COPY bin/* /opt/app-root/bin/
+
+LABEL \
+    io.k8s.description=bonfire-cicd-tools \
+    io.k8s.description=bonfire-cicd-tools \
+    io.openshift.tags="" \
+    summary=bonfire-cicd-tools
