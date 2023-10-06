@@ -108,6 +108,14 @@ cicd::image_builder::get_image_tag() {
 
   local commit_hash build_id tag
 
+  default_tag="$(cicd::image_builder::get_default_tag)"
+
+  if [ ! -z "$default_tag" ]; then
+    tag="${default_tag}"
+  else
+    tag=""
+  fi
+
   if ! commit_hash=$(cicd::common::get_7_chars_commit_hash); then
     cicd::err "Cannot retrieve commit hash!"
     return 1
@@ -115,10 +123,12 @@ cicd::image_builder::get_image_tag() {
 
   if cicd::image_builder::is_change_request_context; then
     build_id=$(cicd::image_builder::get_build_id)
-    tag="pr-${build_id}-${commit_hash}"
+    tag+="pr-${build_id}-${commit_hash}"
   else
-    tag="${commit_hash}"
+    tag+="${commit_hash}"
   fi
+
+  # prepend default tag
 
   echo -n "${tag}"
 }
@@ -138,6 +148,12 @@ cicd::image_builder::get_build_id() {
   fi
 
   echo -n "$build_id"
+}
+
+cicd::image_builder::get_default_tag() {
+  declare -a default_tag=("${DEFAULT_TAG}")
+
+  echo -n "${default_tag}"
 }
 
 cicd::image_builder::get_additional_tags() {
