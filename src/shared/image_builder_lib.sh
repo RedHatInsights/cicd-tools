@@ -110,7 +110,7 @@ cicd::image_builder::get_image_tag() {
 
   default_tag="$(cicd::image_builder::get_default_tag)"
 
-  if [ ! -z "$default_tag" ]; then
+  if [ -n "$default_tag" ]; then
     tag="${default_tag}"
   else
     tag=""
@@ -151,9 +151,9 @@ cicd::image_builder::get_build_id() {
 }
 
 cicd::image_builder::get_default_tag() {
-  declare -a default_tag=("${DEFAULT_TAG}")
+  local default_tag="$DEFAULT_TAG"
 
-  echo -n "${default_tag}"
+  echo -n "$default_tag"
 }
 
 cicd::image_builder::get_additional_tags() {
