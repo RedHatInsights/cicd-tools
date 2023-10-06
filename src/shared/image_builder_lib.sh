@@ -151,7 +151,11 @@ cicd::image_builder::get_build_id() {
 }
 
 cicd::image_builder::get_default_tag() {
-  local default_tag="$DEFAULT_TAG"
+  local default_tag
+
+  if [ -n "$DEFAULT_TAG" ]; then
+    default_tag="$DEFAULT_TAG"
+  fi
 
   echo -n "$default_tag"
 }
