@@ -111,7 +111,7 @@ cicd::image_builder::get_image_tag() {
   default_tag="$(cicd::image_builder::get_default_tag)"
 
   if [ -n "$default_tag" ]; then
-    tag="${default_tag}"
+    tag="${default_tag}-"
   fi
 
   if ! commit_hash=$(cicd::common::get_7_chars_commit_hash); then
