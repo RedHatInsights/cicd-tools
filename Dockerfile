@@ -2,7 +2,6 @@ FROM registry.access.redhat.com/ubi9-minimal:9.4-949.1717074713
 
 LABEL \
     io.k8s.description=hcc-cicd-tools \
-    io.k8s.description=hcc-cicd-tools \
     io.openshift.tags="" \
     summary=hcc-cicd-tools
 
