@@ -18,6 +18,5 @@ COPY bin/* /opt/app-root/bin/
 
 LABEL \
     io.k8s.description=bonfire-cicd-tools \
-    io.k8s.description=bonfire-cicd-tools \
     io.openshift.tags="" \
     summary=bonfire-cicd-tools
