@@ -1,7 +1,27 @@
-# Container lib module
+# Container module
 
 This module provides functions to help write container-engine agnostic Bash scripts. It does so by
 invoking one of the supported container engines found in the user's PATH.
+
+## Definition
+
+The module ID is `container`
+
+All functions exposed by this module will use the namespaced prefix:
+
+```
+cicd::container::
+```
+
+## Dependencies
+
+None
+
+### Public functions
+
+#### cicd::container::cmd
+
+Should be used instead of a container engine command to support container-engine agnostic commands (among the supported container engines)
 
 ## How to use
 
