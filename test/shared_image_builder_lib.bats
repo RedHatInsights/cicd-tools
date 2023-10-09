@@ -541,7 +541,7 @@ setup() {
 
     run cicd::image_builder::build_and_push
 
-    assert_success 
+    assert_success
     assert_output --regexp "^build.*?-t someimage:pr-123-source"
     refute_output --regexp "^build.*?-t someimage:target1"
     assert_output --regexp "^build.*?--label quay.expires-after"
@@ -567,4 +567,54 @@ setup() {
     assert [ -n "$DOCKER_CONFIG" ]
     assert [ -w "${DOCKER_CONFIG}/config.json" ]
 
+}
+
+@test "Default image tag is configured if none set" {
+
+    git() {
+        echo -n "abcdef1"
+    }
+
+    source main.sh image_builder
+
+    expected_tag="abcdef1"
+    actual_tag="$(cicd::image_builder::get_image_tag)"
+
+    assert [ "$expected_tag" == "$actual_tag" ]
+
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='some-cool-tag'
+
+    expected_tag="$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    actual_tag="$(cicd::image_builder::get_image_tag)"
+
+    assert [ "$expected_tag" == "$actual_tag" ]
+}
+
+@test "Build custom tag support" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    source main.sh image_builder
+
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_NAME='foobar'
+    export CONTAINERFILE_PATH='test/data/Containerfile.test'
+
+    expected_tag="$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    actual_tag="$(cicd::image_builder::get_image_tag)"
+
+    assert [ "$expected_tag" == "$actual_tag" ]
+
+    run cicd::image_builder::build
+
+    assert_output --regexp "^build.*-t foobar:custom-tag1"
+
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag2'
+    run cicd::image_builder::build
+
+    assert_output --regexp "^build.*-t foobar:custom-tag2"
+    refute_output --regexp "^build.*-t foobar:custom-tag1"
 }
