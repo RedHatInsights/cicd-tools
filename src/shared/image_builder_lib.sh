@@ -167,7 +167,7 @@ cicd::image_builder::get_additional_tags() {
   fi
 
   for tag in "${configured_tags[@]}"; do
-    additional_tags+=("$(cicd::image_builder::_get_context_based_image_tag $tag)")
+    additional_tags+=("$(cicd::image_builder::_get_context_based_image_tag "$tag")")
   done
 
   echo -n "${additional_tags[@]}"
