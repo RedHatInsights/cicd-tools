@@ -415,7 +415,7 @@ setup() {
     assert_output --partial "push someimage:tag2"
 }
 
-@test "push only one image on change-request-context" {
+@test "push all image tags with context prefix on change-request-context" {
 
     # git mock
     git() {
@@ -436,8 +436,8 @@ setup() {
 
     assert_success
     assert_output --partial "push someimage:pr-123-abcdef1"
-    refute_output --partial "push someimage:tag1"
-    refute_output --partial "push someimage:tag2"
+    assert_output --regexp "push someimage:pr-123-tag1"
+    assert_output --regexp "push someimage:pr-123-tag2"
 }
 
 @test "push error is caught" {
@@ -510,18 +510,22 @@ setup() {
     source main.sh image_builder
 
     IMAGE_NAME="someimage"
-    ADDITIONAL_TAGS=("target1")
+    ADDITIONAL_TAGS=("target1" "target2")
     CONTAINERFILE_PATH='test/data/Containerfile.test'
 
     run cicd::image_builder::build_and_push
 
     assert_success
-    assert_output --regexp "^build.*?-t someimage:source -t someimage:target1"
-    assert_output --partial "push"
+    assert_output --regexp "^build.*?-t someimage:source"
+    assert_output --regexp "^build.*?-t someimage:target1"
+    assert_output --regexp "^build.*?-t someimage:target2"
+    assert_output --partial "push someimage:source"
+    assert_output --partial "push someimage:target1"
+    assert_output --partial "push someimage:target2"
 }
 
 
-@test "build_and_push pushes only default tag if on change request context" {
+@test "build_and_push pushes all tags with context prefix if on change request context" {
 
     # git mock
     git() {
@@ -536,17 +540,16 @@ setup() {
 
     ghprbPullId='123'
     IMAGE_NAME="someimage"
-    ADDITIONAL_TAGS=("target1")
+    ADDITIONAL_TAGS=("target1" "target2")
     CONTAINERFILE_PATH='test/data/Containerfile.test'
 
     run cicd::image_builder::build_and_push
 
-    assert_success 
+    assert_success
     assert_output --regexp "^build.*?-t someimage:pr-123-source"
-    refute_output --regexp "^build.*?-t someimage:target1"
     assert_output --regexp "^build.*?--label quay.expires-after"
-    assert_output --regexp "^build.*?-t someimage:pr-123-source"
-    refute_output --regexp "^build.*?-t someimage:target1"
+    assert_output --regexp "^build.*?-t someimage:pr-123-target1"
+    assert_output --regexp "^build.*?-t someimage:pr-123-target2"
 }
 
 @test "Image build setup doesn't force fresh DOCKER_CONF if not in CI context" {
@@ -566,5 +569,96 @@ setup() {
     source main.sh image_builder
     assert [ -n "$DOCKER_CONFIG" ]
     assert [ -w "${DOCKER_CONFIG}/config.json" ]
+}
 
+@test "Default image tag is configured if none set" {
+
+    git() {
+        echo -n "abcdef1"
+    }
+
+    source main.sh image_builder
+
+    expected_tag="abcdef1"
+    run cicd::image_builder::get_image_tag
+    assert_output "$expected_tag"
+
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='some-cool-tag'
+    expected_tag="$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    run cicd::image_builder::get_image_tag
+    assert_output "$expected_tag"
+}
+
+@test "Build custom tag support" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    source main.sh image_builder
+
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_NAME='foobar'
+    export CONTAINERFILE_PATH='test/data/Containerfile.test'
+
+    expected_tag="$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    run cicd::image_builder::get_image_tag
+
+    assert_output "$expected_tag"
+
+    run cicd::image_builder::build
+
+    assert_output --regexp "^build.*-t foobar:custom-tag1"
+
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag2'
+    run cicd::image_builder::build
+
+    assert_output --regexp "^build.*-t foobar:custom-tag2"
+    refute_output --regexp "^build.*-t foobar:custom-tag1"
+}
+
+@test "Custom tag support for change request context" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    source main.sh image_builder
+
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
+    export ghprbPullId=123
+
+    expected_tag="pr-123-$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    run cicd::image_builder::get_image_tag
+
+    assert_output "$expected_tag"
+}
+
+@test "Build additional tags in change request context" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    source main.sh image_builder
+
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_NAME='foobar'
+    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
+    export CONTAINERFILE_PATH='test/data/Containerfile.test'
+    export CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS=("extra1" "extra2")
+    export ghprbPullId=123
+
+    expected_tag="pr-123-$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    run cicd::image_builder::get_image_tag
+
+    assert_output "$expected_tag"
+
+    run cicd::image_builder::build
+
+    assert_output --regexp "^build.*-t foobar:pr-123-custom-tag1"
+    assert_output --regexp "^build.*-t foobar:pr-123-extra1"
+    assert_output --regexp "^build.*-t foobar:pr-123-extra2"
 }

@@ -48,11 +48,9 @@ cicd::image_builder::build() {
   build_params=("-f" "$containerfile")
   build_params+=('-t' "$default_image_name")
 
-  if ! cicd::image_builder::is_change_request_context; then
-    for additional_tag in $(cicd::image_builder::get_additional_tags); do
-      build_params+=('-t' "${image_name}:${additional_tag}")
-    done
-  fi
+  for additional_tag in $(cicd::image_builder::get_additional_tags); do
+    build_params+=('-t' "${image_name}:${additional_tag}")
+  done
 
   for label in $(cicd::image_builder::get_labels); do
     build_params+=('--label' "${label}")
@@ -106,18 +104,37 @@ cicd::image_builder::_get_image_name() {
 
 cicd::image_builder::get_image_tag() {
 
-  local commit_hash build_id tag
+  local base_tag="${CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG:-$IMAGE_TAG}"
+
+  if [[ -z "$base_tag" ]]; then
+    base_tag=$(cicd::image_builder::get_commit_based_image_tag)
+  fi
+
+  cicd::image_builder::_get_context_based_image_tag "$base_tag"
+}
+
+cicd::image_builder::get_commit_based_image_tag() {
+
+  local commit_hash
 
   if ! commit_hash=$(cicd::common::get_7_chars_commit_hash); then
     cicd::err "Cannot retrieve commit hash!"
     return 1
   fi
 
+  echo -n "$commit_hash"
+}
+
+cicd::image_builder::_get_context_based_image_tag() {
+
+  local base_tag="$1"
+  local tag
+
   if cicd::image_builder::is_change_request_context; then
     build_id=$(cicd::image_builder::get_build_id)
-    tag="pr-${build_id}-${commit_hash}"
+    tag="pr-${build_id}-${base_tag}"
   else
-    tag="${commit_hash}"
+    tag="${base_tag}"
   fi
 
   echo -n "${tag}"
@@ -142,11 +159,16 @@ cicd::image_builder::get_build_id() {
 
 cicd::image_builder::get_additional_tags() {
 
-  declare -a additional_tags=("${CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS[@]:-${ADDITIONAL_TAGS[@]}}")
+  declare -a configured_tags=("${CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS[@]:-${ADDITIONAL_TAGS[@]}}")
+  declare -a additional_tags
 
-  if cicd::image_builder::_array_empty "${additional_tags[@]}"; then
-    additional_tags=()
+  if cicd::image_builder::_array_empty "${configured_tags[@]}"; then
+    configured_tags=()
   fi
+
+  for tag in "${configured_tags[@]}"; do
+    additional_tags+=("$(cicd::image_builder::_get_context_based_image_tag "$tag")")
+  done
 
   echo -n "${additional_tags[@]}"
 }
@@ -209,11 +231,9 @@ cicd::image_builder::push() {
 
   image_tags=("$image_tag")
 
-  if ! cicd::image_builder::is_change_request_context; then
-    for additional_tag in $(cicd::image_builder::get_additional_tags); do
-      image_tags+=("${additional_tag}")
-    done
-  fi
+  for additional_tag in $(cicd::image_builder::get_additional_tags); do
+    image_tags+=("$additional_tag")
+  done
 
   for tag in "${image_tags[@]}"; do
     if ! cicd::container::cmd push "${image_name}:${tag}"; then

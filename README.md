@@ -31,12 +31,13 @@ file [here](examples/unit_test_example.sh).
 The collection of helper libraries are expected to be loaded using the
 provided [src/bootstrap.sh](bootstrap) script.
 
-Currently, there are 2 supported libraries:
+Currently, there are 2 supported modules. To read more about what each of the modules provide,
+please read through the documents linked through the library IDs in the following table:
 
-| Library ID    | Description                                                                |
-|---------------|----------------------------------------------------------------------------|
-| container     | Provides wrapper functions for invoking container engine agnostic commands |
-| image_builder | Provides helper functions to simplify the image building process           |
+| Library ID                                            | Description                                                                |
+|-------------------------------------------------------|----------------------------------------------------------------------------|
+| [container](docs/cicd_tools/container_lib.md)         | Provides wrapper functions for invoking container engine agnostic commands |
+| [image_builder](docs/cicd_tools/image_builder_lib.md) | Provides helper functions to simplify the image building process           |
 
 ### How to use the helper libraries
 
@@ -45,14 +46,14 @@ centralized way. This should be helpful to reduce the amount of code needed to w
 operations in a pipeline for routine tasks, such as operating with containers or building container
 images.
 
-The [src/main.sh](main.sh) script is the main entrypoint and should be used to load the modules 
+The [src/main.sh](main.sh) script is the main entrypoint and should be used to load the modules
 included in this library. This script requires all the other scripts available in a local directory
 following the same structure in this repository.
 
 To use any of the provided libraries, you must source the [src/main.sh](main.sh) script
 and pass the unique library ID to be loaded as a parameter.
 
-There's two different approaches for loading these scripts, depending on if you're a contributor or 
+There's two different approaches for loading these scripts, depending on if you're a contributor or
 an end user.
 
 #### Contributing to the repository
@@ -63,7 +64,7 @@ contributing is to create a new fork and then open a pull request against the `m
 When working with a local copy of the repository, you should source the [src/main.sh](main.sh)
 script directly.
 
-#### Using the library from other scripts 
+#### Using the library from other scripts
 
 There is an existing helper script named [src/bootstrap.sh](bootstrap) to help with sourcing the
 [src/main.sh](main.sh) script if you're not contributing to this repo.
