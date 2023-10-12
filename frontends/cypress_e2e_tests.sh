@@ -2,7 +2,6 @@
 
 set -x
 
-TEST_CONT="cypress-e2e-test-0001"
 CYPRESS_TEST_IMAGE="quay.io/cloudservices/cypress-e2e-image:06b70f3"
 
 source ./helpers/general.sh

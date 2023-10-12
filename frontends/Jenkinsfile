@@ -181,7 +181,6 @@ pipeline {
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
                                 sh '''
-                                    env
                                     ./frontends/iqe_tests.sh
                                 '''
                             }
