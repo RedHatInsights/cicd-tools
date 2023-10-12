@@ -12,7 +12,3 @@ docker cp . "${TEST_CONT}:/opt/app-root/src/"
 
 docker exec -i -w "/opt/app-root/src/" $TEST_CONT sh -c "npm i"
 docker exec -i -w "/opt/app-root/src/" $TEST_CONT sh -c "npm run ci:lint"
-
-RESULT=$?
-
-exit $RESULT
