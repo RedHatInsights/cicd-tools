@@ -2,12 +2,14 @@
 
 TEARDOWN_RAN=0
 
-install_bootstrap {
+function install_bootstrap {
+
     curl -s "${CICD_URL}/bootstrap.sh" > .cicd_bootstrap.sh
     source ./.cicd_bootstrap.sh
 }
 
-trap_proxy {
+function trap_proxy {
+
     # https://stackoverflow.com/questions/9256644/identifying-received-signal-name-in-bash
     func="$1"; shift
     for sig; do
@@ -15,7 +17,8 @@ trap_proxy {
     done
 }
 
-teardown() {
+function teardown() {
+
     local CAPTURED_SIGNAL="$1"
 
     [ "$TEARDOWN_RAN" -ne "0" ] && return
@@ -29,7 +32,7 @@ teardown() {
     TEARDOWN_RAN=1
 }
 
-changes_excluding_docs() {
+function changes_excluding_docs() {
 
     local target_branch=${ghprbTargetBranch:-master}
     local docs_regex='^docs/.*\|^.*\.adoc'
@@ -45,7 +48,7 @@ changes_excluding_docs() {
     fi
 }
 
-create_junit_dummy_result() {
+function create_junit_dummy_result() {
 
     mkdir -p 'artifacts'
 
