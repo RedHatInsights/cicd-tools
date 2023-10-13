@@ -40,7 +40,7 @@ function changes_excluding_docs() {
     local detect_changes=$(git --no-pager diff --name-only "origin/${target_branch}" |\
         grep -v "$docs_regex" | grep -q '.')
 
-    if ! detect_changes; then
+    if [ -z detect_changes ]; then
         echo "No code changes detected, exiting"
         create_junit_dummy_result
 
