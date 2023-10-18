@@ -189,7 +189,7 @@ JUNIT_TEST_OUTPUTS=(
 )
 
 for file in "${JUNIT_TEST_OUTPUTS[@]}"; do
-  if [ ! -e "$file" ]; then
+  if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
     echo "The file $file does not exist."
     exit 1
   fi
