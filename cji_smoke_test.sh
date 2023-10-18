@@ -190,7 +190,7 @@ JUNIT_TEST_OUTPUTS=(
 
 for file in "${JUNIT_TEST_OUTPUTS[@]}"; do
   if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
-    echo "The file $file does not exist."
+    echo "The file $file does not exist. CJI Test(s) may have failed."
     exit 1
   fi
 done
