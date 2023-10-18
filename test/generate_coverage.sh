@@ -2,7 +2,7 @@
 
 COVERAGE_DIRECTORY="$PWD/coverage"
 BATS_CMD='bats'
-TESTS_DIRECTORY='test'
+TESTS_PATH="${1:-test}"
 IGNORE_TAGS='!no-kcov'
 KCOV_CMD='kcov'
 
@@ -24,7 +24,7 @@ fi
     "$COVERAGE_DIRECTORY" \
     "$BATS_CMD" \
     --filter-tags "$IGNORE_TAGS" \
-    "$TESTS_DIRECTORY"
+    "$TESTS_PATH"
 
 
 if [ "$CI" != 'true' ]; then

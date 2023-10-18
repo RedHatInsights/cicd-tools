@@ -4,30 +4,54 @@ setup() {
     _common_setup
 }
 
+
 @test "Load directly results in error" {
 
-    run ! source "src/shared/image_builder_lib.sh"
+    run ! source "src/shared/image_builder.sh"
     assert_failure
-    assert_output --partial "load through main.sh"
+    assert_output --partial "please use 'load_module.sh' to load modules."
 }
 
 @test "Does not fail sourcing the library" {
 
-    run source main.sh image_builder
+    run source load_module.sh image_builder
     assert_success
+}
+
+@test "local build check" {
+
+    unset CI
+
+    assert [ -z "$LOCAL_BUILD" ]
+    assert [ -z "$CI" ]
+    source src/load_module.sh image_builder
+    run cicd::image_builder::local_build
+    assert_success
+    CI='true'
+    run cicd::image_builder::local_build
+    assert_failure
+    assert_output ""
+    LOCAL_BUILD='true'
+    run cicd::image_builder::local_build
+    assert_output ""
+    assert_success
+    unset LOCAL_BUILD
+    run ! cicd::image_builder::local_build
+    assert_output ""
+    assert_failure
 }
 
 @test "Sets expected loaded flags" {
 
-    assert [ -z "$CICD_TOOLS_COMMON_LOADED" ]
-    assert [ -z "$CICD_TOOLS_CONTAINER_ENGINE_LOADED" ]
-    assert [ -z "$CICD_TOOLS_IMAGE_BUILDER_LOADED" ]
+    assert [ -z "$CICD_COMMON_MODULE_LOADED" ]
+    assert [ -z "$CICD_CONTAINER_ENGINE_MODULE_LOADED" ]
+    assert [ -z "$CICD_IMAGE_BUILDER_MODULE_LOADED" ]
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
-    assert [ -n "$CICD_TOOLS_COMMON_LOADED" ]
-    assert [ -n "$CICD_TOOLS_CONTAINER_ENGINE_LOADED" ]
-    assert [ -n "$CICD_TOOLS_IMAGE_BUILDER_LOADED" ]
+    assert [ -n "$CICD_COMMON_MODULE_LOADED" ]
+    assert [ -n "$CICD_CONTAINER_ENGINE_MODULE_LOADED" ]
+    assert [ -n "$CICD_IMAGE_BUILDER_MODULE_LOADED" ]
 }
 
 @test "Image tag outside of a change request context" {
@@ -37,7 +61,7 @@ setup() {
         echo "1abcdef"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
     run cicd::image_builder::get_image_tag
     assert_success
     assert_output '1abcdef'
@@ -51,7 +75,7 @@ setup() {
     }
 
     ghprbPullId=123
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     run cicd::image_builder::get_image_tag
 
@@ -68,7 +92,7 @@ setup() {
 
     gitlabMergeRequestId=4321
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     run cicd::image_builder::get_image_tag
 
@@ -89,7 +113,7 @@ setup() {
         echo "1abcdef"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     EXPECTED_CONTAINERFILE_PATH='Dockerfile'
     IMAGE_NAME='quay.io/foo/bar'
@@ -113,7 +137,7 @@ setup() {
         echo "1abcdef"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     run ! cicd::image_builder::build
     assert_failure
@@ -134,7 +158,7 @@ setup() {
     }
 
     IMAGE_NAME='quay.io/foo/bar'
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     run ! cicd::image_builder::build
     assert_failure
@@ -154,7 +178,7 @@ setup() {
         echo "1abcdef"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     EXPECTED_CONTAINERFILE_PATH='Dockerfile'
     IMAGE_NAME='quay.io/foo/bar'
@@ -182,7 +206,7 @@ setup() {
         echo "1abcdef"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME='quay.io/my-awesome-org/my-awesome-app'
     CICD_TOOLS_IMAGE_BUILDER_LABELS=("LABEL1=FOO" "LABEL2=bar")
@@ -219,7 +243,7 @@ setup() {
         echo "1abcdef"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     ghprbPullId="123"
     IMAGE_NAME="someimage"
@@ -245,7 +269,7 @@ setup() {
         echo "1abcdef"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME="someimage"
     CONTAINERFILE_PATH='test/data/Containerfile.test'
@@ -268,7 +292,7 @@ setup() {
     CICD_TOOLS_IMAGE_BUILDER_QUAY_USER="username1"
     CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
 
-    run source main.sh image_builder
+    run source load_module.sh image_builder
 
     assert_success
     assert_output --regexp "^login.*quay.io"
@@ -277,7 +301,7 @@ setup() {
     CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER="username2"
     CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD="secr3t"
 
-    run source main.sh image_builder
+    run source load_module.sh image_builder
     assert_success
     assert_output --regexp "^login.*registry.redhat.io"
     assert_output --partial "-u=username2"
@@ -293,7 +317,7 @@ setup() {
     CICD_TOOLS_IMAGE_BUILDER_QUAY_USER="wrong-user"
     CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
 
-    run ! source main.sh image_builder
+    run ! source load_module.sh image_builder
 
     assert_failure
     assert_output --partial "Image builder setup failed!"
@@ -310,7 +334,7 @@ setup() {
     CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER="wrong-user"
     CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD="wrong-password"
 
-    run ! source main.sh image_builder
+    run ! source load_module.sh image_builder
 
     assert_failure
     assert_output --partial "Image builder setup failed!"
@@ -325,7 +349,7 @@ setup() {
         echo "1abcdef"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("foo" "bar" "baz")
@@ -353,7 +377,7 @@ setup() {
         echo "$@"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1" "target2" "target3")
@@ -379,7 +403,7 @@ setup() {
       return 1
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
@@ -402,7 +426,7 @@ setup() {
         echo "$@"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("tag1" "tag2")
@@ -426,7 +450,7 @@ setup() {
         echo "$@"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME="someimage"
     ghprbPullId="123"
@@ -452,7 +476,7 @@ setup() {
       return 1
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
@@ -479,7 +503,7 @@ setup() {
         unset CI
     fi
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1")
@@ -507,7 +531,7 @@ setup() {
         CI="true"
     fi
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     IMAGE_NAME="someimage"
     ADDITIONAL_TAGS=("target1" "target2")
@@ -536,7 +560,7 @@ setup() {
       echo "$@"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     ghprbPullId='123'
     IMAGE_NAME="someimage"
@@ -557,7 +581,7 @@ setup() {
     unset DOCKER_CONFIG
     unset CI
 
-    source main.sh image_builder
+    source load_module.sh image_builder
     assert [ -z "$DOCKER_CONFIG" ]
 }
 
@@ -566,7 +590,7 @@ setup() {
     CI="true"
     unset DOCKER_CONFIG
 
-    source main.sh image_builder
+    source load_module.sh image_builder
     assert [ -n "$DOCKER_CONFIG" ]
     assert [ -w "${DOCKER_CONFIG}/config.json" ]
 }
@@ -577,7 +601,7 @@ setup() {
         echo -n "abcdef1"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     expected_tag="abcdef1"
     run cicd::image_builder::get_image_tag
@@ -596,7 +620,7 @@ setup() {
         echo "$@"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
     export CICD_TOOLS_IMAGE_BUILDER_IMAGE_NAME='foobar'
@@ -625,7 +649,7 @@ setup() {
         echo "$@"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
     export ghprbPullId=123
@@ -643,7 +667,7 @@ setup() {
         echo "$@"
     }
 
-    source main.sh image_builder
+    source load_module.sh image_builder
 
     export CICD_TOOLS_IMAGE_BUILDER_IMAGE_NAME='foobar'
     export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'

@@ -6,28 +6,28 @@ setup() {
 
 @test "Load directly results in error" {
 
-    run ! source "src/shared/container_lib.sh"
+    run ! source "src/shared/container.sh"
     assert_failure
-    assert_output --partial "load through main.sh"
+    assert_output --partial "please use 'load_module.sh' to load modules."
 }
 
 @test "Sets expected loaded flags" {
 
-    assert [ -z "$CICD_TOOLS_COMMON_LOADED" ]
-    assert [ -z "$CICD_TOOLS_CONTAINER_ENGINE_LOADED" ]
+    assert [ -z "$CICD_COMMON_MODULE_LOADED" ]
+    assert [ -z "$CICD_CONTAINER_MODULE_LOADED" ]
 
-    source main.sh container
+    source load_module.sh container
 
-    assert [ -n "$CICD_TOOLS_COMMON_LOADED" ]
-    assert [ -n "$CICD_TOOLS_CONTAINER_ENGINE_LOADED" ]
+    assert [ -n "$CICD_COMMON_MODULE_LOADED" ]
+    assert [ -n "$CICD_CONTAINER_MODULE_LOADED" ]
 }
 
-@test "Loading common message is displayed" {
+@test "Loading message is displayed" {
 
-    CICD_TOOLS_DEBUG=1
-    run source main.sh container
+    CICD_LOG_DEBUG=1
+    run source load_module.sh container
     assert_success
-    assert_output --partial "loading container lib"
+    assert_output --partial "loading container module"
 }
 
 @test "container engine cmd is set once" {
@@ -39,13 +39,13 @@ setup() {
         echo "podman version 1"
     }
 
-    PREFER_CONTAINER_ENGINE="docker"
+    CICD_CONTAINER_PREFER_ENGINE="docker"
 
     run ! cicd::container::cmd
     assert_failure
     assert_output --partial "cicd::container::cmd: command not found"
 
-    source src/main.sh container
+    source load_module.sh container
 
     cicd::container::cmd --version
     run cicd::container::cmd --version
@@ -53,8 +53,8 @@ setup() {
     assert_success 
     assert_output "docker version 1"
 
-    unset PREFER_container
-    source main.sh container
+    unset CICD_CONTAINER_PREFER_ENGINE
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_success 
     assert_output "docker version 1"
@@ -73,7 +73,7 @@ setup() {
     assert_failure
     assert_output --partial "cicd::container::cmd: command not found"
 
-    source src/main.sh container
+    source src/load_module.sh container
 
     cicd::container::cmd --version
 
@@ -83,7 +83,7 @@ setup() {
     assert_success 
     assert_output "podman version 1"
 
-    source main.sh container
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_success 
     assert_output "podman version 1"
@@ -95,7 +95,7 @@ setup() {
         echo "podman version 1"
     }
 
-    source main.sh container
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_output --partial "podman version 1"
 }
@@ -112,7 +112,7 @@ setup() {
         echo 'podman version 1'
     }
 
-    source main.sh container
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_output --regexp "WARNING.*docker.*seems emulated"
     assert_output --partial "podman version 1"
@@ -120,7 +120,7 @@ setup() {
 
 @test "if no container engine found, fails" {
 
-    source main.sh container
+    source load_module.sh container
     OLDPATH="$PATH"
     PATH=':'
     run ! cicd::container::cmd --version
@@ -136,7 +136,7 @@ setup() {
     docker() {
         echo 'docker version 1'
     }
-    source main.sh container
+    source load_module.sh container
 
     OLDPATH="$PATH"
     PATH=':'
@@ -157,7 +157,7 @@ setup() {
     date() {
        echo -n "Thu Sep 21 06:25:51 PM CEST 2023"
     }
-    source main.sh container
+    source load_module.sh container
 
     OLDPATH="$PATH"
     PATH=':'
@@ -177,7 +177,7 @@ setup() {
     docker() {
         echo 'docker version 1'
     }
-    source main.sh container
+    source load_module.sh container
 
     run cicd::container::cmd --version
     assert_success
@@ -194,7 +194,7 @@ setup() {
     docker() {
         echo 'docker version 1'
     }
-    source main.sh container
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_success
     assert_output --partial "docker version 1"
@@ -211,7 +211,7 @@ setup() {
     podman() {
         echo 'podman version 1'
     }
-    source main.sh container
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_success
     assert_output --regexp "WARNING.*'cat'.*isn't supported"

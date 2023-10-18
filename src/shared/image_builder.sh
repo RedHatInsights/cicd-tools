@@ -6,11 +6,11 @@ if [[ -n "$CICD_IMAGE_BUILDER_MODULE_LOADED" ]]; then
 fi
 
 if [[ -z "$CICD_LOADER_MODULE_LOADED" ]]; then
-  echo "loader module not found, please use $(load_module.sh) to load modules."
+  echo "loader module not found, please use 'load_module.sh' to load modules."
   return 1
 fi
 
-cicd::log::debug "loading image builder module"
+cicd::log::debug "loading image_builder module"
 
 readonly CICD_IMAGE_BUILDER_LOCAL_BUILD=${CICD_IMAGE_BUILDER_LOCAL_BUILD:-$LOCAL_BUILD}
 readonly CICD_IMAGE_BUILDER_REDHAT_REGISTRY='registry.redhat.io'
@@ -323,5 +323,5 @@ if ! cicd::image_builder::_image_builder_setup; then
   return 1
 fi
 
-cicd::log::debug "Image builder module loaded"
+cicd::log::debug "image_builder module loaded"
 CICD_IMAGE_BUILDER_MODULE_LOADED='true'

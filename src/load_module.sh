@@ -7,4 +7,5 @@ if ! source "${CICD_LOADER_SCRIPTS_DIR}/shared/loader.sh"; then
     exit 1
 fi
 
+# TODO: undo all loader module stuff
 cicd::loader::load_module "$1"

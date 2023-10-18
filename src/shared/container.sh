@@ -6,57 +6,59 @@ if [[ -n "$CICD_CONTAINER_MODULE_LOADED" ]]; then
 fi
 
 if [[ -z "$CICD_LOADER_MODULE_LOADED" ]]; then
-  echo "loader module not found, please use $(load_module.sh) to load modules."
+  echo "loader module not found, please use 'load_module.sh' to load modules."
   return 1
 fi
 
 cicd::log::debug "loading container module"
 
-CONTAINER_ENGINE_CMD=''
-PREFER_CONTAINER_ENGINE=${PREFER_CONTAINER_ENGINE:-}
+CICD_CONTAINER_ENGINE=''
+CICD_CONTAINER_PREFER_ENGINE=${CICD_CONTAINER_PREFER_ENGINE:-}
 
 cicd::container::cmd() {
 
-  if [[ -z "$CONTAINER_ENGINE_CMD" ]]; then
+  if [[ -z "$CICD_CONTAINER_ENGINE" ]]; then
     if ! cicd::container::_set_container_engine_cmd; then
       return 1
     fi
   fi
 
-  "$CONTAINER_ENGINE_CMD" "$@"
+  "$CICD_CONTAINER_ENGINE" "$@"
 }
 
 cicd::container::_set_container_engine_cmd() {
 
   if cicd::container::_preferred_container_engine_available; then
-    CONTAINER_ENGINE_CMD="$PREFER_CONTAINER_ENGINE"
+    CICD_CONTAINER_ENGINE="$CICD_CONTAINER_PREFER_ENGINE"
   else
     if cicd::container::_container_engine_available 'podman'; then
-      CONTAINER_ENGINE_CMD='podman'
+      CICD_CONTAINER_ENGINE='podman'
     elif cicd::container::_container_engine_available 'docker'; then
-      CONTAINER_ENGINE_CMD='docker'
+      CICD_CONTAINER_ENGINE='docker'
     else
       cicd::log::err "ERROR, no container engine found, please install either podman or docker first"
       return 1
     fi
   fi
 
-  cicd::log::debug "Container engine selected: $CONTAINER_ENGINE_CMD"
+  readonly CICD_CONTAINER_ENGINE
+
+  cicd::log::debug "Container engine selected: $CICD_CONTAINER_ENGINE"
 }
 
 cicd::container::_preferred_container_engine_available() {
 
-  local CONTAINER_ENGINE_AVAILABLE=1
+  local engine_available=1
 
-  if [ -n "$PREFER_CONTAINER_ENGINE" ]; then
-    if cicd::container::_container_engine_available "$PREFER_CONTAINER_ENGINE"; then
-      CONTAINER_ENGINE_AVAILABLE=0
+  if [ -n "$CICD_CONTAINER_PREFER_ENGINE" ]; then
+    if cicd::container::_container_engine_available "$CICD_CONTAINER_PREFER_ENGINE"; then
+      engine_available=0
     else
-      cicd::log::info "WARNING: preferred container engine '${PREFER_CONTAINER_ENGINE}' not present, or isn't supported, finding alternative..."
+      cicd::log::info "WARNING: preferred container engine '${CICD_CONTAINER_PREFER_ENGINE}' not present, or isn't supported, finding alternative..."
     fi
   fi
 
-  return "$CONTAINER_ENGINE_AVAILABLE"
+  return "$engine_available"
 }
 
 cicd::container::_container_engine_available() {
@@ -90,10 +92,10 @@ cicd::container::_cmd_exists_and_is_supported() {
 
 cicd::container::_supported_container_engine() {
 
-  local CONTAINER_ENGINE_TO_CHECK="$1"
+  local engine_to_check="$1"
 
-  [ "$CONTAINER_ENGINE_TO_CHECK" = 'docker' ] ||
-    [ "$CONTAINER_ENGINE_TO_CHECK" = 'podman' ]
+  [ "$engine_to_check" = 'docker' ] ||
+    [ "$engine_to_check" = 'podman' ]
 }
 
 cicd::container::_docker_seems_emulated() {

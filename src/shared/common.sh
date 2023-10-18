@@ -6,7 +6,7 @@ if [[ -n "$CICD_COMMON_MODULE_LOADED" ]]; then
 fi
 
 if [[ -z "$CICD_LOADER_MODULE_LOADED" ]]; then
-  echo "loader module not found, please use $(load_module.sh) to load modules."
+  echo "loader module not found, please use 'load_module.sh' to load modules."
   return 1
 fi
 
