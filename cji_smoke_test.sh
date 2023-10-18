@@ -181,10 +181,19 @@ if [ "$MINIO_SUCCESS" = false ]; then
     exit 1
 fi
 
-if [ ! "$(ls -A $directory)" ]; then
-  echo "ERROR: no files found in $directory."
-  exit 1
-fi
+JUNIT_TEST_OUTPUTS=(
+    "iqe-${CJI_NAME}-parallel.log"
+    "iqe-${CJI_NAME}-sequential.log"
+    "junit-${CJI_NAME}-parallel.xml"
+    "junit-${CJI_NAME}-sequential.xml"
+)
+
+for file in "${JUNIT_TEST_OUTPUTS[@]}"; do
+  if [ ! -e "$file" ]; then
+    echo "The file $file does not exist."
+    exit 1
+  fi
+done
 
 echo "copied artifacts from iqe pod: "
 ls -l $ARTIFACTS_DIR
