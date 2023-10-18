@@ -181,5 +181,10 @@ if [ "$MINIO_SUCCESS" = false ]; then
     exit 1
 fi
 
+if [ ! "$(ls -A $directory)" ]; then
+  echo "ERROR: no files found in $directory."
+  exit 1
+fi
+
 echo "copied artifacts from iqe pod: "
 ls -l $ARTIFACTS_DIR
