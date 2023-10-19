@@ -181,19 +181,31 @@ if [ "$MINIO_SUCCESS" = false ]; then
     exit 1
 fi
 
-JUNIT_TEST_OUTPUTS=(
-    "iqe-${CJI_NAME}-parallel.log"
+JUNIT_SEQUENTIAL_OUTPUTS=(
     "iqe-${CJI_NAME}-sequential.log"
-    "junit-${CJI_NAME}-parallel.xml"
     "junit-${CJI_NAME}-sequential.xml"
 )
 
-for file in "${JUNIT_TEST_OUTPUTS[@]}"; do
+for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
   if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
     echo "The file $file does not exist. CJI Test(s) may have failed."
     exit 1
   fi
 done
+
+if [ "$IQE_PARALLEL_ENABLED" = "true" ]
+    JUNIT_PARALLEL_OUTPUTS=(
+        "iqe-${CJI_NAME}-parallel.log"
+        "junit-${CJI_NAME}-parallel.xml"
+    )
+
+    for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
+    if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
+        echo "The file $file does not exist. CJI Test(s) may have failed."
+        exit 1
+    fi
+    done
+fi
 
 echo "copied artifacts from iqe pod: "
 ls -l $ARTIFACTS_DIR
