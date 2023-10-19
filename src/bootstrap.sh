@@ -18,7 +18,7 @@ cicd::bootstrap::clone_cicd_tools_repo() {
 }
 
 cicd::bootstrap::_delete_rootdir() {
-  cicd::debug "Removing existing CICD tools directory: '${CICD_BOOTSTRAP_ROOTDIR}'"
+  cicd::log::debug "Removing existing CICD tools directory: '${CICD_BOOTSTRAP_ROOTDIR}'"
   rm -rf "${CICD_BOOTSTRAP_ROOTDIR}"
 }
 
@@ -35,7 +35,7 @@ if [ -z "$CICD_BOOTSTRAP_SKIP_GIT_CLONE" ]; then
   fi
 fi
 
-# shellcheck source=src/main.sh
+# shellcheck source=src/load_module.sh
 source "$CICD_BOOTSTRAP_ROOTDIR/src/load_module.sh" "$@" || exit 1
 if [[ -z "$CICD_BOOTSTRAP_SKIP_CLEANUP" ]] && ! cicd::bootstrap::cleanup; then
   echo "couldn't perform cicd tools cleanup!"
