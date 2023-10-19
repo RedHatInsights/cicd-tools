@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # container engine helper functions to handle both podman and docker commands
 
 if [[ -n "$CICD_CONTAINER_MODULE_LOADED" ]]; then

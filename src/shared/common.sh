@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Common functions that are shared across the different modules
 
 if [[ -n "$CICD_COMMON_MODULE_LOADED" ]]; then

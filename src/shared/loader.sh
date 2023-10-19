@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# Internal module to provide module loading helper functions
+
 CICD_LOADER_MODULE_LOADED=${CICD_LOADER_MODULE_LOADED:-1}
 
 if [[ "$CICD_LOADER_MODULE_LOADED" -eq 0 ]]; then
@@ -11,6 +15,7 @@ if [[ -z "$CICD_LOADER_SCRIPTS_DIR" ]]; then
   return 1
 fi
 
+# shellcheck source=src/shared/log.sh
 if ! source "${CICD_LOADER_SCRIPTS_DIR}/shared/log.sh"; then
   echo "Error loading 'log' module!"
   return 1
@@ -44,7 +49,7 @@ cicd::loader::_load_all() {
 }
 
 cicd::loader::_load_log_module() {
-  # shellcheck source=src/shared/common.sh
+  # shellcheck source=src/shared/log.sh
   source "${CICD_LOADER_SCRIPTS_DIR}/shared/log.sh"
 }
 

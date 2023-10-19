@@ -1,3 +1,7 @@
+#!/bin/bash
+
+# logging helper funtions
+
 CICD_LOG_DEBUG=${CICD_LOG_DEBUG:-}
 
 if [[ -n "$CICD_LOG_MODULE_LOADED" ]]; then

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # helper functions to build container images
 
 if [[ -n "$CICD_IMAGE_BUILDER_MODULE_LOADED" ]]; then
