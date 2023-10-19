@@ -12,12 +12,13 @@ docker() {
 
 load_common_helper_cicd_tools() {
 
-    local PREFER_CONTAINER_ENGINE='docker'
+    local CICD_CONTAINER_PREFER_ENGINE='docker'
     local LIBRARY_TO_LOAD=${1:-all}
-    local MAIN_SCRIPT='./src/main.sh'
+    local MAIN_SCRIPT='./src/load_module.sh'
     source "$MAIN_SCRIPT" "$LIBRARY_TO_LOAD"
     cicd::container::cmd --version
 }
+
 load_common_helper_cicd_tools container
 
 EXPECTED_OUTPUT=$(cicd::container::cmd --version)

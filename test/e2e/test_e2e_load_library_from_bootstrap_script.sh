@@ -25,17 +25,7 @@ load_cicd_helper_functions() {
             CICD_BOOTSTRAP_ROOTDIR=.
         fi
         source src/bootstrap.sh "$LIBRARY_TO_LOAD"
-#        if [ "$GITHUB_HEAD_REF" != "main" ]; then
-#            CICD_BOOTSTRAP_ROOTDIR=.
-#            CICD_BOOTSTRAP_SKIP_GIT_CLONE=1
-#            source src/bootstrap.sh "$LIBRARY_TO_LOAD"
-#        else
-#            source <(curl -sSL "$CICD_URL") "$LIBRARY_TO_LOAD"
-#        fi
     fi
-
-    # required to persist container preferrence
-    cicd::container::cmd --version
 }
 
 load_cicd_helper_functions container
