@@ -47,7 +47,6 @@ setup() {
 
     source load_module.sh container
 
-    cicd::container::cmd --version
     run cicd::container::cmd --version
 
     assert_success 
@@ -77,7 +76,7 @@ setup() {
 
     cicd::container::cmd --version
 
-    PREFER_CONTAINER_ENGINE="docker"
+    CICD_CONTAINER_PREFER_ENGINE="docker"
 
     run cicd::container::cmd --version
     assert_success 
@@ -102,7 +101,8 @@ setup() {
 
 @test "if forcing docker as container engine but is emulated, keeps looking and uses podman if found" {
 
-    PREFER_CONTAINER_ENGINE="docker"
+    export CICD_CONTAINER_PREFER_ENGINE="docker"
+    export CICD_LOG_DEBUG='1'
 
     docker() {
         podman
@@ -112,58 +112,71 @@ setup() {
         echo 'podman version 1'
     }
 
-    source load_module.sh container
-    run cicd::container::cmd --version
+    run source load_module.sh container
     assert_output --regexp "WARNING.*docker.*seems emulated"
-    assert_output --partial "podman version 1"
+    assert_output --partial "engine selected: podman"
 }
 
 @test "if no container engine found, fails" {
 
-    source load_module.sh container
+    # date mock required by log module
+    date() {
+       echo -n "Thu Sep 21 06:25:51 PM CEST 2023"
+    }
+    # force the test not to find the container engines
     OLDPATH="$PATH"
     PATH=':'
-    run ! cicd::container::cmd --version
+    CICD_LOADER_SCRIPTS_DIR="$(pwd)/src"
+    run ! source src/load_module.sh container
     PATH="$OLDPATH"
     assert_failure
     assert_output --partial "ERROR, no container engine found"
+    assert_output --partial "container module setup failed"
 }
 
 @test "if forcing podman but not found, uses docker if found and not emulated" {
 
-    PREFER_CONTAINER_ENGINE="podman"
+    export CICD_CONTAINER_PREFER_ENGINE="podman"
+    export CICD_LOG_DEBUG='1'
 
     docker() {
         echo 'docker version 1'
     }
-    source load_module.sh container
+    # date mock required by log module
+    date() {
+       echo -n "Thu Sep 21 06:25:51 PM CEST 2023"
+    }
 
+    # force the test not to find the container engines
     OLDPATH="$PATH"
     PATH=':'
 
-    run cicd::container::cmd --version
+    CICD_LOADER_SCRIPTS_DIR="$(pwd)/src"
+    run source src/load_module.sh container
     PATH="$OLDPATH"
+
     assert_output --regexp "WARNING.*podman.*not present"
-    assert_output --partial "docker version 1"
+    assert_output --partial "engine selected: docker"
 }
 
 @test "if forcing podman but not found and docker is emulated it fails" {
 
-    PREFER_CONTAINER_ENGINE="podman"
+    export CICD_CONTAINER_PREFER_ENGINE="podman"
+    export CICD_LOADER_SCRIPTS_DIR="$(pwd)/src"
 
     docker() {
         echo 'podman version 1'
     }
+    # date mock required by log module
     date() {
        echo -n "Thu Sep 21 06:25:51 PM CEST 2023"
     }
-    source load_module.sh container
+
 
     OLDPATH="$PATH"
     PATH=':'
-    run cicd::container::cmd --version
+    run ! source src/load_module.sh container
     PATH="$OLDPATH"
-    assert [ $status -eq 1 ]
     assert_output --regexp "WARNING.*docker seems emulated"
     assert_output --regexp "WARNING.*podman.*not present"
     assert_output --partial "no container engine found"
@@ -186,7 +199,7 @@ setup() {
 
 @test "Docker can be set as preferred over podman if both are available" {
 
-    PREFER_CONTAINER_ENGINE='docker'
+    export CICD_CONTAINER_PREFER_ENGINE='docker'
 
     podman() {
         echo 'podman version 1'
@@ -202,8 +215,8 @@ setup() {
 
 @test "cat is not a supported container engine" {
 
-    PREFER_CONTAINER_ENGINE='cat'
-
+    export CICD_CONTAINER_PREFER_ENGINE='cat'
+    export CICD_LOG_DEBUG='1'
 
     cat() {
         echo "not an awesome container engine"
@@ -211,9 +224,9 @@ setup() {
     podman() {
         echo 'podman version 1'
     }
-    source load_module.sh container
-    run cicd::container::cmd --version
+    run source load_module.sh container
     assert_success
     assert_output --regexp "WARNING.*'cat'.*isn't supported"
-    assert_output --partial "podman version 1"
+    assert_output --partial "finding alternative"
+    assert_output --partial "engine selected: podman"
 }

@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # https://stackoverflow.com/a/246128
-readonly CICD_LOADER_SCRIPTS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+if [ -z "$CICD_LOADER_SCRIPTS_DIR" ]; then
+    readonly CICD_LOADER_SCRIPTS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+fi
+
 if ! source "${CICD_LOADER_SCRIPTS_DIR}/shared/loader.sh"; then
     echo "Error loading 'loader' module!"
     exit 1

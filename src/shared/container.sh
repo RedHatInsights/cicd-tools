@@ -16,13 +16,6 @@ CICD_CONTAINER_ENGINE=''
 CICD_CONTAINER_PREFER_ENGINE=${CICD_CONTAINER_PREFER_ENGINE:-}
 
 cicd::container::cmd() {
-
-  if [[ -z "$CICD_CONTAINER_ENGINE" ]]; then
-    if ! cicd::container::_set_container_engine_cmd; then
-      return 1
-    fi
-  fi
-
   "$CICD_CONTAINER_ENGINE" "$@"
 }
 
@@ -105,6 +98,19 @@ cicd::container::_docker_seems_emulated() {
 cicd::container::_podman_version_under_4_5_0() {
   [ "$(echo -en "4.5.0\n$(_podman_version)" | sort -V | head -1)" != "4.5.0" ]
 }
+
+cicd::container::_module_setup() {
+
+  if ! cicd::container::_set_container_engine_cmd; then
+    cicd::log::err "Error configuring a container engine!"
+    return 1
+  fi
+}
+
+if ! cicd::container::_module_setup; then
+  cicd::log::err "container module setup failed!"
+  return 1
+fi
 
 cicd::log::debug "container module loaded"
 CICD_CONTAINER_MODULE_LOADED='true'

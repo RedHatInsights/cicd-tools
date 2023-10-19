@@ -256,7 +256,7 @@ cicd::image_builder::get_full_image_name() {
   echo -n "${image_name}:${image_tag}"
 }
 
-cicd::image_builder::_image_builder_setup() {
+cicd::image_builder::_module_setup() {
 
   if ! cicd::image_builder::_try_log_in_to_image_registries; then
     cicd::log::err "Error trying to log into the image registries!"
@@ -318,8 +318,8 @@ cicd::image_builder::_log_in_to_redhat_registry() {
     "$CICD_IMAGE_BUILDER_REDHAT_REGISTRY"
 }
 
-if ! cicd::image_builder::_image_builder_setup; then
-  cicd::log::err "Image builder setup failed!"
+if ! cicd::image_builder::_module_setup; then
+  cicd::log::err "image_builder module setup failed!"
   return 1
 fi
 
