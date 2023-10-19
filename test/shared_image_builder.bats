@@ -18,40 +18,48 @@ setup() {
     assert_success
 }
 
-@test "local build check" {
-
-    unset CI
-
-    assert [ -z "$LOCAL_BUILD" ]
-    assert [ -z "$CI" ]
-    source src/load_module.sh image_builder
-    run cicd::image_builder::local_build
-    assert_success
-    CI='true'
-    run cicd::image_builder::local_build
-    assert_failure
-    assert_output ""
-    LOCAL_BUILD='true'
-    run cicd::image_builder::local_build
-    assert_output ""
-    assert_success
-    unset LOCAL_BUILD
-    run ! cicd::image_builder::local_build
-    assert_output ""
-    assert_failure
-}
-
 @test "Sets expected loaded flags" {
 
     assert [ -z "$CICD_COMMON_MODULE_LOADED" ]
-    assert [ -z "$CICD_CONTAINER_ENGINE_MODULE_LOADED" ]
+    assert [ -z "$CICD_CONTAINER_MODULE_LOADED" ]
     assert [ -z "$CICD_IMAGE_BUILDER_MODULE_LOADED" ]
 
     source load_module.sh image_builder
 
     assert [ -n "$CICD_COMMON_MODULE_LOADED" ]
-    assert [ -n "$CICD_CONTAINER_ENGINE_MODULE_LOADED" ]
+    assert [ -n "$CICD_CONTAINER_MODULE_LOADED" ]
     assert [ -n "$CICD_IMAGE_BUILDER_MODULE_LOADED" ]
+}
+
+@test "local build check outside of CI" {
+
+    unset CI
+
+    assert [ -z "$CICD_IMAGE_BUILDER_LOCAL_BUILD" ]
+    assert [ -z "$CI" ]
+    source load_module.sh image_builder
+    run cicd::image_builder::local_build
+    assert_success
+    assert_output ""
+}
+
+@test "local build check in CI" {
+
+    export CI='true'
+    source load_module.sh image_builder
+    run cicd::image_builder::local_build
+    assert_failure
+    assert_output ""
+}
+
+@test "local build check forced with variable" {
+
+    export CI='true'
+    export CICD_IMAGE_BUILDER_LOCAL_BUILD='true'
+    source load_module.sh image_builder
+    run cicd::image_builder::local_build
+    assert_success
+    assert_output ""
 }
 
 @test "Image tag outside of a change request context" {
@@ -209,11 +217,11 @@ setup() {
     source load_module.sh image_builder
 
     IMAGE_NAME='quay.io/my-awesome-org/my-awesome-app'
-    CICD_TOOLS_IMAGE_BUILDER_LABELS=("LABEL1=FOO" "LABEL2=bar")
-    CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS=("test1" "additional-label-2" "security")
-    CICD_TOOLS_IMAGE_BUILDER_BUILD_ARGS=("BUILD_ARG1=foobar" "BUILD_ARG2=bananas")
-    CICD_TOOLS_IMAGE_BUILDER_BUILD_CONTEXT='another/context'
-    CICD_TOOLS_IMAGE_BUILDER_CONTAINERFILE_PATH='test/data/Containerfile.test'
+    CICD_IMAGE_BUILDER_LABELS=("LABEL1=FOO" "LABEL2=bar")
+    CICD_IMAGE_BUILDER_ADDITIONAL_TAGS=("test1" "additional-label-2" "security")
+    CICD_IMAGE_BUILDER_BUILD_ARGS=("BUILD_ARG1=foobar" "BUILD_ARG2=bananas")
+    CICD_IMAGE_BUILDER_BUILD_CONTEXT='another/context'
+    CICD_IMAGE_BUILDER_CONTAINERFILE_PATH='test/data/Containerfile.test'
 
     run cicd::image_builder::build
 
@@ -289,8 +297,8 @@ setup() {
         echo "$@"
     }
 
-    CICD_TOOLS_IMAGE_BUILDER_QUAY_USER="username1"
-    CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
+    CICD_IMAGE_BUILDER_QUAY_USER="username1"
+    CICD_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
 
     run source load_module.sh image_builder
 
@@ -298,8 +306,8 @@ setup() {
     assert_output --regexp "^login.*quay.io"
     assert_output --partial "-u=username1"
 
-    CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER="username2"
-    CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD="secr3t"
+    CICD_IMAGE_BUILDER_REDHAT_USER="username2"
+    CICD_IMAGE_BUILDER_REDHAT_PASSWORD="secr3t"
 
     run source load_module.sh image_builder
     assert_success
@@ -314,13 +322,13 @@ setup() {
         return 1
     }
 
-    CICD_TOOLS_IMAGE_BUILDER_QUAY_USER="wrong-user"
-    CICD_TOOLS_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
+    CICD_IMAGE_BUILDER_QUAY_USER="wrong-user"
+    CICD_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
 
     run ! source load_module.sh image_builder
 
     assert_failure
-    assert_output --partial "Image builder setup failed!"
+    assert_output --partial "image_builder module setup failed!"
     assert_output --partial "Error logging in to Quay.io"
 }
 
@@ -331,13 +339,13 @@ setup() {
         return 1
     }
 
-    CICD_TOOLS_IMAGE_BUILDER_REDHAT_USER="wrong-user"
-    CICD_TOOLS_IMAGE_BUILDER_REDHAT_PASSWORD="wrong-password"
+    CICD_IMAGE_BUILDER_REDHAT_USER="wrong-user"
+    CICD_IMAGE_BUILDER_REDHAT_PASSWORD="wrong-password"
 
     run ! source load_module.sh image_builder
 
     assert_failure
-    assert_output --partial "Image builder setup failed!"
+    assert_output --partial "image_builder module setup failed!"
     assert_output --partial "Error logging in to Red Hat Registry"
 }
 
@@ -607,8 +615,8 @@ setup() {
     run cicd::image_builder::get_image_tag
     assert_output "$expected_tag"
 
-    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='some-cool-tag'
-    expected_tag="$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    export CICD_IMAGE_BUILDER_IMAGE_TAG='some-cool-tag'
+    expected_tag="$CICD_IMAGE_BUILDER_IMAGE_TAG"
     run cicd::image_builder::get_image_tag
     assert_output "$expected_tag"
 }
@@ -622,11 +630,11 @@ setup() {
 
     source load_module.sh image_builder
 
-    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
-    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_NAME='foobar'
+    export CICD_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
+    export CICD_IMAGE_BUILDER_IMAGE_NAME='foobar'
     export CONTAINERFILE_PATH='test/data/Containerfile.test'
 
-    expected_tag="$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    expected_tag="$CICD_IMAGE_BUILDER_IMAGE_TAG"
     run cicd::image_builder::get_image_tag
 
     assert_output "$expected_tag"
@@ -635,7 +643,7 @@ setup() {
 
     assert_output --regexp "^build.*-t foobar:custom-tag1"
 
-    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag2'
+    export CICD_IMAGE_BUILDER_IMAGE_TAG='custom-tag2'
     run cicd::image_builder::build
 
     assert_output --regexp "^build.*-t foobar:custom-tag2"
@@ -651,10 +659,10 @@ setup() {
 
     source load_module.sh image_builder
 
-    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
+    export CICD_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
     export ghprbPullId=123
 
-    expected_tag="pr-123-$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    expected_tag="pr-123-$CICD_IMAGE_BUILDER_IMAGE_TAG"
     run cicd::image_builder::get_image_tag
 
     assert_output "$expected_tag"
@@ -669,13 +677,13 @@ setup() {
 
     source load_module.sh image_builder
 
-    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_NAME='foobar'
-    export CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
+    export CICD_IMAGE_BUILDER_IMAGE_NAME='foobar'
+    export CICD_IMAGE_BUILDER_IMAGE_TAG='custom-tag1'
     export CONTAINERFILE_PATH='test/data/Containerfile.test'
-    export CICD_TOOLS_IMAGE_BUILDER_ADDITIONAL_TAGS=("extra1" "extra2")
+    export CICD_IMAGE_BUILDER_ADDITIONAL_TAGS=("extra1" "extra2")
     export ghprbPullId=123
 
-    expected_tag="pr-123-$CICD_TOOLS_IMAGE_BUILDER_IMAGE_TAG"
+    expected_tag="pr-123-$CICD_IMAGE_BUILDER_IMAGE_TAG"
     run cicd::image_builder::get_image_tag
 
     assert_output "$expected_tag"
