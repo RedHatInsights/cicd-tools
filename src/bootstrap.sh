@@ -4,6 +4,7 @@ CICD_BOOTSTRAP_REPO_ORG="${CICD_BOOTSTRAP_REPO_ORG:-RedHatInsights}"
 CICD_BOOTSTRAP_REPO_BRANCH="${CICD_BOOTSTRAP_REPO_BRANCH:-main}"
 CICD_BOOTSTRAP_ROOTDIR="${CICD_BOOTSTRAP_ROOTDIR:-.cicd_tools}"
 CICD_BOOTSTRAP_SKIP_CLEANUP=${CICD_BOOTSTRAP_SKIP_CLEANUP:-}
+CICD_BOOTSTRAP_SKIP_GIT_CLONE=${CICD_BOOTSTRAP_SKIP_GIT_CLONE:-}
 
 cicd::bootstrap::clone_cicd_tools_repo() {
 
@@ -24,7 +25,7 @@ cicd::bootstrap::_delete_rootdir() {
 cicd::bootstrap::cleanup() {
   cicd::bootstrap::_delete_rootdir
   unset cicd::bootstrap::clone_cicd_tools_repo cicd::bootstrap::_delete_rootdir cicd::bootstrap::cleanup
-  unset CICD_BOOTSTRAP_REPO_ORG CICD_BOOTSTRAP_REPO_BRANCH CICD_BOOTSTRAP_ROOTDIR CICD_BOOTSTRAP_SKIP_CLEANUP
+  unset CICD_BOOTSTRAP_REPO_ORG CICD_BOOTSTRAP_REPO_BRANCH CICD_BOOTSTRAP_ROOTDIR CICD_BOOTSTRAP_SKIP_CLEANUP CICD_BOOTSTRAP_SKIP_GIT_CLONE
 }
 
 if [ -z "$CICD_BOOTSTRAP_SKIP_GIT_CLONE" ]; then
