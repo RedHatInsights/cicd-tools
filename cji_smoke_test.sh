@@ -186,7 +186,6 @@ echo "checking if files exist"
 JUNIT_SEQUENTIAL_OUTPUTS=(
     "iqe-${CJI_NAME}-sequential.log"
     "junit-${CJI_NAME}-sequential.xml"
-    "fake"
 )
 
 for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
