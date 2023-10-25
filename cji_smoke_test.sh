@@ -181,6 +181,8 @@ if [ "$MINIO_SUCCESS" = false ]; then
     exit 1
 fi
 
+echo "checking if files exist"
+
 JUNIT_SEQUENTIAL_OUTPUTS=(
     "iqe-${CJI_NAME}-sequential.log"
     "junit-${CJI_NAME}-sequential.xml"
