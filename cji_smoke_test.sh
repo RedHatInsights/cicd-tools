@@ -156,7 +156,7 @@ run_mc () {
     set +e
     docker run -t --net=host --name=$CONTAINER_NAME --entrypoint="/bin/sh" $MC_IMAGE -c "$CMD"
     RET_CODE=$?
-    docker cp $CONTAINER_NAME:/artifacts/. $ARTIFACTS_DIR
+    #docker cp $CONTAINER_NAME:/artifacts/. $ARTIFACTS_DIR
     docker rm $CONTAINER_NAME
     set -e
     return $RET_CODE
