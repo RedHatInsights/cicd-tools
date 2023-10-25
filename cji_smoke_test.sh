@@ -195,7 +195,7 @@ for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
   fi
 done
 
-if [ "$IQE_PARALLEL_ENABLED" = "true" ]
+if [ "$IQE_PARALLEL_ENABLED" = "true" ]; then
     JUNIT_PARALLEL_OUTPUTS=(
         "iqe-${CJI_NAME}-parallel.log"
         "junit-${CJI_NAME}-parallel.xml"
