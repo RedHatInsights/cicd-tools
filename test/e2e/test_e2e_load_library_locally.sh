@@ -9,14 +9,10 @@ docker() {
     echo "Docker version 99"
 }
 
-PREFER_CONTAINER_ENGINE='docker'
+export CICD_CONTAINER_PREFER_ENGINE='docker'
 LIBRARY_TO_LOAD=${1:-all}
-MAIN_SCRIPT='./src/main.sh'
-
+MAIN_SCRIPT='./src/load_module.sh'
 source "$MAIN_SCRIPT" "$LIBRARY_TO_LOAD"
-
-cicd::container::cmd --version >/dev/null
-
 EXPECTED_OUTPUT=$(cicd::container::cmd --version)
 
 # Assert there's an actual output

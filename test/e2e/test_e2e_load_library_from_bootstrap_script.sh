@@ -11,25 +11,21 @@ docker() {
 
 load_cicd_helper_functions() {
 
-    local PREFER_CONTAINER_ENGINE='docker'
+    local CICD_CONTAINER_PREFER_ENGINE='docker'
     local LIBRARY_TO_LOAD=${1:-all}
     
     if [ "CI" != "true" ]; then
-        CICD_TOOLS_ROOTDIR=.
-        CICD_TOOLS_SKIP_GIT_CLONE=1
-        CICD_TOOLS_SKIP_CLEANUP=1
+        CICD_BOOTSTRAP_ROOTDIR=.
+        CICD_BOOTSTRAP_SKIP_GIT_CLONE=1
+        CICD_BOOTSTRAP_SKIP_CLEANUP=1
         source src/bootstrap.sh "$LIBRARY_TO_LOAD"
     else
         if [ "$GITHUB_HEAD_REF" != "main" ]; then
-            CICD_TOOLS_ROOTDIR=.
-            source src/bootstrap.sh "$LIBRARY_TO_LOAD"
-        else
-            source <(curl -sSL "$CICD_TOOLS_URL") "$LIBRARY_TO_LOAD"
+            CICD_BOOTSTRAP_SKIP_GIT_CLONE=1
+            CICD_BOOTSTRAP_ROOTDIR=.
         fi
+        source src/bootstrap.sh "$LIBRARY_TO_LOAD"
     fi
-
-    # required to persist container preferrence
-    cicd::container::cmd --version
 }
 
 load_cicd_helper_functions container

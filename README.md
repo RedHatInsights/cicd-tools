@@ -26,18 +26,24 @@ file [here](examples/unit_test_example.sh).
 | smoke_test.sh           | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh)                                                                                                                                                                                                       |
 | iqe_pod                 | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh)                                                                                                                                                                                                       |
 
-## Bash script helper scripts usage
+## Bash script library usage
 
 The collection of helper libraries are expected to be loaded using the
 provided [src/bootstrap.sh](bootstrap) script.
 
-Currently, there are 2 supported modules. To read more about what each of the modules provide,
-please read through the documents linked through the library IDs in the following table:
+The  [src/bootstrap.sh](/src/bootstrap.sh) script pulls a local copy of this repo and initializes
+the loader module, which serves as an entrypoint into the library. The loader module provides
+the ` cicd::loader::load_module` functions that enable loading different modules.
 
-| Library ID                                            | Description                                                                |
-|-------------------------------------------------------|----------------------------------------------------------------------------|
-| [container](docs/cicd_tools/container_lib.md)         | Provides wrapper functions for invoking container engine agnostic commands |
-| [image_builder](docs/cicd_tools/image_builder_lib.md) | Provides helper functions to simplify the image building process           |
+See the table below for information on the modules:
+
+| Library ID                                        | Description                                        |
+|---------------------------------------------------|----------------------------------------------------|
+| [container](docs/cicd_tools/container.md)         | container engine agnostic commands                 |
+| [image_builder](docs/cicd_tools/image_builder.md) | Simplify image building process                    |
+| [common](docs/cicd_tools/common.md)               | Generic helper functions shared across all modules |
+| [log](docs/cicd_tools/log.md)                     | logging tools                                      |
+| [loader](docs/cicd_tools/loader.md)               | Module loading functions                           |
 
 ### How to use the helper libraries
 
@@ -46,12 +52,23 @@ centralized way. This should be helpful to reduce the amount of code needed to w
 operations in a pipeline for routine tasks, such as operating with containers or building container
 images.
 
-The [src/main.sh](main.sh) script is the main entrypoint and should be used to load the modules
+The [src/load_module.sh](load_module.sh) script is the main entrypoint and should be used to load
+the modules
 included in this library. This script requires all the other scripts available in a local directory
 following the same structure in this repository.
 
-To use any of the provided libraries, you must source the [src/main.sh](main.sh) script
-and pass the unique library ID to be loaded as a parameter.
+To use any of the provided libraries, you must source the [src/load_module.sh](load_module.sh)
+script and pass the unique library ID to be loaded as a parameter. For example:
+
+```
+module_id='container'
+source src/load_module.sh "$module_id"
+
+
+$ cicd::container::cmd --version
+
+podman version 4.7.0
+```
 
 There's two different approaches for loading these scripts, depending on if you're a contributor or
 an end user.
@@ -61,13 +78,14 @@ an end user.
 This is the intended way when developing new modules for this library. The recommended approach for
 contributing is to create a new fork and then open a pull request against the `main` branch.
 
-When working with a local copy of the repository, you should source the [src/main.sh](main.sh)
+When working with a local copy of the repository, you should source
+the [src/load_module.sh](load_module.sh)
 script directly.
 
 #### Using the library from other scripts
 
 There is an existing helper script named [src/bootstrap.sh](bootstrap) to help with sourcing the
-[src/main.sh](main.sh) script if you're not contributing to this repo.
+[src/load_module.sh](load_module.sh) script if you're not contributing to this repo.
 
 **This is the intended way of using this library from external projects**.
 

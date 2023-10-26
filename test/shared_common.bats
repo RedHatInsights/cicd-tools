@@ -6,25 +6,34 @@ setup() {
 
 @test "Load directly results in error" {
 
-    run ! source "src/shared/common_lib.sh"
+    run ! source "src/shared/common.sh"
     assert_failure
-    assert_output --partial "load through main.sh"
+    assert_output --partial "please use 'load_module.sh' to load modules."
 }
+
+@test "Load the module multiple times only loads it once" {
+    CICD_LOG_DEBUG=1
+    source load_module.sh common
+    run cicd::loader::load_module common
+    assert_success
+    assert_output --partial "common module already loaded, skipping"
+}
+
 
 @test "Sets expected loaded flags" {
 
-    assert [ -z "$CICD_TOOLS_COMMON_LOADED" ]
+    assert [ -z "$CICD_COMMON_MODULE_LOADED" ]
 
-    source main.sh common
+    source load_module.sh common
 
-    assert [ "$CICD_TOOLS_COMMON_LOADED" -eq 0 ]
+    assert [ -n "$CICD_COMMON_MODULE_LOADED" ]
 }
 
 
 @test "Loading common message is displayed" {
 
-    CICD_TOOLS_DEBUG=1
-    run source main.sh common
+    CICD_LOG_DEBUG=1
+    run source load_module.sh common
     assert_success
     assert_output --partial "loading common"
 }
@@ -35,7 +44,7 @@ setup() {
         echo "cat exists"
     }
 
-    source main.sh common
+    source load_module.sh common
     run ! cicd::common::command_is_present foo
     assert_failure
 
@@ -46,38 +55,15 @@ setup() {
 
 @test "get_7_chars_commit_hash works" {
 
-    source main.sh common
+    source load_module.sh common
     run cicd::common::get_7_chars_commit_hash
     assert_success
     assert_output --regexp '^[0-9a-f]{7}$'
 }
 
-@test "local build check" {
-
-    unset CI
-
-    assert [ -z "$LOCAL_BUILD" ]
-    assert [ -z "$CI" ]
-    source src/main.sh common
-    run cicd::common::local_build
-    assert_success
-    CI='true'
-    run cicd::common::local_build
-    assert_failure
-    assert_output ""
-    LOCAL_BUILD='true'
-    run cicd::common::local_build
-    assert_output ""
-    assert_success
-    unset LOCAL_BUILD
-    run ! cicd::common::local_build
-    assert_output ""
-    assert_failure
-}
-
 @test "is_ci_context" {
 
-    source src/main.sh common
+    source src/load_module.sh common
 
     unset CI
     assert [ -z "$CI" ]

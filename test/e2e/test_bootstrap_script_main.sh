@@ -11,7 +11,7 @@ docker() {
 
 load_cicd_helper_functions() {
 
-    local PREFER_CONTAINER_ENGINE='docker'
+    local CICD_CONTAINER_PREFER_ENGINE='docker'
     local LIBRARY_TO_LOAD=${1:-all}
     local CICD_TOOLS_URL="https://raw.githubusercontent.com/RedHatInsights/cicd-tools/main/src/bootstrap.sh"
     source <(curl -sSL "$CICD_TOOLS_URL") "$LIBRARY_TO_LOAD"

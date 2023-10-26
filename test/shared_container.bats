@@ -6,28 +6,28 @@ setup() {
 
 @test "Load directly results in error" {
 
-    run ! source "src/shared/container_lib.sh"
+    run ! source "src/shared/container.sh"
     assert_failure
-    assert_output --partial "load through main.sh"
+    assert_output --partial "please use 'load_module.sh' to load modules."
 }
 
 @test "Sets expected loaded flags" {
 
-    assert [ -z "$CICD_TOOLS_COMMON_LOADED" ]
-    assert [ -z "$CICD_TOOLS_CONTAINER_ENGINE_LOADED" ]
+    assert [ -z "$CICD_COMMON_MODULE_LOADED" ]
+    assert [ -z "$CICD_CONTAINER_MODULE_LOADED" ]
 
-    source main.sh container
+    source load_module.sh container
 
-    assert [ -n "$CICD_TOOLS_COMMON_LOADED" ]
-    assert [ -n "$CICD_TOOLS_CONTAINER_ENGINE_LOADED" ]
+    assert [ -n "$CICD_COMMON_MODULE_LOADED" ]
+    assert [ -n "$CICD_CONTAINER_MODULE_LOADED" ]
 }
 
-@test "Loading common message is displayed" {
+@test "Loading message is displayed" {
 
-    CICD_TOOLS_DEBUG=1
-    run source main.sh container
+    CICD_LOG_DEBUG=1
+    run source load_module.sh container
     assert_success
-    assert_output --partial "loading container lib"
+    assert_output --partial "loading container module"
 }
 
 @test "container engine cmd is set once" {
@@ -39,22 +39,21 @@ setup() {
         echo "podman version 1"
     }
 
-    PREFER_CONTAINER_ENGINE="docker"
+    CICD_CONTAINER_PREFER_ENGINE="docker"
 
     run ! cicd::container::cmd
     assert_failure
     assert_output --partial "cicd::container::cmd: command not found"
 
-    source src/main.sh container
+    source load_module.sh container
 
-    cicd::container::cmd --version
     run cicd::container::cmd --version
 
     assert_success 
     assert_output "docker version 1"
 
-    unset PREFER_container
-    source main.sh container
+    unset CICD_CONTAINER_PREFER_ENGINE
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_success 
     assert_output "docker version 1"
@@ -73,17 +72,17 @@ setup() {
     assert_failure
     assert_output --partial "cicd::container::cmd: command not found"
 
-    source src/main.sh container
+    source src/load_module.sh container
 
     cicd::container::cmd --version
 
-    PREFER_CONTAINER_ENGINE="docker"
+    CICD_CONTAINER_PREFER_ENGINE="docker"
 
     run cicd::container::cmd --version
     assert_success 
     assert_output "podman version 1"
 
-    source main.sh container
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_success 
     assert_output "podman version 1"
@@ -95,14 +94,15 @@ setup() {
         echo "podman version 1"
     }
 
-    source main.sh container
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_output --partial "podman version 1"
 }
 
 @test "if forcing docker as container engine but is emulated, keeps looking and uses podman if found" {
 
-    PREFER_CONTAINER_ENGINE="docker"
+    export CICD_CONTAINER_PREFER_ENGINE="docker"
+    export CICD_LOG_DEBUG='1'
 
     docker() {
         podman
@@ -112,58 +112,71 @@ setup() {
         echo 'podman version 1'
     }
 
-    source main.sh container
-    run cicd::container::cmd --version
+    run source load_module.sh container
     assert_output --regexp "WARNING.*docker.*seems emulated"
-    assert_output --partial "podman version 1"
+    assert_output --partial "engine selected: podman"
 }
 
 @test "if no container engine found, fails" {
 
-    source main.sh container
+    # date mock required by log module
+    date() {
+       echo -n "Thu Sep 21 06:25:51 PM CEST 2023"
+    }
+    # force the test not to find the container engines
     OLDPATH="$PATH"
     PATH=':'
-    run ! cicd::container::cmd --version
+    CICD_LOADER_SCRIPTS_DIR="$(pwd)/src"
+    run ! source src/load_module.sh container
     PATH="$OLDPATH"
     assert_failure
     assert_output --partial "ERROR, no container engine found"
+    assert_output --partial "container module setup failed"
 }
 
 @test "if forcing podman but not found, uses docker if found and not emulated" {
 
-    PREFER_CONTAINER_ENGINE="podman"
+    export CICD_CONTAINER_PREFER_ENGINE="podman"
+    export CICD_LOG_DEBUG='1'
 
     docker() {
         echo 'docker version 1'
     }
-    source main.sh container
+    # date mock required by log module
+    date() {
+       echo -n "Thu Sep 21 06:25:51 PM CEST 2023"
+    }
 
+    # force the test not to find the container engines
     OLDPATH="$PATH"
     PATH=':'
 
-    run cicd::container::cmd --version
+    CICD_LOADER_SCRIPTS_DIR="$(pwd)/src"
+    run source src/load_module.sh container
     PATH="$OLDPATH"
+
     assert_output --regexp "WARNING.*podman.*not present"
-    assert_output --partial "docker version 1"
+    assert_output --partial "engine selected: docker"
 }
 
 @test "if forcing podman but not found and docker is emulated it fails" {
 
-    PREFER_CONTAINER_ENGINE="podman"
+    export CICD_CONTAINER_PREFER_ENGINE="podman"
+    export CICD_LOADER_SCRIPTS_DIR="$(pwd)/src"
 
     docker() {
         echo 'podman version 1'
     }
+    # date mock required by log module
     date() {
        echo -n "Thu Sep 21 06:25:51 PM CEST 2023"
     }
-    source main.sh container
+
 
     OLDPATH="$PATH"
     PATH=':'
-    run cicd::container::cmd --version
+    run ! source src/load_module.sh container
     PATH="$OLDPATH"
-    assert [ $status -eq 1 ]
     assert_output --regexp "WARNING.*docker seems emulated"
     assert_output --regexp "WARNING.*podman.*not present"
     assert_output --partial "no container engine found"
@@ -177,7 +190,7 @@ setup() {
     docker() {
         echo 'docker version 1'
     }
-    source main.sh container
+    source load_module.sh container
 
     run cicd::container::cmd --version
     assert_success
@@ -186,7 +199,7 @@ setup() {
 
 @test "Docker can be set as preferred over podman if both are available" {
 
-    PREFER_CONTAINER_ENGINE='docker'
+    export CICD_CONTAINER_PREFER_ENGINE='docker'
 
     podman() {
         echo 'podman version 1'
@@ -194,7 +207,7 @@ setup() {
     docker() {
         echo 'docker version 1'
     }
-    source main.sh container
+    source load_module.sh container
     run cicd::container::cmd --version
     assert_success
     assert_output --partial "docker version 1"
@@ -202,8 +215,8 @@ setup() {
 
 @test "cat is not a supported container engine" {
 
-    PREFER_CONTAINER_ENGINE='cat'
-
+    export CICD_CONTAINER_PREFER_ENGINE='cat'
+    export CICD_LOG_DEBUG='1'
 
     cat() {
         echo "not an awesome container engine"
@@ -211,9 +224,9 @@ setup() {
     podman() {
         echo 'podman version 1'
     }
-    source main.sh container
-    run cicd::container::cmd --version
+    run source load_module.sh container
     assert_success
     assert_output --regexp "WARNING.*'cat'.*isn't supported"
-    assert_output --partial "podman version 1"
+    assert_output --partial "finding alternative"
+    assert_output --partial "engine selected: podman"
 }
