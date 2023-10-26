@@ -14,6 +14,7 @@
 #IQE_SELENIUM="true" -- whether to run IQE pod with a selenium container, default is "false"
 #IQE_RP_ARGS=True -- Turn on reporting to reportportal
 #IQE_IBUTSU_SOURCE="post_stage" -- update the ibutsu source for the current run
+#IQE_ENV_VARS="ENV_VAR1=value1,ENV_VAR2=value2" -- custom set of extra environment variables to set on IQE pod
 #NAMESPACE="mynamespace" -- namespace to deploy iqe pod into, usually already set by 'deploy_ephemeral_env.sh'
 
 # Env vars set by 'bootstrap.sh':
@@ -37,7 +38,7 @@ set -e
 : "${IQE_PARALLEL_WORKER_COUNT:='""'}"
 : "${IQE_RP_ARGS:='""'}"
 : "${IQE_IBUTSU_SOURCE:='""'}"
-
+: "${IQE_ENV_VARS:='""'}"
 
 _running_in_rhel7() {
     grep -q "Red Hat Enterprise Linux.*7\." '/etc/redhat-release'
@@ -64,6 +65,14 @@ fi
 SELENIUM_ARG=""
 if [ "$IQE_SELENIUM" = "true" ]; then
     SELENIUM_ARG=" --selenium "
+fi
+
+ENV_VAR_ARGS=""
+if [ -z "$IQE_ENV_VARS" ]; then
+    IFS=',' read -ra values_array <<< "$IQE_ENV_VARS"
+    for i in "${values_array[@]}"; do
+        ENV_VAR_ARGS="${ENV_VAR_ARGS} --env-var $i"
+    done
 fi
 
 # check if there is a iqe-tests container image tag with the corresponding PR
@@ -104,6 +113,7 @@ POD=$(
     --parallel-worker-count $IQE_PARALLEL_WORKER_COUNT \
     --rp-args $IQE_RP_ARGS \
     --ibutsu-source $IQE_IBUTSU_SOURCE \
+    $ENV_VAR_ARGS \
     --namespace $NAMESPACE)
 set +x
 
