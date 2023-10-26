@@ -38,7 +38,7 @@ set -e
 : "${IQE_PARALLEL_WORKER_COUNT:='""'}"
 : "${IQE_RP_ARGS:='""'}"
 : "${IQE_IBUTSU_SOURCE:='""'}"
-: "${IQE_ENV_VARS:='""'}"
+: "${IQE_ENV_VARS:=}"
 
 _running_in_rhel7() {
     grep -q "Red Hat Enterprise Linux.*7\." '/etc/redhat-release'
