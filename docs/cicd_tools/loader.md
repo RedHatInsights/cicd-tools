@@ -1,6 +1,12 @@
 # loader module
 
-This module provides functions to help loading the different modules included in this library.
+Loads other modules provided by the library.
+
+**Internal use only**
+
+This is an internal API for the CICD tools library and not intended for public use. Library users
+should use the [/src/bootstrap.sh](/src/bootstrap.sh) script in lieu of calling the loader module
+itself
 
 ## Definition
 
@@ -13,10 +19,6 @@ cicd::loader::
 ```
 
 ## Usage
-
-**Note:** This is an **internal module** and is not meant to be loaded directly, you should try to
-use
-*the [src/bootstrap.sh](load_module.sh) script as it already provides means to load this module.
 
 To load this module, the `CICD_LOADER_SCRIPTS_DIR` must be set with the path to the root directory
 where the different modules to be loaded are located.
