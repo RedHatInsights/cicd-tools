@@ -25,25 +25,200 @@ source <(curl -sSL "$CICD_TOOLS_URL") image_builder
 
 This module uses the following variables to configure the image building requirements:
 
-| Variable name                         | Description                                                                                                                       | Default value        | Type   | Mandatory |
-|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|----------------------|--------|-----------|
-| CICD_IMAGE_BUILDER_IMAGE_NAME         | The Image name to be used, in format: 'imageregistry/org/image_name'                                                              | `""`                 | string | Yes       |
-| CICD_IMAGE_BUILDER_LOCAL_BUILD        | Override local build detection                                                                                                    | `$LOCAL_BUILD`       | string | No        |
-| CICD_IMAGE_BUILDER_IMAGE_TAG          | The main image tag to be used. If not provided the 7 first chars of the current repository's git commit hash will be used instead | `""`                 | string | No        |
-| CICD_IMAGE_BUILDER_ADDITIONAL_TAGS    | The additional tags (if any) to be created in array format: ("tag1" "tag2" "latest")                                              | `()`                 | Array  | No        |
-| CICD_IMAGE_BUILDER_LABELS             | The labels (if any) to add to the image being built in array format: ("label1=Value1" "label2=value2")                            | `()`                 | Array  | No        |
-| CICD_IMAGE_BUILDER_BUILD_ARGS         | The build arguments to be provided when building the image (if any) in array format: ("buildarg1=Value1" "buildarg2=value2")      | `()`                 | Array  | No        |
-| CICD_IMAGE_BUILDER_BUILD_CONTEXT      | The build context path to use when building the image.                                                                            | `.`                  | None   | string    | No|
-| CICD_IMAGE_BUILDER_CONTAINERFILE_PATH | The Containerfile path to use when building the image.                                                                            | `Dockerfile`         | None   | string    | No|
-| CICD_IMAGE_BUILDER_QUAY_EXPIRE_TIME   | The expire time value to be set for Quay expires labels, used only in change request contexts.                                    | `3d`                 | string | No        |
-| CICD_IMAGE_BUILDER_QUAY_USER          | The username to use when logging in to Quay.io                                                                                    | `$QUAY_USER`         | string | No        |
-| CICD_IMAGE_BUILDER_QUAY_PASSWORD      | The password to use when logging in to Quay.io                                                                                    | `$QUAY_TOKEN`        | string | No        |
-| CICD_IMAGE_BUILDER_REDHAT_USER        | The username to use when logging in to the Red Hat Registry                                                                       | `$RH_REGISTRY_USER`  | string | No        |
-| CICD_IMAGE_BUILDER_REDHAT_PASSWORD    | The password to use when logging in to the Red Hat Registry                                                                       | `$RH_REGISTRY_TOKEN` | string | No        |
+### Configuration variables
 
 The only required variable is `CICD_IMAGE_BUILDER_IMAGE_NAME`, the rest of them are optional
 and should not be needed for the majority of use cases as the provided default values should be
 enough.
+
+Here are a few examples (considering `abcdef1` is the first 7 chars of the current directory git
+HEAD):
+
+```
+export CICD_IMAGE_BUILDER_IMAGE_NAME='quay.io/awesome_org/awesome_project'
+source <(curl -sSL "$CICD_TOOLS_URL") image_builder
+
+cicd::image_builder::get_full_image_name
+
+# returns quay.io/awesome_org/awesome_project:abcdef1
+```
+
+The following is a list of all the configuration variables available with a description and examples
+
+#### CICD_IMAGE_BUILDER_IMAGE_NAME
+
+Type: "string", Default value: ""
+
+Image name to be used, in format: 'imageregistry/org/image_name'. This variable is **mandatory**.
+Several functions rely on this variable to work properly.
+
+```shell
+export CICD_IMAGE_BUILDER_IMAGE_NAME='quay.io/cloudservices/awesomerepo'
+
+cicd::image_builder::get_full_image_name
+
+# quay.io/cloudservices/awesomerepo:abcdef1
+```
+
+### CICD_IMAGE_BUILDER_LOCAL_BUILD
+
+Type: "string", Default value: ""
+
+Force "local build context" mode. The library autodetects the mode based on the environment
+variables to decide if on a local build context or not. Some functions change their behavior
+depending on whether it's a local build or not.
+
+For example, `cicd::image_builder::build_and_push` will not actually `push` if on local mode. This
+is to prevent accidental push events and to facilitate local debugging.
+
+Setting this variable to a non-empty value will force the local mode regardless of the environment
+variables present
+
+```shell
+
+export CICD_IMAGE_BUILDER_LOCAL_MODE=1
+
+if cicd::image_builder::local_build then;
+    echo "forcing local mode!"
+fi
+```
+
+### CICD_IMAGE_BUILDER_IMAGE_TAG
+
+Type: "string", Default value: ""
+
+Define a static default tag. If not defined, the 7 first chars of the current repository's git
+commit hash will be used instead
+
+```shell
+
+cicd::image_builder::get_image_tag
+# prints abcdef1
+
+export CICD_IMAGE_BUILDER_IMAGE_TAG='awesome_tag'
+cicd::image_builder::get_image_tag
+# prints awesome_tag
+```
+
+### CICD_IMAGE_BUILDER_ADDITIONAL_TAGS
+
+Type: "array", Default value: "()"
+
+The additional tags (if any) to be created in array format: ("tag1" "tag2" "latest")
+
+```shell
+
+cicd::image_builder::get_additional_tags
+# prints ""
+
+export CICD_IMAGE_BUILDER_ADDITIONAL_TAGS=("apple" "banana" "orange")
+cicd::image_builder::get_additional_tags
+# prints "apple" "banana" "orange"
+
+export CICD_IMAGE_BUILDER_IMAGE_NAME='quay.io/cloudservices/awesome'
+cicd::image_builder::build
+# will attempt to build the following tags:
+#quay.io/cloudservices/awesome:abcdef1
+#quay.io/cloudservices/awesome:apple
+#quay.io/cloudservices/awesome:banana
+#quay.io/cloudservices/awesome:orange
+
+```
+
+### CICD_IMAGE_BUILDER_LABELS
+
+Type: "array", Default value: "()"
+
+The additional labels (if any) to be created in array format: ("label1=Value1" "label2=value2")
+
+```shell
+export CICD_IMAGE_BUILDER_LABELS=("label1=value1" "label2=value2")
+
+cicd::image_builder::build
+
+# will add --label label1=value1 --label2=value2 to the image build command
+```
+
+### CICD_IMAGE_BUILDER_BUILD_ARGS
+
+Type: "array", Default value: "()"
+
+The additional labels (if any) to be created in array format: ("buildarg1=Value1" "
+buildarg2=value2")
+
+```shell
+export CICD_IMAGE_BUILDER_BUILD_ARGS=("buildarg1=value1" "buildarg2=value2")
+
+cicd::image_builder::build
+
+# will add --build-arg buildarg1=value1 --build-arg buildarg2=value2 to the image build command
+```
+
+### CICD_IMAGE_BUILDER_BUILD_CONTEXT
+
+Type: "string", Default value: "."
+
+Defines the current build context for when building the container images
+
+```shell
+export CICD_IMAGE_BUILDER_BUILD_CONTEXT='./container' 
+
+cicd::image_builder::build
+
+# will try to run the build command using the provided context
+# docker build -f Dockerfile ./contaienr
+```
+
+### CICD_IMAGE_BUILDER_CONTAINERFILE_PATH
+
+Type: "string", Default value: "Dockerfile"
+
+Defines the containerfiule path to build images.
+
+```shell
+export CICD_IMAGE_BUILDER_CONTAINERFILE_PATH='deployment/test.Dockerfile' 
+
+cicd::image_builder::build
+
+# will try to run the build command using the provided containerfile
+# docker build -f deployment/test.Dockerfile .
+```
+
+### CICD_IMAGE_BUILDER_QUAY_EXPIRE_TIME
+
+Type: "string", Default value: "3d"
+
+Defines the default expiry time for change request images pushed to Quay.
+
+```shell
+export CICD_IMAGE_BUILDER_QUAY_EXPIRE_TIME='1h'
+
+# in a change request context, will build using the label: quay.expires-after=1h 
+```
+
+### CICD_IMAGE_BUILDER_QUAY_USER
+
+Type: "string", Default value: `$QUAY_USER`
+
+The username used to log in to Quay.io
+
+### CICD_IMAGE_BUILDER_QUAY_PASSWORD
+
+Type: "string", Default value: `$QUAY_TOKEN`
+
+The password used to log in to Quay.io
+
+### CICD_IMAGE_BUILDER_REDHAT_USER
+
+Type: "string", Default value: `$RH_REGISTRY_USER`
+
+The username used to log in to the Red Hat Registry
+
+### CICD_IMAGE_BUILDER_QUAY_PASSWORD
+
+Type: "string", Default value: `$RH_REGISTRY_TOKEN`
+
+The password used to log in to Red Hat Registry
 
 It is important to consider that the behavior of the different image builder functions may be
 affected by the context where it runs.
@@ -73,8 +248,10 @@ expected to be created, considering if:
 
 ## Override the default image tag
 
-If for some reason the "GIT_SHA" default value, the `CICD_IMAGE_BUILDER_IMAGE_TAG` can be used to override it.
-The value of the default tag will still be modified in change requests context though, to include the `buildID` and the `pr` prefix
+If for some reason the "GIT_SHA" default value, the `CICD_IMAGE_BUILDER_IMAGE_TAG` can be used to
+override it.
+The value of the default tag will still be modified in change requests context though, to include
+the `buildID` and the `pr` prefix
 
 Example:
 
@@ -82,8 +259,8 @@ Example:
 export CICD_IMAGE_BUILDER_IMAGE_TAG=awesome-tag
 echo $(cicd::image_builder::get_image_tag)
 ```
-Will output the value `awesome-tag` or the `pr-123-awaesome-tag` value for Change Request contexts
 
+Will output the value `awesome-tag` or the `pr-123-awaesome-tag` value for Change Request contexts
 
 ## Dependencies
 
