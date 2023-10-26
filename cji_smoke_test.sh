@@ -68,7 +68,7 @@ if [ "$IQE_SELENIUM" = "true" ]; then
 fi
 
 ENV_VAR_ARGS=""
-if [ -z "$IQE_ENV_VARS" ]; then
+if [ ! -z "$IQE_ENV_VARS" ]; then
     IFS=',' read -ra values_array <<< "$IQE_ENV_VARS"
     for i in "${values_array[@]}"; do
         ENV_VAR_ARGS="${ENV_VAR_ARGS} --env-var $i"
