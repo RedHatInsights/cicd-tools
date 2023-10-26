@@ -1,7 +1,6 @@
 # Common module
 
-This module exposes helper functions that may be used (and shared) across all modules, or that don't
-serve a specific module's purpose to fit within it.
+Helper functions that are shared and used by other modules
 
 ## Definition
 
