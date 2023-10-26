@@ -31,13 +31,26 @@ file [here](examples/unit_test_example.sh).
 The collection of helper libraries are expected to be loaded using the
 provided [src/bootstrap.sh](bootstrap) script.
 
-Currently, there are 2 supported modules. To read more about what each of the modules provide,
+The bootstrap's script responsibilities are to get a local copy of this repository, initialize
+the `loader` module, and load
+
+The `loader` module is a special one, and it's main function is to serve as an entrypoint to the
+library.
+It provides the `cicd::loader::load_module` functions, that must be used to load the different
+modules.
+
+This is all handed by the boostrap script
+
+To read more about what each of the modules provide,
 please read through the documents linked through the library IDs in the following table:
 
-| Library ID                                            | Description                                                                |
-|-------------------------------------------------------|----------------------------------------------------------------------------|
-| [container](docs/cicd_tools/container_lib.md)         | Provides wrapper functions for invoking container engine agnostic commands |
-| [image_builder](docs/cicd_tools/image_builder_lib.md) | Provides helper functions to simplify the image building process           |
+| Library ID                          | Description                                                                |
+|-------------------------------------|----------------------------------------------------------------------------|
+| [container](docs/cicd_tools/container.md) | Provides wrapper functions for invoking container engine agnostic commands |
+| [image_builder](docs/cicd_tools/image_builder.md) | Provides helper functions to simplify the image building process           |
+| [common](docs/cicd_tools/common.md) | Provides helper functions to simplify the image building process           |
+| [log](docs/cicd_tools/log.md)       | Provides wrapper functions for invoking container engine agnostic commands |
+| [loader](docs/cicd_tools/loader.md) | Provides wrapper functions for invoking container engine agnostic commands |
 
 ### How to use the helper libraries
 
@@ -46,12 +59,13 @@ centralized way. This should be helpful to reduce the amount of code needed to w
 operations in a pipeline for routine tasks, such as operating with containers or building container
 images.
 
-The [src/main.sh](main.sh) script is the main entrypoint and should be used to load the modules
+The [src/load_module.sh](load_module.sh) script is the main entrypoint and should be used to load
+the modules
 included in this library. This script requires all the other scripts available in a local directory
 following the same structure in this repository.
 
-To use any of the provided libraries, you must source the [src/main.sh](main.sh) script
-and pass the unique library ID to be loaded as a parameter.
+To use any of the provided libraries, you must source the [src/load_module.sh](load_module.sh)
+script and pass the unique library ID to be loaded as a parameter.
 
 There's two different approaches for loading these scripts, depending on if you're a contributor or
 an end user.
@@ -61,13 +75,14 @@ an end user.
 This is the intended way when developing new modules for this library. The recommended approach for
 contributing is to create a new fork and then open a pull request against the `main` branch.
 
-When working with a local copy of the repository, you should source the [src/main.sh](main.sh)
+When working with a local copy of the repository, you should source
+the [src/load_module.sh](load_module.sh)
 script directly.
 
 #### Using the library from other scripts
 
 There is an existing helper script named [src/bootstrap.sh](bootstrap) to help with sourcing the
-[src/main.sh](main.sh) script if you're not contributing to this repo.
+[src/load_module.sh](load_module.sh) script if you're not contributing to this repo.
 
 **This is the intended way of using this library from external projects**.
 
