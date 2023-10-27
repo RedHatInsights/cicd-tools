@@ -5,11 +5,11 @@
 #IQE_CJI_TIMEOUT="10m" -- timeout value to pass to 'oc wait', should be slightly higher than expected test run time
 #IQE_MARKER_EXPRESSION="something AND something_else" -- pytest marker, can be "" if no filter desired
 #IQE_FILTER_EXPRESSION="something AND something_else" -- pytest filter, can be "" if no filter desired
-#IQE_IMAGE_TAG="something" -- image tag to use for IQE pod, leave unset to use ClowdApp's iqePlugin value
+#IQE_IMAGE_TAG="something" -- image tag to use for IQE pod, leave unset to use ClowdApp's iqePLUGIN value
 #IQE_REQUIREMENTS="something,something_else" -- iqe requirements filter, can be "" if no filter desired
 #IQE_REQUIREMENTS_PRIORITY="something,something_else" -- iqe requirements filter, can be "" if no filter desired
 #IQE_TEST_IMPORTANCE="something,something_else" -- iqe test importance filter, can be "" if no filter desired
-#IQE_PLUGINS="plugin1,plugin2" -- IQE plugins to run tests for, leave unset to use ClowdApp's iqePlugin value
+#IQE_PLUGINS="PLUGIN1,PLUGIN2" -- IQE PLUGINs to run tests for, leave unset to use ClowdApp's iqePLUGIN value
 #IQE_ENV="something" -- value to set for ENV_FOR_DYNACONF, default is "clowder_smoke"
 #IQE_SELENIUM="true" -- whether to run IQE pod with a selenium container, default is "false"
 #IQE_RP_ARGS=True -- Turn on reporting to reportportal
@@ -105,7 +105,7 @@ POD=$(
     --requirements "$IQE_REQUIREMENTS" \
     --requirements-priority "$IQE_REQUIREMENTS_PRIORITY" \
     --test-importance "$IQE_TEST_IMPORTANCE" \
-    --plugins "$IQE_PLUGINS" \
+    --PLUGINs "$IQE_PLUGINS" \
     --env "$IQE_ENV" \
     --cji-name $CJI_NAME \
     $SELENIUM_ARG \
@@ -193,22 +193,12 @@ fi
 
 echo "checking if files exist"
 
-JUNIT_SEQUENTIAL_OUTPUTS=(
-    "iqe-${CJI_NAME}-sequential.log"
-    "junit-${CJI_NAME}-sequential.xml"
-)
+IFS=',' read -ra PLUGINS <<< "$IQE_PLUGINS"
 
-for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
-  if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
-    echo "The file $file does not exist. CJI Test(s) may have failed."
-    exit 1
-  fi
-done
-
-if [ "$IQE_PARALLEL_ENABLED" = "true" ]; then
-    JUNIT_PARALLEL_OUTPUTS=(
-        "iqe-${CJI_NAME}-parallel.log"
-        "junit-${CJI_NAME}-parallel.xml"
+for PLUGIN in "${PLUGINS[@]}"; do
+    JUNIT_SEQUENTIAL_OUTPUTS=(
+        "iqe-${PLUGIN}-sequential.log"
+        "junit-${PLUGIN}-sequential.xml"
     )
 
     for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
@@ -217,7 +207,21 @@ if [ "$IQE_PARALLEL_ENABLED" = "true" ]; then
         exit 1
     fi
     done
-fi
+
+    if [ "$IQE_PARALLEL_ENABLED" = "true" ]; then
+        JUNIT_PARALLEL_OUTPUTS=(
+            "iqe-${PLUGIN}-parallel.log"
+            "junit-${PLUGIN}-parallel.xml"
+        )
+
+        for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
+        if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
+            echo "The file $file does not exist. CJI Test(s) may have failed."
+            exit 1
+        fi
+        done
+    fi
+done
 
 echo "copied artifacts from iqe pod: "
 ls -l $ARTIFACTS_DIR
