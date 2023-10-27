@@ -194,29 +194,30 @@ fi
 echo "checking if files exist"
 
 for PLUGIN in ${IQE_PLUGINS//,/ }; do
+    PLUGIN_NAME=${PLUGIN//-/_}
     JUNIT_SEQUENTIAL_OUTPUTS=(
-        "iqe-${PLUGIN}-sequential.log"
-        "junit-${PLUGIN}-sequential.xml"
+        "iqe-${PLUGIN_NAME}-sequential.log"
+        "junit-${PLUGIN_NAME}-sequential.xml"
     )
 
     for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
-    if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
-        echo "The file $file does not exist. CJI Test(s) may have failed."
-        exit 1
-    fi
-    done
-
-    if [ "$IQE_PARALLEL_ENABLED" = "true" ]; then
-        JUNIT_PARALLEL_OUTPUTS=(
-            "iqe-${PLUGIN}-parallel.log"
-            "junit-${PLUGIN}-parallel.xml"
-        )
-
-        for file in "${JUNIT_PARALLEL_OUTPUTS[@]}"; do
         if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
             echo "The file $file does not exist. CJI Test(s) may have failed."
             exit 1
         fi
+    done
+
+    if [ "$IQE_PARALLEL_ENABLED" = "true" ]; then
+        JUNIT_PARALLEL_OUTPUTS=(
+            "iqe-${PLUGIN_NAME}-parallel.log"
+            "junit-${PLUGIN_NAME}-parallel.xml"
+        )
+
+        for file in "${JUNIT_PARALLEL_OUTPUTS[@]}"; do
+            if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
+                echo "The file $file does not exist. CJI Test(s) may have failed."
+                exit 1
+            fi
         done
     fi
 done
