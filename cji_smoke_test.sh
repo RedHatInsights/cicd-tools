@@ -193,9 +193,7 @@ fi
 
 echo "checking if files exist"
 
-IFS=',' read -ra PLUGINS <<< "$IQE_PLUGINS"
-
-for PLUGIN in "${PLUGINS[@]}"; do
+for PLUGIN in ${IQE_PLUGINS//,/ }; do
     JUNIT_SEQUENTIAL_OUTPUTS=(
         "iqe-${PLUGIN}-sequential.log"
         "junit-${PLUGIN}-sequential.xml"
