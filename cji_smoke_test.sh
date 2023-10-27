@@ -5,11 +5,11 @@
 #IQE_CJI_TIMEOUT="10m" -- timeout value to pass to 'oc wait', should be slightly higher than expected test run time
 #IQE_MARKER_EXPRESSION="something AND something_else" -- pytest marker, can be "" if no filter desired
 #IQE_FILTER_EXPRESSION="something AND something_else" -- pytest filter, can be "" if no filter desired
-#IQE_IMAGE_TAG="something" -- image tag to use for IQE pod, leave unset to use ClowdApp's iqeplugin value
+#IQE_IMAGE_TAG="something" -- image tag to use for IQE pod, leave unset to use ClowdApp's iqePlugin value
 #IQE_REQUIREMENTS="something,something_else" -- iqe requirements filter, can be "" if no filter desired
 #IQE_REQUIREMENTS_PRIORITY="something,something_else" -- iqe requirements filter, can be "" if no filter desired
 #IQE_TEST_IMPORTANCE="something,something_else" -- iqe test importance filter, can be "" if no filter desired
-#IQE_PLUGINS="plugin1,plugin2" -- IQE PLUGINs to run tests for, leave unset to use ClowdApp's iqeplugin value
+#IQE_PLUGINS="plugin1,plugin2" -- IQE plugins to run tests for, leave unset to use ClowdApp's iqePlugin value
 #IQE_ENV="something" -- value to set for ENV_FOR_DYNACONF, default is "clowder_smoke"
 #IQE_SELENIUM="true" -- whether to run IQE pod with a selenium container, default is "false"
 #IQE_RP_ARGS=True -- Turn on reporting to reportportal
