@@ -214,7 +214,7 @@ for PLUGIN in "${PLUGINS[@]}"; do
             "junit-${PLUGIN}-parallel.xml"
         )
 
-        for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
+        for file in "${JUNIT_PARALLEL_OUTPUTS[@]}"; do
         if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
             echo "The file $file does not exist. CJI Test(s) may have failed."
             exit 1
