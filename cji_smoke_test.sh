@@ -193,22 +193,10 @@ fi
 
 echo "checking if files exist"
 
-JUNIT_SEQUENTIAL_OUTPUTS=(
-    "iqe-${CJI_NAME}-sequential.log"
-    "junit-${CJI_NAME}-sequential.xml"
-)
-
-for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
-  if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
-    echo "The file $file does not exist. CJI Test(s) may have failed."
-    exit 1
-  fi
-done
-
-if [ "$IQE_PARALLEL_ENABLED" = "true" ]; then
-    JUNIT_PARALLEL_OUTPUTS=(
-        "iqe-${CJI_NAME}-parallel.log"
-        "junit-${CJI_NAME}-parallel.xml"
+for PLUGIN in ${IQE_PLUGINS//,/ }; do
+    JUNIT_SEQUENTIAL_OUTPUTS=(
+        "iqe-${PLUGIN}-sequential.log"
+        "junit-${PLUGIN}-sequential.xml"
     )
 
     for file in "${JUNIT_SEQUENTIAL_OUTPUTS[@]}"; do
@@ -217,7 +205,21 @@ if [ "$IQE_PARALLEL_ENABLED" = "true" ]; then
         exit 1
     fi
     done
-fi
+
+    if [ "$IQE_PARALLEL_ENABLED" = "true" ]; then
+        JUNIT_PARALLEL_OUTPUTS=(
+            "iqe-${PLUGIN}-parallel.log"
+            "junit-${PLUGIN}-parallel.xml"
+        )
+
+        for file in "${JUNIT_PARALLEL_OUTPUTS[@]}"; do
+        if [ ! -e "$ARTIFACTS_DIR/$file" ]; then
+            echo "The file $file does not exist. CJI Test(s) may have failed."
+            exit 1
+        fi
+        done
+    fi
+done
 
 echo "copied artifacts from iqe pod: "
 ls -l $ARTIFACTS_DIR
