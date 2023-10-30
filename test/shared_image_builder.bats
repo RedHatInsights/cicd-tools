@@ -694,3 +694,37 @@ setup() {
     assert_output --regexp "^build.*-t foobar:pr-123-extra1"
     assert_output --regexp "^build.*-t foobar:pr-123-extra2"
 }
+
+@test "Support extra build args for build" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    source load_module.sh image_builder
+
+    export CICD_IMAGE_BUILDER_IMAGE_NAME='foobar'
+    export CICD_IMAGE_BUILDER_CONTAINERFILE_PATH='test/data/Containerfile.test'
+
+    run cicd::image_builder::build --some-extra-arg1 foo=foo:bar --another-extra-arg foobar=bazbar
+
+    assert_output --regexp "^build.*--some-extra-arg1 foo=foo:bar --another-extra-arg foobar=bazbar"
+}
+
+@test "Support extra build args for build_and_push" {
+
+    # podman mock
+    podman() {
+        echo "$@"
+    }
+
+    source load_module.sh image_builder
+
+    export CICD_IMAGE_BUILDER_IMAGE_NAME='foobar'
+    export CICD_IMAGE_BUILDER_CONTAINERFILE_PATH='test/data/Containerfile.test'
+
+    run cicd::image_builder::build_and_push --some-extra-arg1 foo=foo:bar --another-extra-arg foobar=bazbar
+
+    assert_output --regexp "^build.*--some-extra-arg1 foo=foo:bar --another-extra-arg foobar=bazbar"
+}

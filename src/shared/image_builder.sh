@@ -30,7 +30,7 @@ cicd::image_builder::local_build() {
 }
 
 cicd::image_builder::build_and_push() {
-  cicd::image_builder::build || return 1
+  cicd::image_builder::build "$@" || return 1
   if ! cicd::image_builder::local_build; then
     cicd::image_builder::push || return 1
   fi
@@ -65,6 +65,8 @@ cicd::image_builder::build() {
   for build_arg in $(cicd::image_builder::get_build_args); do
     build_params+=('--build-arg' "${build_arg}")
   done
+
+  build_params+=("$@")
 
   build_params+=("$build_context")
 
