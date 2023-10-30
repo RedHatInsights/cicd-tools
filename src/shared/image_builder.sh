@@ -66,9 +66,7 @@ cicd::image_builder::build() {
     build_params+=('--build-arg' "${build_arg}")
   done
 
-  for extra_build_arg in $(cicd::image_builder::get_extra_build_args); do
-    build_params+=("${extra_build_arg}")
-  done
+  build_params+=("$@")
 
   build_params+=("$build_context")
 
@@ -217,17 +215,6 @@ cicd::image_builder::get_build_args() {
   fi
 
   echo -n "${build_args[@]}"
-}
-
-cicd::image_builder::get_extra_build_args() {
-
-  declare -a extra_build_args=("${CICD_IMAGE_BUILDER_EXTRA_BUILD_ARGS[@]:-}")
-
-  if cicd::image_builder::_array_empty "${extra_build_args[@]}"; then
-    extra_build_args=()
-  fi
-
-  echo -n "${extra_build_args[@]}"
 }
 
 cicd::image_builder::tag() {

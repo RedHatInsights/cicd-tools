@@ -285,6 +285,16 @@ the provided configuration
 
 #### cicd::container::build
 
+Accepts any number of parameters, will be appended to the final `build` command
+
+**Note** this is to allow extra arguments not directly supported by the library.
+
+```shell
+cicd::image_builder::build --extra-arg1 param1=value1 --param-2
+
+# will add --extra-arg1 param1=value1 --param2 to the resulting image build command
+```
+
 This will build a container image using the provided configuration
 
 #### cicd::container::tag

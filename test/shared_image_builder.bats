@@ -706,9 +706,8 @@ setup() {
 
     export CICD_IMAGE_BUILDER_IMAGE_NAME='foobar'
     export CICD_IMAGE_BUILDER_CONTAINERFILE_PATH='test/data/Containerfile.test'
-    export CICD_IMAGE_BUILDER_EXTRA_BUILD_ARGS=('--some-extra-arg1 foo=foo:bar' '--another-extra-arg foobar=bazbar')
     
-    run cicd::image_builder::build
+    run cicd::image_builder::build --some-extra-arg1 foo=foo:bar --another-extra-arg foobar=bazbar
 
     assert_output --regexp "^build.*--some-extra-arg1 foo=foo:bar --another-extra-arg foobar=bazbar"
 }
