@@ -72,7 +72,7 @@ pipeline {
                     if (env.RUN_PLATSEC == true)
                         steps {
                             withVault([configuration, vaultSecrets: secrets]) {
-                                sh 'source ${CICD_ROOT}/platsec.sh $IMAGE $ARTIFACTS_DIR' 
+                                sh 'source ${CICD_ROOT}/platsec.sh "$IMAGE" "$ARTIFACTS_DIR"' 
                         }
                     }
                 }   
