@@ -9,7 +9,7 @@ download_install_script() {
     local command="$1"
     local destination="$2"
 
-    curl -sSfL "https://raw.githubusercontent.com/anchore/${command}/main/install.sh" | sh -s -- -b "$2"
+    curl -sSfL "https://raw.githubusercontent.com/anchore/${command}/main/install.sh" | sh -s -- -b "$destination"
 }
 
 setup() {
@@ -20,6 +20,8 @@ setup() {
     fi
 
     set -e
+
+    # shellcheck source=/dev/null
     source <(curl -sSL https://raw.githubusercontent.com/RedHatInsights/cicd-tools/main/src/bootstrap.sh) image_builder 
     export CICD_IMAGE_BUILDER_IMAGE_NAME="$IMAGE_NAME"
     IMAGE_TO_SCAN=$(cicd::image_builder::get_full_image_name)
@@ -32,7 +34,8 @@ setup() {
         fi
     fi
 
-    local SCRIPTS_DIR=$(mktemp -d)
+    local SCRIPTS_DIR
+    SCRIPTS_DIR=$(mktemp -d)
     export PATH="$PATH:$SCRIPTS_DIR"
 
     if ! cicd::common::command_is_present "syft"; then
@@ -49,12 +52,6 @@ if ! setup; then
     exit 1
 fi
 
-#./bins/syft -v ${IMAGE_TO_SCAN} > "${ARTIFACTS_DIR}/syft-sbom-results.txt"
-syft -v ${IMAGE_TO_SCAN} > "${ARTIFACTS_DIR}/syft-sbom-results.txt"
-
-#install and run grype
-#./bins/grype -v -o table --scope all-layers ${IMAGE_TO_SCAN} > "${ARTIFACTS_DIR}/grype-vuln-results-full.txt"
-#./bins/grype -v -o table --only-fixed --fail-on high ${IMAGE_TO_SCAN} > "${ARTIFACTS_DIR}/grype-vuln-results-fixable.txt"
-
+syft -v "${IMAGE_TO_SCAN}" > "${ARTIFACTS_DIR}/syft-sbom-results.txt"
 grype -v -o table --scope all-layers "${IMAGE_TO_SCAN}" > "${ARTIFACTS_DIR}/grype-vuln-results-full.txt"
 grype -v -o table --only-fixed --fail-on high "${IMAGE_TO_SCAN}" > "${ARTIFACTS_DIR}/grype-vuln-results-fixable.txt"
