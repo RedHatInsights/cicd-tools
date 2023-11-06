@@ -24,7 +24,7 @@ pipeline {
         APP_NAME="CHANGEME"  // name of app-sre "application" folder this component lives in
         COMPONENT_NAME="CHANGEME"  // name of app-sre "resourceTemplate" in deploy.yaml for this component
         IMAGE="quay.io/cloudservices/CHANGEME"  // image location on quay
-
+        RUN_PLATSEC=false // optional step to run vulnerability checks
         IQE_PLUGINS="CHANGEME"  // name of the IQE plugin for this app.
         IQE_MARKER_EXPRESSION="CHANGEME"  // This is the value passed to pytest -m
         IQE_FILTER_EXPRESSION=""  // This is the value passed to pytest -k
@@ -67,6 +67,15 @@ pipeline {
 
                     }
                 }
+                
+                stage ('Run vulnerability tests') {
+                    if (env.RUN_PLATSEC == true)
+                        steps {
+                            withVault([configuration, vaultSecrets: secrets]) {
+                                sh 'source ${CICD_ROOT}/platsec.sh "$IMAGE" "$ARTIFACTS_DIR"' 
+                        }
+                    }
+                }   
             }
         }
     }
