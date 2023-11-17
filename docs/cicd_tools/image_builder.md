@@ -226,6 +226,18 @@ The context include a CI context (for example, while running in a pipeline), and
 Request (a Pull Request pipeline for a project hosted in Github or a Merge Request pipeline for a
 project hosted in Gitlab).
 
+## CICD_IMAGE_BUILDER_MULTIARCH
+
+Type: "boolean", Default value: "false"
+
+If set to true, the image will be built for multiple architectures. The default value is false.
+
+## CICD_IMAGE_BUILDER_BUILDX_BUILDER
+
+Type: "string", Default value: "multiarchbuilder"
+
+The name of the buildx builder to use when building multiarch images. The default value is "multiarchbuilder".
+
 ## Expected Image tags based on the environment
 
 The following table has examples of the different combinations of the variables and tags that are
