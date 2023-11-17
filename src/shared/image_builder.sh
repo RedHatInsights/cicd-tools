@@ -99,8 +99,11 @@ cicd::image_builder::build() {
     fi
   fi
 
-  # Restore the docker config
-  export DOCKER_CONFIG="$docker_config_cache"
+  # Restore the docker config if required
+  if [ -z "$DOCKER_CONFIG" ] && [ -n "$docker_config_cache" ]; then
+      export DOCKER_CONFIG="$docker_config_cache"
+  fi
+
   # Standard build - used if multiarch is not true or if buildx is not available
   if ! cicd::container::cmd build "${build_params[@]}"; then
     cicd::log::err "Error building image"
