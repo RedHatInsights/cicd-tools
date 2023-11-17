@@ -83,7 +83,7 @@ cicd::image_builder::build() {
   if [[ "$multiarch" = true ]]; then
     # if buildx and the specified builder are available, use it
     # if not, fall back to standard build
-    if cicd::container::_get_buildx_available && cicd::image_builder::_buildx_builder_available && !cicd::image_builder::is_change_request_context;; then
+    if cicd::container::_get_buildx_available && cicd::image_builder::_buildx_builder_available && ! cicd::image_builder::is_change_request_context; then
       # buildx is only supported with docker
       # so we need to set the container engine to docker
       CICD_CONTAINER_PREFER_ENGINE="docker"
