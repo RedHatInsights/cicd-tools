@@ -86,7 +86,7 @@ cicd::image_builder::build() {
     if cicd::container::_get_buildx_available && cicd::image_builder::_buildx_builder_available && ! cicd::image_builder::is_change_request_context; then
       # buildx is only supported with docker
       # so we need to set the container engine to docker
-      CICD_CONTAINER_PREFER_ENGINE="docker"
+      export CICD_CONTAINER_PREFER_ENGINE="docker"
       cicd::container::_set_container_engine_cmd
       build_params+=('--platform linux/amd64,linux/arm64')
       if ! cicd::container::cmd buildx build "${build_params[@]}"; then
