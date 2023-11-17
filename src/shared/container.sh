@@ -21,6 +21,21 @@ cicd::container::cmd() {
   "$CICD_CONTAINER_ENGINE" "$@"
 }
 
+cicd::container::_get_buildx_available() {
+
+  local buildx_available=1
+
+  if cicd::container::_container_engine_available 'docker'; then
+    if docker buildx &> /dev/null; then
+      buildx_available=0
+    else
+      cicd::log::info "WARNING: docker buildx not available."
+    fi
+  fi
+
+  return "$buildx_available"
+}
+
 cicd::container::_set_container_engine_cmd() {
 
   if cicd::container::_preferred_container_engine_available; then

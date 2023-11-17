@@ -24,6 +24,7 @@ readonly CICD_IMAGE_BUILDER_REDHAT_USER="${CICD_IMAGE_BUILDER_REDHAT_USER:-$RH_R
 readonly CICD_IMAGE_BUILDER_REDHAT_PASSWORD="${CICD_IMAGE_BUILDER_REDHAT_PASSWORD:-$RH_REGISTRY_TOKEN}"
 readonly CICD_IMAGE_BUILDER_DEFAULT_BUILD_CONTEXT='.'
 readonly CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH='Dockerfile'
+readonly CICD_IMAGE_BUILDER_DEFAULT_BUILDX_BUILDER='multiarchbuilder'
 
 cicd::image_builder::local_build() {
   [[ "$CICD_IMAGE_BUILDER_LOCAL_BUILD" = true ]] || ! cicd::common::is_ci_context
@@ -38,13 +39,14 @@ cicd::image_builder::build_and_push() {
 
 cicd::image_builder::build() {
 
-  local containerfile build_context image_name image_tags default_image_name
+  local containerfile build_context image_name image_tags default_image_name multiarch
   declare -a build_params
 
   containerfile="$(cicd::image_builder::get_containerfile)"
   build_context="$(cicd::image_builder::get_build_context)"
   image_name="$(cicd::image_builder::_get_image_name)" || return 1
   default_image_name=$(cicd::image_builder::get_full_image_name) || return 1
+  multiarch=$(cicd::image_builder::get_multiarch)
 
   if ! [[ -r "$containerfile" ]]; then
     cicd::log::err "Containerfile '$containerfile' does not exist or is not readable!"
@@ -70,10 +72,54 @@ cicd::image_builder::build() {
 
   build_params+=("$build_context")
 
+  #Multiarch builds with buildx require access to the global docker context
+  #this is because buildx uses a builder which can only be created by a privledged user
+  #so we need to unset the docker config to use the global one so we have access to the
+  #global docker context and the multiarch builder within it
+  local docker_config_cache="$DOCKER_CONFIG"
+  unset DOCKER_CONFIG
+
+  # Multiarch build - used if multiarch is true and buildx is available
+  if [[ "$multiarch" = true ]]; then
+    # if buildx and the specified builder are available, use it
+    # if not, fall back to standard build
+    if cicd::container::_get_buildx_available && cicd::image_builder::_buildx_builder_available && !cicd::image_builder::is_change_request_context;; then
+      # buildx is only supported with docker
+      # so we need to set the container engine to docker
+      CICD_CONTAINER_PREFER_ENGINE="docker"
+      cicd::container::_set_container_engine_cmd
+      build_params+=('--platform linux/amd64,linux/arm64')
+      if ! cicd::container::cmd buildx build "${build_params[@]}"; then
+        cicd::log::err "Error building image with buildx"
+        return 1
+      fi
+      return 0
+    else
+      cicd::log::info "Docker buildx not available, or the specified builder is not available, or this is a change request build, falling back to standard build"
+    fi
+  fi
+
+  export DOCKER_CONFIG="$docker_config_cache"
+  # Standard build - used if multiarch is not true or if buildx is not available
   if ! cicd::container::cmd build "${build_params[@]}"; then
     cicd::log::err "Error building image"
     return 1
   fi
+}
+
+cicd::image_builder::_buildx_builder_available() {
+  local builder="${CICD_IMAGE_BUILDER_BUILDX_BUILDER:-$CICD_IMAGE_BUILDER_DEFAULT_BUILDX_BUILDER}"
+  # Check if the specified builder is in the list of available builders
+  if cicd::container::cmd buildx ls | grep -q "$builder"; then
+    return 0  # builder available
+  else
+    return 1  # builder not available
+  fi
+}
+
+cicd::image_builder::get_multiarch() {
+  local multiarch="${CICD_IMAGE_BUILDER_MULTIARCH:-false}"
+  echo -n "$multiarch"
 }
 
 cicd::image_builder::get_containerfile() {
