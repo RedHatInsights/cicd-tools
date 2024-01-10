@@ -26,31 +26,24 @@ export BONFIRE_REPO_ORG="${BONFIRE_REPO_ORG:-RedHatInsights}"
 
 set -x
 # Set up docker cfg
-export DOCKER_CONFIG="$WORKSPACE/.docker"
-rm -fr $DOCKER_CONFIG
-mkdir $DOCKER_CONFIG
-
-# Set up podman cfg
-# No longer needed due to podman now using the DOCKER_CONFIG
-#AUTH_CONF_DIR="$WORKSPACE/.podman"
-#rm -fr $AUTH_CONF_DIR
-#mkdir $AUTH_CONF_DIR
-#export REGISTRY_AUTH_FILE="$AUTH_CONF_DIR/auth.json"
+export DOCKER_CONFIG="${WORKSPACE}/.docker"
+rm -rf "$DOCKER_CONFIG"
+mkdir "$DOCKER_CONFIG"
 
 # Set up kube cfg
-export KUBECONFIG_DIR="$WORKSPACE/.kube"
-export KUBECONFIG="$KUBECONFIG_DIR/config"
-rm -fr $KUBECONFIG_DIR
-mkdir $KUBECONFIG_DIR
+export KUBECONFIG_DIR="${WORKSPACE}/.kube"
+export KUBECONFIG="${KUBECONFIG_DIR}/config"
+rm -rf "$KUBECONFIG_DIR"
+mkdir "$KUBECONFIG_DIR"
 
 set +x
 
 # if this is a PR, use a different tag, since PR tags expire
-if [ ! -z "$ghprbPullId" ]; then
+if [ -n "$ghprbPullId" ]; then
   export IMAGE_TAG="pr-${ghprbPullId}-${IMAGE_TAG}"
 fi
 
-if [ ! -z "$gitlabMergeRequestIid" ]; then
+if [ -n "$gitlabMergeRequestIid" ]; then
   export IMAGE_TAG="pr-${gitlabMergeRequestIid}-${IMAGE_TAG}"
 fi
 
@@ -58,7 +51,7 @@ fi
 export GIT_COMMIT=$(git rev-parse HEAD)
 export ARTIFACTS_DIR="$WORKSPACE/artifacts"
 
-rm -fr $ARTIFACTS_DIR && mkdir -p $ARTIFACTS_DIR
+rm -rf "$ARTIFACTS_DIR" && mkdir -p "$ARTIFACTS_DIR"
 
 # TODO: create custom jenkins agent image that has a lot of this stuff pre-installed
 export LANG=en_US.utf-8
@@ -71,14 +64,13 @@ python3 -m pip install --upgrade pip 'setuptools<58' wheel
 python3 -m pip install --upgrade 'crc-bonfire>=4.10.4'
 
 # clone repo to download cicd scripts
-rm -fr $BONFIRE_ROOT
+rm -rf "$BONFIRE_ROOT"
 echo "Fetching branch '$BONFIRE_REPO_BRANCH' of https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git"
 git clone --branch "$BONFIRE_REPO_BRANCH" "https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git" "$BONFIRE_ROOT"
 
 # Do a docker login to ensure our later 'docker pull' calls have an auth file created
-source ${CICD_ROOT}/_common_container_logic.sh
+source "${CICD_ROOT}/_common_container_logic.sh"
 login
-
 
 # Gives access to helper commands such as "oc_wrapper"
 add_cicd_bin_to_path() {
@@ -131,7 +123,7 @@ _try_set_cluster_environment_variables() {
             ;;
 
         *)
-            echo "Unknown cluster $cluster"
+            echo "Unknown cluster $cluster_id"
             return 1
             ;;
     esac
