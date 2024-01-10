@@ -23,6 +23,12 @@ export BONFIRE_NS_REQUESTER="${JOB_NAME}-${BUILD_NUMBER}"
 # which branch to fetch cicd scripts from in bonfire repo
 export BONFIRE_REPO_BRANCH="${BONFIRE_REPO_BRANCH:-main}"
 export BONFIRE_REPO_ORG="${BONFIRE_REPO_ORG:-RedHatInsights}"
+SUPPORTED_CLUSTERS=("crcd" "ephemeral")
+PREFERRED_CLUSTER="${PREFERRED_CLUSTER:-}"
+
+if [[ -n "$PREFERRED_CLUSTER" ]]; then
+    SUPPORTED_CLUSTERS=("$PREFERRED_CLUSTER")
+fi
 
 set -x
 # Set up docker cfg
@@ -83,7 +89,7 @@ try_login_openshift_cluster() {
 
     success=1
 
-    for cluster_id in crcd ephemeral ; do
+    for cluster_id in "${SUPPORTED_CLUSTERS[@]}"; do
 
         cluster_url=''
         cluster_token=''
