@@ -79,12 +79,72 @@ git clone --branch "$BONFIRE_REPO_BRANCH" "https://github.com/${BONFIRE_REPO_ORG
 source ${CICD_ROOT}/_common_container_logic.sh
 login
 
+
 # Gives access to helper commands such as "oc_wrapper"
 add_cicd_bin_to_path() {
   if ! command -v oc_wrapper; then export PATH=$PATH:${CICD_ROOT}/bin; fi
 }
 
-add_cicd_bin_to_path
+try_login_openshift_cluster() {
 
-echo "logging in to CRCD cluster"
-oc_wrapper login --token=$OC_LOGIN_TOKEN_DEV --server=$OC_LOGIN_SERVER_DEV
+    local success cluster_url cluster_token cluster_id
+
+    success=1
+
+    for cluster_id in ephemeral crcd; do
+
+        cluster_url=''
+        cluster_token=''
+
+        _try_set_cluster_environment_variables "$cluster_id"
+
+        if [[ -z "$cluster_url" ]] || [[ -z "$cluster_token" ]]; then
+            echo "Environment variables for cluster '$cluster_id' not found"
+        else 
+            if _try_login_cluster "$cluster_url" "$cluster_token"; then
+                echo "Logged in to cluster '$cluster_id'"
+                success=0
+                break
+            else
+                echo "Failed logging into cluster: '$cluster_id'"
+            fi
+        fi
+    done
+
+    return "$success"
+}
+
+_try_set_cluster_environment_variables() {
+
+    local cluster_id="$1"
+
+    case "$cluster_id" in
+
+        crcd)
+            cluster_url="$OC_LOGIN_SERVER_DEV"
+            cluster_token="$OC_LOGIN_TOKEN_DEV"
+            ;;
+
+        ephemeral)
+            cluster_url="$OC_LOGIN_SERVER"
+            cluster_token="$OC_LOGIN_TOKEN"
+            ;;
+
+        *)
+            echo "Unknown cluster $cluster"
+            return 1
+            ;;
+    esac
+}
+
+_try_login_cluster() {
+    local url="$1"
+    local token="$2"
+    oc_wrapper login --token="$token" --server="$url"
+}
+
+add_cicd_bin_to_path
+if ! try_login_openshift_cluster; then
+    echo "Failed logging into any cluster!"
+    exit 1
+fi
