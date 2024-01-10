@@ -83,7 +83,7 @@ try_login_openshift_cluster() {
 
     success=1
 
-    for cluster_id in ephemeral crcd; do
+    for cluster_id in crcd ephemeral ; do
 
         cluster_url=''
         cluster_token=''
