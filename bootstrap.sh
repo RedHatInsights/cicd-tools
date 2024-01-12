@@ -23,7 +23,7 @@ export BONFIRE_NS_REQUESTER="${JOB_NAME}-${BUILD_NUMBER}"
 # which branch to fetch cicd scripts from in bonfire repo
 export BONFIRE_REPO_BRANCH="${BONFIRE_REPO_BRANCH:-main}"
 export BONFIRE_REPO_ORG="${BONFIRE_REPO_ORG:-RedHatInsights}"
-SUPPORTED_CLUSTERS=('crcd' 'ephemeral')
+SUPPORTED_CLUSTERS=('ephemeral' 'crcd')
 if [[ -z "${AVAILABLE_CLUSTERS[*]}" ]]; then
     AVAILABLE_CLUSTERS=("${SUPPORTED_CLUSTERS[@]}")
 fi
