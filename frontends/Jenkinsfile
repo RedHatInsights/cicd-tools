@@ -39,8 +39,7 @@ pipeline {
             steps {
                 script {
                     GIT_COMMIT_HASH = ghprbActualCommit.take(6)
-                }
-                
+                }            
                 checkout scmGit(
                     branches: [[name: '$ghprbSourceBranch']],
                     userRemoteConfigs: [[url: '$ghprbAuthorRepoGitUrl']])
