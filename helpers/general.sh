@@ -31,31 +31,3 @@ function teardown() {
     docker rm -f "$TEST_CONT"
     TEARDOWN_RAN=1
 }
-
-function changes_excluding_docs() {
-
-    local target_branch=${ghprbTargetBranch:-master}
-    local docs_regex='^docs/.*\|^.*\.adoc'
-
-    local detect_changes=$(git --no-pager diff --name-only "origin/${target_branch}" |\
-        grep -v "$docs_regex" | grep -q '.')
-
-    if [ -z detect_changes ]; then
-        echo "No code changes detected, exiting"
-        create_junit_dummy_result
-
-        exit 0
-    fi
-}
-
-function create_junit_dummy_result() {
-
-    mkdir -p 'artifacts'
-
-    cat <<- EOF > 'artifacts/junit-dummy.xml'
-	<?xml version="1.0" encoding="UTF-8"?>
-	<testsuite tests="1">
-	    <testcase classname="dummy" name="dummy-empty-test"/>
-	</testsuite>
-	EOF
-}

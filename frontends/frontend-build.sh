@@ -2,7 +2,7 @@
 
 set -x
 
-QUAY_EXPIRE_TIME="${IMAGE_AUTO_DELETION_DAYS}d"
+QUAY_EXPIRE_TIME="${IMAGE_AUTO_DELETION_DAYS}"
 
 NODE_BUILD_VERSION=`node -e 'console.log(require("./package.json").engines.node.match(/(\d+)\.\d+\.\d+/)[1])'`
 

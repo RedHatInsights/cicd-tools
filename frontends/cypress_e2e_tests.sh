@@ -20,7 +20,3 @@ docker run \
     --rm \
     --entrypoint bash \
     "${CYPRESS_TEST_IMAGE}" /e2e/run-e2e.sh
-
-RESULT=$?
-
-exit $RESULT

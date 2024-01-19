@@ -38,7 +38,7 @@ pipeline {
             agent { label 'insights' }
             steps {
                 script {
-                    GIT_COMMIT_HASH = ghprbActualCommit.take(6)
+                    GIT_COMMIT_HASH = ghprbActualCommit.take(7)
                 }            
                 checkout scmGit(
                     branches: [[name: '$ghprbSourceBranch']],
