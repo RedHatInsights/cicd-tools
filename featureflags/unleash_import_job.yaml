@@ -1,0 +1,28 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: unleash-export-import-template
+  annotations:
+    description: "The purpose of this job is to import Unleash toggles into ephemeral namespaces"
+objects:
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: "unleash-import-config-${RANDOM_STRING}"
+  spec:
+    template:
+      spec:
+        containers:
+        - name: ubi8
+          image: registry.access.redhat.com/ubi8/ubi:8.9-1107.1706791207
+          command: ["dnf install jq -y && ./unleash_config_export_import.sh"]
+          volumeMounts:
+          - mountPath: /tmp
+            name: unleash-export-import-script-volume
+        restartPolicy: Never
+    backoffLimit: 4
+parameters:
+  - description: generates a random string to uniquely identify the name of an object
+    name: RANDOM_STRING
+    value: "$(head -c 6 /dev/random | base64)"
+    required: true
