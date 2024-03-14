@@ -1,28 +1,37 @@
 #!/bin/bash
 
+set -x
 
 EPHEMERAL_NAMESPACE="${EPHEMERAL_NAMESPACE:-}"
 EXPORT_UNLEASH_URL="${EXPORT_UNLEASH_URL:-}"
 EXPORT_NAMESPACE="${EXPORT_NAMESPACE:-}"
-
- # This is retrieved in a later step until we convert to a job
 EXPORT_ADMIN_SECRET="${EXPORT_ADMIN_SECRET:-}"
 IMPORT_PAT="${IMPORT_PAT:-}"
 
-declare -A required_env_vars
-required_env_vars["EPHEMERAL_NAMESPACE"]=$EPHEMERAL_NAMESPACE
-required_env_vars["EXPORT_UNLEASH_URL"]=$EXPORT_UNLEASH_URL
-required_env_vars["EXPORT_NAMESPACE"]=$EXPORT_NAMESPACE
-required_env_vars["EXPORT_ADMIN_SECRET"]=$EXPORT_ADMIN_SECRET
-required_env_vars["IMPORT_PAT"]=$IMPORT_PAT
-
-for var in "${required_env_vars[@]}"
-do
-  if {{ -z required_env_vars[var] }}; then
-    printf "variable [%s] was not set" "var"
+if [ -z "${EXPORT_UNLEASH_URL}" ]; then
+    printf "variable [%s] was not set" "$EPHEMERAL_NAMESPACE"
     return 1
-  fi
-done
+fi
+
+if [ -z "${EPHEMERAL_NAMESPACE}" ]; then
+    printf "variable [%s] was not set" "$EXPORT_UNLEASH_URL"
+    return 1
+fi
+
+if [ -z "${EXPORT_NAMESPACE}" ]; then
+    printf "variable [%s] was not set" "$EXPORT_NAMESPACE"
+    return 1
+fi
+
+if [ -z "${EXPORT_ADMIN_SECRET}" ]; then
+    printf "variable [%s] was not set" "$EXPORT_ADMIN_SECRET"
+    return 1
+fi
+
+if [ -z "${IMPORT_PAT}" ]; then
+    printf "variable [%s] was not set" "$IMPORT_PAT"
+    return 1
+fi
 
 mkdir featureflags
 
@@ -50,7 +59,7 @@ curl -L -X POST "${EXPORT_UNLEASH_URL}/api/admin/features-batch/export" \
 }' > featureflags/feature_flags_exported_toggles.json
 
 # Import toggles into ephemeral environment
-EXPORTED_UNLEASH_TOGGLES=$(cat tmp/feature_flags_exported_toggles.json)
+EXPORTED_UNLEASH_TOGGLES=$(cat featureflags /feature_flags_exported_toggles.json)
 
 curl -L -X POST  'http://localhost:4243/api/admin/features-batch/import' -H   'Content-Type: application/json' \
 -H 'Accept: application/json' \
@@ -61,10 +70,5 @@ curl -L -X POST  'http://localhost:4243/api/admin/features-batch/import' -H   'C
   "data": '"$EXPORTED_UNLEASH_TOGGLES"'
 }'
 
-echo "\n
-###########################################################################################
-# Cleanup json files
-###########################################################################################
-"
-
+echo "Cleanup json files"
 rm -rf featureflags
