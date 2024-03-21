@@ -15,7 +15,7 @@ objects:
         containers:
         - name: ubi8
           image: registry.access.redhat.com/ubi8/ubi:8.9-1107.1706791207
-          command: ["dnf install jq -y && ./unleash_config_export_import.sh"]
+          command: ["dnf", "install", "jq", "-y", "&&", "source", "<(https://github.com/RedHatInsights/cicd-tools/blob/437db2c2c738b16dc567accc45f4254b21ae6f69/featureflags/unleash_config_export_import.sh)"]
           volumeMounts:
           - mountPath: /tmp
             name: unleash-export-import-script-volume
