@@ -271,7 +271,7 @@ cicd::image_builder::_module_setup() {
 cicd::image_builder::_try_log_in_to_image_registries() {
 
   if ! cicd::image_builder::local_build; then
-    DOCKER_CONFIG="$(mktemp -d)"
+    DOCKER_CONFIG="$(mktemp -d --tmpdir="${WORKSPACE:-$(pwd)}")"
     export DOCKER_CONFIG
     echo -n '{}' >"${DOCKER_CONFIG}/config.json"
   fi
