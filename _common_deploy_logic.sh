@@ -16,14 +16,7 @@
 
 add_cicd_bin_to_path
 
-function trap_proxy {
-    # https://stackoverflow.com/questions/9256644/identifying-received-signal-name-in-bash
-    func="$1"; shift
-    for sig; do
-        trap "$func $sig" "$sig"
-    done
-}
-
+# this trap replaces 'cleanup' set in bootstrap.sh, but we'll re-set it at the end of 'teardown'
 trap_proxy teardown EXIT ERR SIGINT SIGTERM
 
 set -e
@@ -105,6 +98,10 @@ function teardown {
         fi
         set -e
     done
+
+    # make sure cleanup gets run at final exit
+    trap job_cleanup EXIT ERR SIGINT SIGTERM
+
     TEARDOWN_RAN=1
 }
 
