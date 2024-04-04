@@ -58,13 +58,14 @@ def main() -> None:
     snapshot: Snapshot = Snapshot.model_validate_json(snapshot_str)
     ret = []
     for component in snapshot.components:
+        component_name = os.environ.get("BONFIRE_COMPONENT_NAME", component.name)
         ret.extend((
             "--set-template-ref",
-            f"{component.name}={component.source.git.revision}",
+            f"{component_name}={component.source.git.revision}",
             "--set-parameter",
-            f"{component.name}/IMAGE={component.container_image.image}@sha256",
+            f"{component_name}/IMAGE={component.container_image.image}@sha256",
             "--set-parameter",
-            f"{component.name}/IMAGE_TAG={component.container_image.sha}"
+            f"{component_name}/IMAGE_TAG={component.container_image.sha}"
         ))
     print(" ".join(ret))
 
