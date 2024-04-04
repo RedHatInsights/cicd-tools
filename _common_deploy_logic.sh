@@ -16,7 +16,7 @@
 
 add_cicd_bin_to_path
 
-# this trap replaces 'cleanup' set in bootstrap.sh, but we'll re-set it at the end of 'teardown'
+# this trap replaces 'job_cleanup' set in bootstrap.sh, but we'll re-set it at the end of 'teardown'
 trap_proxy teardown EXIT ERR SIGINT SIGTERM
 
 set -e

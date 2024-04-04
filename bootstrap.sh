@@ -25,14 +25,14 @@ function trap_proxy() {
 export TMP_JOB_DIR=$(mktemp -d -t "jenkins-${JOB_NAME}-${BUILD_NUMBER}-XXXXXX")
 echo "job tmp dir location: $TMP_JOB_DIR"
 
-function cleanup() {
+function job_cleanup() {
     local CAPTURED_SIGNAL="$1"
     echo "triggering job cleanup due to signal: $CAPTURED_SIGNAL"
 
     rm -fr $TMP_JOB_DIR
 }
 
-trap_proxy cleanup EXIT ERR SIGINT SIGTERM
+trap_proxy job_cleanup EXIT ERR SIGINT SIGTERM
 
 export APP_ROOT=$(pwd)
 export WORKSPACE=${WORKSPACE:-$APP_ROOT}  # if running in jenkins, use the build's workspace
