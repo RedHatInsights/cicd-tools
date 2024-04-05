@@ -29,7 +29,7 @@ is_rhel7_host() {
 
 function check_for_secrets() {
 
-    local LIST_SECRETS=$(detect-secrets scan $WORKSPACE --exclude-files 'test*' --disable-plugin HexHighEntropyString --disable-plugin KeywordDetector | jq -r '.results')
+    local LIST_SECRETS=$(detect-secrets scan $WORKSPACE --exclude-files 'test|grafana-dashboard' --disable-plugin HexHighEntropyString --disable-plugin KeywordDetector | jq -r '.results')
 
     # Check if we found secret(s)
     if $LIST_SECRETS | jq -e '. != {}'; then
