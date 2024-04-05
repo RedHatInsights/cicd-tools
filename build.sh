@@ -29,7 +29,8 @@ is_rhel7_host() {
 
 function check_for_secrets() {
 
-    if jq -e '. != {}' < detect-secrets scan $WORKSPACE | jq -r '.results'; then
+    # Check if we found secret(s)
+    if detect-secrets scan $WORKSPACE | jq -r '.results' | jq -e '. != {}'; then
         exit 1
     fi
 
