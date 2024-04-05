@@ -32,7 +32,7 @@ function check_for_secrets() {
     local LIST_SECRETS=$(detect-secrets scan $WORKSPACE --exclude-files 'test|grafana-dashboard' --disable-plugin HexHighEntropyString --disable-plugin KeywordDetector | jq -r '.results')
 
     # Check if we found secret(s)
-    if [ $LIST_SECRETS | jq -e '. != {}' ]; then
+    if [ "$LIST_SECRETS" = "{}" ]; then
         echo "secrets detected - forcing job failure: ${LIST_SECRETS}"
         exit 1
     fi
