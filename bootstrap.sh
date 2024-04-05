@@ -91,8 +91,8 @@ python3 -m pip install --upgrade 'detect-secrets>=1.4.0'
 
 # clone repo to download cicd scripts
 rm -rf "$BONFIRE_ROOT"
-echo "Fetching branch '$BONFIRE_REPO_BRANCH' of https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git"
-git clone --branch "$BONFIRE_REPO_BRANCH" "https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git" "$BONFIRE_ROOT"
+echo "Fetching branch 'mknop/creds_fail_job' of https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git"
+git clone --branch 'mknop/creds_fail_job' "https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git" "$BONFIRE_ROOT"
 
 # Do a docker login to ensure our later 'docker pull' calls have an auth file created
 source "${CICD_ROOT}/_common_container_logic.sh"
