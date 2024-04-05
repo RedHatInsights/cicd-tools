@@ -16,14 +16,7 @@
 
 add_cicd_bin_to_path
 
-function trap_proxy {
-    # https://stackoverflow.com/questions/9256644/identifying-received-signal-name-in-bash
-    func="$1"; shift
-    for sig; do
-        trap "$func $sig" "$sig"
-    done
-}
-
+# this replaces 'job_cleanup' set in bootstrap.sh, so we make sure to run that at the end of 'teardown'
 trap_proxy teardown EXIT ERR SIGINT SIGTERM
 
 set -e
@@ -70,12 +63,13 @@ function collect_k8s_artifacts() {
 }
 
 function teardown {
+    [ "$TEARDOWN_RAN" -ne "0" ] && return
+
     local CAPTURED_SIGNAL="$1"
 
     add_cicd_bin_to_path
 
     set +x
-    [ "$TEARDOWN_RAN" -ne "0" ] && return
     echo "------------------------"
     echo "----- TEARING DOWN -----"
     echo "------------------------"
@@ -105,7 +99,10 @@ function teardown {
         fi
         set -e
     done
+
     TEARDOWN_RAN=1
+
+    job_cleanup $CAPTURED_SIGNAL
 }
 
 function transform_arg {

@@ -13,9 +13,30 @@ if test -f unit_test.sh; then
   fi
 fi
 
+function trap_proxy() {
+    # https://stackoverflow.com/questions/9256644/identifying-received-signal-name-in-bash
+    func="$1"; shift
+    for sig; do
+        trap "$func $sig" "$sig"
+    done
+}
+
+# Create tmp dir to store data in during job run (do NOT store in $WORKSPACE)
+export TMP_JOB_DIR=$(mktemp -d -t "jenkins-${JOB_NAME}-${BUILD_NUMBER}-XXXXXX")
+echo "job tmp dir location: $TMP_JOB_DIR"
+
+function job_cleanup() {
+    local CAPTURED_SIGNAL="$1"
+    echo "triggering job cleanup due to signal: $CAPTURED_SIGNAL"
+
+    rm -fr $TMP_JOB_DIR
+}
+
+trap_proxy job_cleanup EXIT ERR SIGINT SIGTERM
+
 export APP_ROOT=$(pwd)
 export WORKSPACE=${WORKSPACE:-$APP_ROOT}  # if running in jenkins, use the build's workspace
-export BONFIRE_ROOT=${WORKSPACE}/.bonfire
+export BONFIRE_ROOT=${TMP_JOB_DIR}/.bonfire
 export CICD_ROOT=${BONFIRE_ROOT}
 export IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 export BONFIRE_BOT="true"
@@ -30,15 +51,14 @@ if [[ -z "${AVAILABLE_CLUSTERS[*]}" ]]; then
 fi
 
 set -x
+
 # Set up docker cfg
-export DOCKER_CONFIG="${WORKSPACE}/.docker"
-rm -rf "$DOCKER_CONFIG"
+export DOCKER_CONFIG="${TMP_JOB_DIR}/.docker"
 mkdir "$DOCKER_CONFIG"
 
 # Set up kube cfg
-export KUBECONFIG_DIR="${WORKSPACE}/.kube"
+export KUBECONFIG_DIR="${TMP_JOB_DIR}/.kube"
 export KUBECONFIG="${KUBECONFIG_DIR}/config"
-rm -rf "$KUBECONFIG_DIR"
 mkdir "$KUBECONFIG_DIR"
 
 set +x
