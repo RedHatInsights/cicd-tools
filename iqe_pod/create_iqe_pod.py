@@ -11,7 +11,7 @@ from ocviapy import oc, wait_for_ready
 
 from bonfire.utils import split_equals
 
-SECRET_NAME = "iqe-settings"
+SECRET_NAME = "iqe-settings" # pragma: allowlist secret
 
 
 def _get_base_pod_cfg():

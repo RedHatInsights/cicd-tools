@@ -87,6 +87,7 @@ source .bonfire_venv/bin/activate
 
 python3 -m pip install --upgrade pip 'setuptools<58' wheel
 python3 -m pip install --upgrade 'crc-bonfire>=4.10.4'
+python3 -m pip install --upgrade 'detect-secrets>=1.4.0'
 
 # clone repo to download cicd scripts
 rm -rf "$BONFIRE_ROOT"
