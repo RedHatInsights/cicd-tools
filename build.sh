@@ -29,8 +29,11 @@ is_rhel7_host() {
 
 function check_for_secrets() {
 
+    local LIST_SECRETS=$(detect-secrets scan $WORKSPACE | jq -r '.results')
+
     # Check if we found secret(s)
-    if detect-secrets scan $WORKSPACE | jq -r '.results' | jq -e '. != {}'; then
+    if $LIST_SECRETS | jq -e '. != {}'; then
+        echo "secrets detected - forcing job failure: ${LIST_SECRETS}"
         exit 1
     fi
 
