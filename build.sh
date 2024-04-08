@@ -34,7 +34,7 @@ function check_for_secrets() {
     # Check if we found secret(s)
     if [ "$LIST_SECRETS" != "{}" ]; then
         echo "secrets detected - forcing job failure: ${LIST_SECRETS}"
-        exit 1
+        return
     fi
 
     echo "no secrets detected"
@@ -130,31 +130,28 @@ function podman_build {
 # Login to registry with podman/docker
 login
 
-check_for_secrets
+# Validate that no secrets are present before we copy into container
+if check_for_secrets; then
+    return 0
+fi
 
-# if [[ $IMAGE == quay.io/* ]]; then
-#     # if using quay, check to see if this tag already exists
-#     echo "checking if image '$IMAGE:$IMAGE_TAG' already exists in quay.io..."
-#     QUAY_REPO=${IMAGE#"quay.io/"}
-#     RESPONSE=$( \
-#         curl -Ls -H "Authorization: Bearer $QUAY_API_TOKEN" \
-#         "https://quay.io/api/v1/repository/$QUAY_REPO/tag/?specificTag=$IMAGE_TAG" \
-#     )
-#     # find all non-expired tags
-#     VALID_TAGS_LENGTH=$(echo $RESPONSE | jq '[ .tags[] | select(.end_ts == null) ] | length')
-#     if [[ "$VALID_TAGS_LENGTH" -gt 0 ]]; then
-#         echo "$IMAGE:$IMAGE_TAG already present in quay, not rebuilding"
-#     else
-#         # Validate that no secrets are present before we copy into container
-#         check_for_secrets
-
-#         # image does not yet exist, build and push it
-#         build
-#     fi
-# else
-#     # Validate that no secrets are present before we copy into container
-#     check_for_secrets
-
-#     # if not pushing to quay, always build
-#     build
-# fi
+if [[ $IMAGE == quay.io/* ]]; then
+    # if using quay, check to see if this tag already exists
+    echo "checking if image '$IMAGE:$IMAGE_TAG' already exists in quay.io..."
+    QUAY_REPO=${IMAGE#"quay.io/"}
+    RESPONSE=$( \
+        curl -Ls -H "Authorization: Bearer $QUAY_API_TOKEN" \
+        "https://quay.io/api/v1/repository/$QUAY_REPO/tag/?specificTag=$IMAGE_TAG" \
+    )
+    # find all non-expired tags
+    VALID_TAGS_LENGTH=$(echo $RESPONSE | jq '[ .tags[] | select(.end_ts == null) ] | length')
+    if [[ "$VALID_TAGS_LENGTH" -gt 0 ]]; then
+        echo "$IMAGE:$IMAGE_TAG already present in quay, not rebuilding"
+    else
+        # image does not yet exist, build and push it
+        build
+    fi
+else
+    # if not pushing to quay, always build
+    build
+fi
