@@ -298,7 +298,7 @@ setup() {
     }
 
     CICD_IMAGE_BUILDER_QUAY_USER="username1"
-    CICD_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
+    CICD_IMAGE_BUILDER_QUAY_PASSWORD="secr3t" # pragma: allowlist secret
 
     run source load_module.sh image_builder
 
@@ -307,7 +307,7 @@ setup() {
     assert_output --partial "-u=username1"
 
     CICD_IMAGE_BUILDER_REDHAT_USER="username2"
-    CICD_IMAGE_BUILDER_REDHAT_PASSWORD="secr3t"
+    CICD_IMAGE_BUILDER_REDHAT_PASSWORD="secr3t" # pragma: allowlist secret
 
     run source load_module.sh image_builder
     assert_success
@@ -323,7 +323,7 @@ setup() {
     }
 
     CICD_IMAGE_BUILDER_QUAY_USER="wrong-user"
-    CICD_IMAGE_BUILDER_QUAY_PASSWORD="secr3t"
+    CICD_IMAGE_BUILDER_QUAY_PASSWORD="secr3t" # pragma: allowlist secret
 
     run ! source load_module.sh image_builder
 
@@ -340,7 +340,7 @@ setup() {
     }
 
     CICD_IMAGE_BUILDER_REDHAT_USER="wrong-user"
-    CICD_IMAGE_BUILDER_REDHAT_PASSWORD="wrong-password"
+    CICD_IMAGE_BUILDER_REDHAT_PASSWORD="wrong-password" # pragma: allowlist secret
 
     run ! source load_module.sh image_builder
 

@@ -27,6 +27,19 @@ is_rhel7_host() {
     [ -f "$RELEASE_FILE" ] && grep -q -i "release 7" "$RELEASE_FILE"
 }
 
+function check_for_secrets() {
+
+    local LIST_SECRETS=$(detect-secrets scan $WORKSPACE --exclude-files 'test|grafana-dashboard' --disable-plugin HexHighEntropyString --disable-plugin KeywordDetector | jq -r '.results')
+
+    # Check if we found secret(s)
+    if [ "$LIST_SECRETS" != "{}" ]; then
+        echo "secrets detected - forcing job failure: ${LIST_SECRETS}"
+        return
+    fi
+
+    echo "no secrets detected"
+}
+
 function build {
 
     local IMAGE_TAG_LATEST=''
@@ -116,6 +129,11 @@ function podman_build {
 
 # Login to registry with podman/docker
 login
+
+# Validate that no secrets are present before we copy into container
+if check_for_secrets; then
+    return 0
+fi
 
 if [[ $IMAGE == quay.io/* ]]; then
     # if using quay, check to see if this tag already exists
