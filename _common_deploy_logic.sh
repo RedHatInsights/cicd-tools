@@ -17,7 +17,7 @@
 add_cicd_bin_to_path
 
 # this replaces 'job_cleanup' set in bootstrap.sh, so we make sure to run that at the end of 'teardown'
-trap_proxy teardown EXIT ERR SIGINT SIGTERM
+trap teardown EXIT ERR SIGINT SIGTERM
 
 set -e
 
@@ -65,8 +65,6 @@ function collect_k8s_artifacts() {
 function teardown {
     [ "$TEARDOWN_RAN" -ne "0" ] && return
 
-    local CAPTURED_SIGNAL="$1"
-
     add_cicd_bin_to_path
 
     set +x
@@ -74,8 +72,6 @@ function teardown {
     echo "----- TEARING DOWN -----"
     echo "------------------------"
     local ns
-
-    echo "Tear down operation triggered by signal: $CAPTURED_SIGNAL"
 
     # run teardown on all namespaces possibly reserved in this run
     RESERVED_NAMESPACES=("${NAMESPACE}" "${DB_NAMESPACE}" "${SMOKE_NAMESPACE}")
@@ -100,9 +96,9 @@ function teardown {
         set -e
     done
 
-    TEARDOWN_RAN=1
+    job_cleanup
 
-    job_cleanup $CAPTURED_SIGNAL
+    TEARDOWN_RAN=1
 }
 
 function transform_arg {
