@@ -13,26 +13,16 @@ if test -f unit_test.sh; then
   fi
 fi
 
-function trap_proxy() {
-    # https://stackoverflow.com/questions/9256644/identifying-received-signal-name-in-bash
-    func="$1"; shift
-    for sig; do
-        trap "$func $sig" "$sig"
-    done
-}
-
 # Create tmp dir to store data in during job run (do NOT store in $WORKSPACE)
 export TMP_JOB_DIR=$(mktemp -d -p "$HOME" -t "jenkins-${JOB_NAME}-${BUILD_NUMBER}-XXXXXX")
 echo "job tmp dir location: $TMP_JOB_DIR"
 
 function job_cleanup() {
-    local CAPTURED_SIGNAL="$1"
-    echo "triggering job cleanup due to signal: $CAPTURED_SIGNAL"
-
+    echo "in job_cleanup handler, removing tmp dir: $TMP_JOB_DIR"
     rm -fr $TMP_JOB_DIR
 }
 
-trap_proxy job_cleanup EXIT ERR SIGINT SIGTERM
+trap job_cleanup EXIT ERR SIGINT SIGTERM
 
 export APP_ROOT=$(pwd)
 export WORKSPACE=${WORKSPACE:-$APP_ROOT}  # if running in jenkins, use the build's workspace
