@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-crc-bonfire = ">=4.10.4"
+crc-bonfire = ">=5.7.1"
 pydantic = "*"
 awscli = "==1.29.28"
 
