@@ -7,8 +7,6 @@ setup() {
     if [[ -r "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH" ]]; then
        mv "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH" "${CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH}.tmp"
     fi
-
-    touch foo
 }
 
 teardown() {
@@ -16,7 +14,6 @@ teardown() {
     if [[ -r "${CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH}.tmp" ]]; then
        mv "${CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH}.tmp" "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH"
     fi
-    touch bar
 }
 
 
