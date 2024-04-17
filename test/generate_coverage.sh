@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 COVERAGE_DIRECTORY="$PWD/coverage"
-BATS_CMD='bats'
+BATS_CMD='./test/bats/bin/bats'
 TESTS_PATH="${1:-test}"
 IGNORE_TAGS='!no-kcov'
 KCOV_CMD='kcov'

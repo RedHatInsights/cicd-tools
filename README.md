@@ -26,6 +26,30 @@ file [here](examples/unit_test_example.sh).
 | smoke_test.sh           | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh)                                                                                                                                                                                                       |
 | iqe_pod                 | **DEPRECATED**, use [cji_smoke_test.sh](cji_smoke_test.sh)                                                                                                                                                                                                       |
 
+## Running the Bash script library tests
+
+The Bash script library uses [BATS](https://bats-core.readthedocs.io/en/stable/) for its unit tests. 
+
+In order to run the tests, you need to have fetched all the git submodules (BATS and the test_helpers are provided as git submodules). 
+
+You can do this at clone time:
+
+```shell
+# git clone --recurse-submodules https://github.com/RedHatInsights/cicd-tools
+```
+
+or if you already cloned it, but you don't have fetched the submodules you can do that with:
+
+```shell
+# git submodule update --init
+```
+
+you can then run BATS from the provided git submodule: 
+
+```shell
+# ./test/bats/bin/bats test
+```
+
 ## Bash script library usage
 
 The collection of helper libraries are expected to be loaded using the

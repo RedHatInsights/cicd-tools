@@ -2,6 +2,18 @@
 setup() {
     load "test_helper/common-setup"
     _common_setup
+
+    CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH="Dockerfile"
+    if [[ -r "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH" ]]; then
+       mv "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH" "${CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH}.tmp"
+    fi
+}
+
+teardown() {
+
+    if [[ -r "${CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH}.tmp" ]]; then
+       mv "${CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH}.tmp" "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH"
+    fi
 }
 
 
@@ -123,14 +135,15 @@ setup() {
 
     source load_module.sh image_builder
 
-    EXPECTED_CONTAINERFILE_PATH='Dockerfile'
     IMAGE_NAME='quay.io/foo/bar'
 
-    refute [ -r "$EXPECTED_CONTAINERFILE_PATH" ]
+    refute [ -r "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH" ]
+
     run ! cicd::image_builder::build
     assert_failure
-    assert_output --regexp "$EXPECTED_CONTAINERFILE_PATH.*does not exist"
+    assert_output --regexp "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH.*does not exist"
     refute_output --regexp "build"
+
 }
 
 @test "Image build fails if no image name is defined" {
@@ -188,12 +201,11 @@ setup() {
 
     source load_module.sh image_builder
 
-    EXPECTED_CONTAINERFILE_PATH='Dockerfile'
     IMAGE_NAME='quay.io/foo/bar'
 
-    touch "${EXPECTED_CONTAINERFILE_PATH}"
+    touch "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH"
     run cicd::image_builder::build
-    rm "${EXPECTED_CONTAINERFILE_PATH}"
+    rm "$CICD_IMAGE_BUILDER_DEFAULT_CONTAINERFILE_PATH"
 
     assert_success
     assert_output --regexp "^build"
