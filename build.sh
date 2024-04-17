@@ -113,7 +113,7 @@ function podman_build {
 
 : ${DOCKERFILE:="Dockerfile"}
 : ${CACHE_FROM_LATEST_IMAGE:="false"}
-
+git ls-files --others --exclude-standard
 # Login to registry with podman/docker
 login
 
