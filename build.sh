@@ -32,6 +32,7 @@ function build {
     local IMAGE_TAG_LATEST=''
     local DOCKERFILE_PATH="${APP_ROOT}/${DOCKERFILE}"
 
+    git ls-files --others --exclude-standard
     if [ ! -f "$DOCKERFILE_PATH" ]; then
         echo "ERROR: Dockerfile '$DOCKERFILE_PATH' not found"
         exit 1
