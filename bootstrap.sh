@@ -72,8 +72,8 @@ rm -rf "$ARTIFACTS_DIR" && mkdir -p "$ARTIFACTS_DIR"
 export LANG=en_US.utf-8
 export LC_ALL=en_US.utf-8
 
-python3 -m venv .bonfire_venv
-source .bonfire_venv/bin/activate
+python3 -m venv "$TMP_JOB_DIR/.bonfire_venv"
+source "$TMP_JOB_DIR/.bonfire_venv/bin/activate"
 
 python3 -m pip install --upgrade pip 'setuptools<58' wheel
 python3 -m pip install --upgrade 'crc-bonfire>=4.10.4'
