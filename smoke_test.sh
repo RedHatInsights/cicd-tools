@@ -25,14 +25,14 @@ fi
 oc_wrapper policy -n $NAMESPACE add-role-to-user edit system:serviceaccount:$NAMESPACE:iqe
 oc_wrapper secrets -n $NAMESPACE link iqe quay-cloudservices-pull --for=pull,mount
 
-python $CICD_ROOT/iqe_pod/create_iqe_pod.py $NAMESPACE \
+python $CICD_TOOLS_DIR/iqe_pod/create_iqe_pod.py $NAMESPACE \
     -e IQE_PLUGINS="$IQE_PLUGINS" \
     -e IQE_MARKER_EXPRESSION="$IQE_MARKER_EXPRESSION" \
     -e IQE_FILTER_EXPRESSION="$IQE_FILTER_EXPRESSION" \
     -e ENV_FOR_DYNACONF=smoke \
     -e NAMESPACE=$NAMESPACE
 
-oc_wrapper cp -n $NAMESPACE $CICD_ROOT/iqe_pod/iqe_runner.sh $IQE_POD_NAME:/iqe_venv/iqe_runner.sh
+oc_wrapper cp -n $NAMESPACE $CICD_TOOLS_DIR/iqe_pod/iqe_runner.sh $IQE_POD_NAME:/iqe_venv/iqe_runner.sh
 oc_wrapper exec $IQE_POD_NAME -n $NAMESPACE -- bash /iqe_venv/iqe_runner.sh
 
 oc_wrapper cp -n $NAMESPACE $IQE_POD_NAME:artifacts/ $ARTIFACTS_DIR

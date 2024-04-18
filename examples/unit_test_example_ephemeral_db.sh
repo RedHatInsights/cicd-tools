@@ -1,7 +1,7 @@
 # This script is used to deploy an ephemeral DB for your unit tests run against
 # This script can be found at:
 # https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd/deploy_ephemeral_db.sh
-source $CICD_ROOT/deploy_ephemeral_db.sh
+source $CICD_TOOLS_DIR/deploy_ephemeral_db.sh
 
 # Here we remap env vars set by `deploy_ephemeral_db.sh`.  APPs call the DB ENV VARs
 # different names, if your env vars do not match what the shell script sets,
