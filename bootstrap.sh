@@ -24,14 +24,16 @@ function job_cleanup() {
 
 trap job_cleanup EXIT ERR SIGINT SIGTERM
 
-CICD_TOOLS_DIR=$TMP_JOB_DIR/.cicd_tools
-export APP_ROOT=${WORKSPACE:-$(pwd)}
+export APP_ROOT=$(pwd)
+export WORKSPACE=${WORKSPACE:-$APP_ROOT}  # if running in jenkins, use the build's workspace
+export BONFIRE_ROOT=${TMP_JOB_DIR}/.bonfire
+export CICD_ROOT=${BONFIRE_ROOT}
 export IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 export BONFIRE_BOT="true"
 export BONFIRE_NS_REQUESTER="${JOB_NAME}-${BUILD_NUMBER}"
 # which branch to fetch cicd scripts from in bonfire repo
-export CICD_REPO_BRANCH="${CICD_REPO_BRANCH:-main}"
-export CICD_REPO_ORG="${CICD_REPO_ORG:-RedHatInsights}"
+export BONFIRE_REPO_BRANCH="${BONFIRE_REPO_BRANCH:-main}"
+export BONFIRE_REPO_ORG="${BONFIRE_REPO_ORG:-RedHatInsights}"
 export ENABLE_TELEMETRY="true"
 SUPPORTED_CLUSTERS=('ephemeral' 'crcd')
 if [[ -z "${AVAILABLE_CLUSTERS[*]}" ]]; then
@@ -60,8 +62,10 @@ if [ -n "$gitlabMergeRequestIid" ]; then
   export IMAGE_TAG="pr-${gitlabMergeRequestIid}-${IMAGE_TAG}"
 fi
 
+
 export GIT_COMMIT=$(git rev-parse HEAD)
-export ARTIFACTS_DIR="${APP_ROOT}/artifacts"
+export ARTIFACTS_DIR="$WORKSPACE/artifacts"
+
 rm -rf "$ARTIFACTS_DIR" && mkdir -p "$ARTIFACTS_DIR"
 
 # TODO: create custom jenkins agent image that has a lot of this stuff pre-installed
@@ -75,16 +79,17 @@ python3 -m pip install --upgrade pip 'setuptools<58' wheel
 python3 -m pip install --upgrade 'crc-bonfire>=4.10.4'
 
 # clone repo to download cicd scripts
-echo "Fetching branch '$CICD_REPO_BRANCH' of https://github.com/${CICD_REPO_ORG}/cicd-tools.git"
-git clone --branch "$CICD_REPO_BRANCH" "https://github.com/${CICD_REPO_ORG}/cicd-tools.git" "$CICD_TOOLS_DIR"
+rm -rf "$BONFIRE_ROOT"
+echo "Fetching branch '$BONFIRE_REPO_BRANCH' of https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git"
+git clone --branch "$BONFIRE_REPO_BRANCH" "https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git" "$BONFIRE_ROOT"
 
 # Do a docker login to ensure our later 'docker pull' calls have an auth file created
-source "${CICD_TOOLS_DIR}/_common_container_logic.sh"
+source "${CICD_ROOT}/_common_container_logic.sh"
 login
 
 # Gives access to helper commands such as "oc_wrapper"
 add_cicd_bin_to_path() {
-  if ! command -v oc_wrapper; then export PATH=$PATH:${CICD_TOOLS_DIR}/bin; fi
+  if ! command -v oc_wrapper; then export PATH=$PATH:${CICD_ROOT}/bin; fi
 }
 
 try_login_openshift_cluster() {

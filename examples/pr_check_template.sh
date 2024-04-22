@@ -22,7 +22,7 @@ curl -s $CICD_URL/bootstrap.sh > .cicd_bootstrap.sh && source .cicd_bootstrap.sh
 # The contents of build.sh can be found at:
 # https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd/build.sh
 # This script is used to build the image that is used in the PR Check
-source $CICD_TOOLS_DIR/build.sh
+source $CICD_ROOT/build.sh
 
 # Your APP's unit tests should be run in the unit_test.sh script.  Two different
 # examples of unit_test.sh are provided in:
@@ -41,7 +41,7 @@ source $APP_ROOT/unit_test.sh
 # This script is used to deploy the ephemeral environment for smoke tests.
 # The manual steps for this can be found in:
 # https://internal.cloud.redhat.com/docs/devprod/ephemeral/02-deploying/
-source $CICD_TOOLS_DIR/deploy_ephemeral_env.sh
+source $CICD_ROOT/deploy_ephemeral_env.sh
 
 # (DEPRECATED!) Run smoke tests using smoke_test.sh
 #
@@ -50,14 +50,14 @@ source $CICD_TOOLS_DIR/deploy_ephemeral_env.sh
 # This script is used to run the smoke tests for a given APP.  The ENV VARs are
 # defined at the top in the "Options that must be configured by app owner" section
 # will control the behavior of the test.
-#source $CICD_TOOLS_DIR/smoke_test.sh
+#source $CICD_ROOT/smoke_test.sh
 
 # Run smoke tests using a ClowdJobInvocation (preferred)
 # The contents of this script can be found at:
 # https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd/cji_smoke_test.sh
-source $CICD_TOOLS_DIR/cji_smoke_test.sh
+source $CICD_ROOT/cji_smoke_test.sh
 
 # Post a comment with test run IDs to the PR
 # The contents of this script can be found at:
 # https://raw.githubusercontent.com/RedHatInsights/bonfire/master/cicd/post_test_results.sh
-source $CICD_TOOLS_DIR/post_test_results.sh
+source $CICD_ROOT/post_test_results.sh
