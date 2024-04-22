@@ -14,7 +14,7 @@
 CMD_OPTS="-t ${IMAGE}:${IMAGE_TAG}"
 set -e
 
-source ${CICD_ROOT}/_common_container_logic.sh
+source "${CICD_TOOLS_DIR}/_common_container_logic.sh"
 
 is_pr_or_mr_build() {
     [ -n "$ghprbPullId" ] || [ -n "$gitlabMergeRequestId" ]
