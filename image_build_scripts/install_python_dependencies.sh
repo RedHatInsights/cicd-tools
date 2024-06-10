@@ -1,3 +1,9 @@
 #!/bin/bash
 
-pip3 install crc-bonfire --user
+dependencies=(
+    "awscli==1.29.28"
+    "crc-bonfire"
+    "pydantic"
+)
+
+pip3 install --user "${dependencies[@]}"
