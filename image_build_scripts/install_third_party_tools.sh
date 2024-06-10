@@ -2,47 +2,15 @@
 
 install_location="${1:-/tools/bin}"
 
-#install_oc_tools() {
-#
-#    local version=4.14
-#    local url="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-${version}/openshift-client-linux.tar.gz"
-#    local filename="oc.tar.gz"
-#
-#    if ! curl -L "$url" -o "$filename"; then
-#        echo "cannot download OC tools from URL:$url"
-#        return 1
-#    fi
-#    
-#    if ! tar -C "$install_location" -xvzf "$filename" oc kubectl; then
-#        echo "cannot extract OC tools!"
-#        return 1
-#    fi
-#
-#    rm -f "$filename"
-#}
-
 install_mc_tools() {
 
     local url="https://dl.min.io/client/mc/release/linux-amd64/mc"
-
     __install_tool 'mc' "$url" 'false' 'mc'
-
-#    if ! curl -L "$url" -o "$filename"; then
-#        echo "cannot download MC from URL:$url"
-#        return 1
-#    fi
-#    
-#    if ! tar -C "$install_location" -xvzf "$filename" mc; then
-#        echo "cannot extract MC tools!"
-#        return 1
-#    fi
 }
 
 install_jq_tools() {
 
     local url="https://github.com/jqlang/jq/releases/download/jq-1.6/jq-linux64"
-    local filename="jq"
-
     __install_tool "jq" "$url" 'false' 'jq'
 }
 
@@ -95,6 +63,7 @@ __install_tool() {
             echo "unsupported compression: '$compressed'"
             return 1
         fi
+        rm "$downloaded_tmpfile"
     else
         mv -v "$downloaded_tmpfile" "$install_location/${commands[0]}"
     fi
