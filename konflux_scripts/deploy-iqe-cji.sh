@@ -13,7 +13,7 @@ main() {
     # Mandatory arguments
     local ns="${1:?Namespace was not provided}"
     local ns_requester="${2:?Namespace requester name was not provided}"
-    local component_name="${COMPONENT_NAME:?Component name not provided}"
+    local component_name="${BONFIRE_COMPONENT_NAME:-${COMPONENT_NAME:?Component name not provided}}"
     local cji_name=$component_name
 
     # Optional arguments
