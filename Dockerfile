@@ -25,3 +25,6 @@ RUN /setup/install_third_party_tools.sh "$TOOLS_DEP_LOCATION"
 
 # Copy konflux scripts
 COPY konflux_scripts/* "$KONFLUX_SCRIPTS_LOCATION/"
+
+# Copy local helper scripts
+COPY bin/oc_wrapper "$TOOLS_DEP_LOCATION/"
