@@ -27,6 +27,7 @@ set -e
 : ${REF_ENV:="insights-production"}
 : ${RELEASE_NAMESPACE:="true"}
 : ${ALWAYS_COLLECT_LOGS:="false"}
+: ${DEPLOY_START_TIME:=$(date +%s%3N)}  # for grafana, fetch millisecond epoch timestamp
 
 K8S_ARTIFACTS_DIR="$ARTIFACTS_DIR/k8s_artifacts"
 TEARDOWN_RAN=0
@@ -78,6 +79,9 @@ function teardown {
     # remove duplicates (https://stackoverflow.com/a/13648438)
     UNIQUE_NAMESPACES=($(echo "${RESERVED_NAMESPACES[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
 
+    # add 5 mins to account for namespace tearing down after being released
+    DEPLOY_END_TIME=$(($(date +%s%3N) + 300000))
+
     for ns in ${UNIQUE_NAMESPACES[@]}; do
         echo "Running teardown for ns: $ns"
         set +e
@@ -94,6 +98,11 @@ function teardown {
             bonfire namespace release $ns -f
         fi
         set -e
+
+        for ns in ${UNIQUE_NAMESPACES[@]}; do
+            echo "resource usage dashboard for ns '$ns': https://grafana.app-sre.devshift.net/d/jRY7KLnVz?var-namespace=$ns&from=$DEPLOY_START_TIME&to=$DEPLOY_END_TIME"
+        done
+
     done
 
     job_cleanup
