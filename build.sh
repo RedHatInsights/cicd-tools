@@ -27,7 +27,7 @@ is_rhel7_host() {
     [ -f "$RELEASE_FILE" ] && grep -q -i "release 7" "$RELEASE_FILE"
 }
 
-function build {
+build() {
 
     local IMAGE_TAG_LATEST=''
     local DOCKERFILE_PATH="${APP_ROOT}/${DOCKERFILE}"
@@ -72,7 +72,7 @@ _file_ends_with_newline() {
     [ $(tail -1 "$1" | wc -l) -ne 0 ]
 }
 
-function docker_build {
+docker_build() {
     if [ "$CACHE_FROM_LATEST_IMAGE" == "true" ]; then
         echo "Attempting to build image using cache"
         {
@@ -100,7 +100,7 @@ function docker_build {
     set +x
 }
 
-function podman_build {
+podman_build() {
     set -x
     podman build -f $APP_ROOT/$DOCKERFILE ${CMD_OPTS} $APP_ROOT
     podman push "${IMAGE}:${IMAGE_TAG}"
@@ -110,6 +110,41 @@ function podman_build {
     set +x
 }
 
+get_tag_data() {
+
+    local token="$1"
+    local repository="$2"
+    local tag="$3"
+    local auth_header="Authorization: Bearer $token"
+    local query_url="https://quay.io/api/v1/repository/$repository/tag/?specificTag=$tag&onlyActiveTags=true"
+
+    local response
+    local tag_info
+
+    if ! response=$(curl -Ls -H "$auth_header" "$query_url"); then
+        echo "Error retrieving tag data from Quay"
+        echo "Response: $response"
+        return 1
+    fi
+
+    tag_info=$(jq '.tags' <<< "$response")
+
+    if [[ 'null' == "$tag_info" ]]; then
+        echo "Error retrieving tags info, response: $response"
+        return 1
+    fi
+
+    echo "$tag_info"
+}
+
+tag_already_exists() {
+
+    local tag_data="$1"
+    local tags_found
+
+    tags_found=$(jq 'length' <<< "$tag_data")
+    [[ "$tags_found" -ne 0 ]]
+}
 
 : ${DOCKERFILE:="Dockerfile"}
 : ${CACHE_FROM_LATEST_IMAGE:="false"}
@@ -118,16 +153,19 @@ function podman_build {
 login
 
 if [[ $IMAGE == quay.io/* ]]; then
+
     # if using quay, check to see if this tag already exists
     echo "checking if image '$IMAGE:$IMAGE_TAG' already exists in quay.io..."
     QUAY_REPO=${IMAGE#"quay.io/"}
-    RESPONSE=$( \
-        curl -Ls -H "Authorization: Bearer $QUAY_API_TOKEN" \
-        "https://quay.io/api/v1/repository/$QUAY_REPO/tag/?specificTag=$IMAGE_TAG" \
-    )
+
+    if ! tag_data=$(get_tag_data "$QUAY_API_TOKEN" "$QUAY_REPO" "$IMAGE_TAG"); then
+        echo "Error retrieving tag data!"
+        echo "$tag_data"
+        exit 1
+    fi
+
     # find all non-expired tags
-    VALID_TAGS_LENGTH=$(echo $RESPONSE | jq '[ .tags[] | select(.end_ts == null) ] | length')
-    if [[ "$VALID_TAGS_LENGTH" -gt 0 ]]; then
+    if tag_already_exists "$tag_data"; then
         echo "$IMAGE:$IMAGE_TAG already present in quay, not rebuilding"
     else
         # image does not yet exist, build and push it
