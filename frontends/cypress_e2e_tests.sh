@@ -8,6 +8,14 @@ source ./helpers/general.sh
 
 trap_proxy teardown EXIT ERR SIGINT SIGTERM
 
+# Create tmp dir to store data in during job run (do NOT store in $WORKSPACE)
+export TMP_JOB_DIR=$(mktemp -d -p "$HOME" -t "jenkins-${JOB_NAME}-${BUILD_NUMBER}-XXXXXX")
+echo "job tmp dir location: $TMP_JOB_DIR"
+
+# Set up docker cfg
+export DOCKER_CONFIG="${TMP_JOB_DIR}/.docker"
+mkdir "$DOCKER_CONFIG"
+
 docker login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io
 
 docker run \
