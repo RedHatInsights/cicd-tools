@@ -31,7 +31,7 @@ function teardown() {
     docker rm -f "$TEST_CONT"
 
     echo "in job_cleanup handler, removing tmp dir: $TMP_JOB_DIR"
-    rm -fr $TMP_JOB_DIR
+    rm -fr "$TMP_JOB_DIR"
 
     TEARDOWN_RAN=1
 }
