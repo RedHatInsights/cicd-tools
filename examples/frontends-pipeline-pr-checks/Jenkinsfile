@@ -24,13 +24,13 @@ pipeline {
         timestamps()
     }
     environment {
+        MASTER_BRANCH="master"
+        MASTER_STABLE_BRANCH="master-stable"
+
         NODE_BASE_IMAGE="registry.access.redhat.com/ubi9/nodejs-18:1-53"
         CYPRESS_TEST_IMAGE="quay.io/cloudservices/cypress-e2e-image:06b70f3"
 
         CICD_URL="https://raw.githubusercontent.com/RedHatInsights/cicd-tools/main"
-
-        IMAGE="${APP_IMAGE}"
-
     }
 
     stages {
@@ -38,58 +38,16 @@ pipeline {
             agent { label 'rhel8' }
             steps {
                 script {
-                    GIT_COMMIT_HASH = ghprbActualCommit.take(6)
+                    sh '''
+                        env
+                    '''
                 }
-                
+
                 checkout scmGit(
                     branches: [[name: '$ghprbSourceBranch']],
                     userRemoteConfigs: [[url: '$ghprbAuthorRepoGitUrl']])
+            }
 
-                stash(name: 'project-files', includes: "**")
-            }
-        }
-
-        stage('Lint') {
-            agent { label 'insights' }
-            environment {
-                TEST_CONT="${APP_NAME}-lint-${GIT_COMMIT_HASH}"
-            }
-            when {
-                expression {
-                    return (RUN_LINT_FLAG == 'true')
-                }
-            }
-            steps {
-                unstash 'project-files'
-
-                script {
-                    withVault([configuration: configuration, vaultSecrets: secrets]) {
-                        sh './frontends/lint.sh'
-                    }
-                }
-            }
-        }
-
-        stage('Frontend Build') {
-            agent { label 'insights' }
-            environment {
-                COMMON_BUILDER="https://raw.githubusercontent.com/RedHatInsights/insights-frontend-builder-common/master"
-                TEST_CONT="${APP_NAME}-frontend-build-${GIT_COMMIT_HASH}"
-            }
-            when {
-                expression {
-                    return (RUN_FRONTEND_COMMON_BUILDER_FLAG == 'true')
-                }
-            }
-            steps {
-                dir("${WORKSPACE}") {
-                    unstash 'project-files'
-
-                    withVault([configuration: configuration, vaultSecrets: secrets]) {
-                        sh './frontends/frontend-build.sh'
-                    }
-                }
-            }
         }
 
         stage('Tests/Build for Frontends') {
@@ -97,7 +55,8 @@ pipeline {
                 stage('Unit Testing') {
                     agent { label 'rhel8' }
                     environment {
-                        TEST_CONT="${APP_NAME}-unit-tests-${GIT_COMMIT_HASH}"
+                            IMG_TAG=sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
+                            TEST_CONT="${PROJECT_NAME}-unit-tests-${IMG_TAG}"
                     }
                     when {
                         expression {
@@ -105,11 +64,33 @@ pipeline {
                         }
                     }
                     steps {
-                        unstash 'project-files'
-
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
-                                sh './frontends/unit_tests.sh'
+                                sh '''
+                                    ./examples/frontends-pipeline-pr-checks/unit_tests.sh
+                                '''
+                            }
+                        }
+                    }
+                }
+
+                stage('Lint') {
+                    agent { label 'rhel8' }
+                    environment {
+                        IMG_TAG=sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
+                        TEST_CONT="${PROJECT_NAME}-lint-${IMG_TAG}"
+                    }
+                    when {
+                        expression {
+                            return (RUN_LINT_FLAG == 'true')
+                        }
+                    }
+                    steps {
+                        script {
+                            withVault([configuration: configuration, vaultSecrets: secrets]) {
+                                sh '''
+                                    ./examples/frontends-pipeline-pr-checks/lint.sh
+                                '''
                             }
                         }
                     }
@@ -118,7 +99,8 @@ pipeline {
                 stage('Cypress Component Testing') {
                     agent { label 'rhel8' }
                     environment {
-                        TEST_CONT="${APP_NAME}-cypress-component-tests-${GIT_COMMIT_HASH}"
+                        IMG_TAG=sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
+                        TEST_CONT="${PROJECT_NAME}-cypress-component-tests-${IMG_TAG}"
                     }
                     when {
                         expression {
@@ -126,11 +108,11 @@ pipeline {
                         }
                     }
                     steps {
-                        unstash 'project-files'
-
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
-                                sh './frontends/cypress_component_tests.sh'
+                                sh '''
+                                    ./examples/frontends-pipeline-pr-checks/cypress_component_tests.sh
+                                '''
                             }
                         }
                     }
@@ -139,8 +121,11 @@ pipeline {
                 stage('Cypress E2E Tests') {
                     agent { label 'rhel8' }
                     environment {
-                        TEST_CONT="${APP_NAME}-cypress-e2e-tests-${GIT_COMMIT_HASH}"
+                        IMG_TAG=sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
+                        TEST_CONT="${PROJECT_NAME}-cypress-e2e-tests-${IMG_TAG}"
 
+                        COMPONENT="insights-chrome-frontend"
+                        IMAGE="quay.io/cloudservices/${COMPONENT}"
                         INCLUDE_CHROME_CONFIG="true"
                     }
                     when {
@@ -149,11 +134,11 @@ pipeline {
                         }
                     }
                     steps {
-                        unstash 'project-files'
-
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
-                                sh './frontends/cypress_e2e_tests.sh'
+                                sh '''
+                                    ./examples/frontends-pipeline-pr-checks/cypress_e2e_tests.sh
+                                '''
                             }
                         }
                     }
@@ -162,13 +147,31 @@ pipeline {
                 stage('IQE Tests') {
                     agent { label 'rhel8' }
                     environment {
-                        TEST_CONT="${APP_NAME}-cypress-e2e-tests-${GIT_COMMIT_HASH}"
+                        IMG_TAG=sh(script: "git rev-parse --short=8 HEAD", returnStdout: true).trim()
+                        TEST_CONT="${PROJECT_NAME}-cypress-e2e-tests-${IMG_TAG}"
 
                         // Deploy to an ephemeral namespace for testing
-                        GIT_COMMIT_HASH="$ghprbActualCommit"
+                        IMAGE="quay.io/cloudservices/rbac"
+                        GIT_COMMIT="master"
+                        IMAGE_TAG="latest"
                         DEPLOY_FRONTENDS=true
+                        
+                        // Run tests with ClowdJobInvocation
+                        IQE_IMAGE_TAG="platform-ui"
+                        IQE_PLUGINS="platform_ui"
+                        IQE_MARKER_EXPRESSION="smoke"
+                        // xclude progressive profile tests
+                        // Exclude APIdocs tests
+                        IQE_FILTER_EXPRESSION="not (test_progressive or test_apidocs)"
+                        IQE_ENV="ephemeral"
+                        IQE_SELENIUM="true"
                         IQE_CJI_TIMEOUT="30m"
                         DEPLOY_TIMEOUT="900"  // 15min
+
+                        // Ensure that we deploy the right component for testing
+                        APP_NAME="rbac"
+                        COMPONENT="rbac"
+                        COMPONENT_NAME="rbac"
                     }
                     when {
                         expression {
@@ -176,13 +179,10 @@ pipeline {
                         }
                     }
                     steps {
-                        unstash 'project-files'
-
                         script {
                             withVault([configuration: configuration, vaultSecrets: secrets]) {
                                 sh '''
-                                    env
-                                    ./frontends/iqe_tests.sh
+                                    ./examples/frontends-pipeline-pr-checks/iqe_tests.sh
                                 '''
                             }
                         }
@@ -191,6 +191,28 @@ pipeline {
                         always {
                             archiveArtifacts artifacts: 'artifacts/**/*', fingerprint: true
                             junit skipPublishingChecks: true, testResults: 'artifacts/junit-*.xml'
+                        }
+                    }
+                }
+
+                stage('Frontend Build') {
+                    agent { label 'rhel8' }
+                    environment {
+                        COMMON_BUILDER="https://raw.githubusercontent.com/RedHatInsights/insights-frontend-builder-common/master"
+
+                        COMPONENT="insights-chrome-frontend"
+                        IMAGE="quay.io/cloudservices/${COMPONENT}"
+                    }
+                    when {
+                        expression {
+                            return (RUN_FRONTEND_BUILD_FLAG == 'true')
+                        }
+                    }
+                    steps {
+                        withVault([configuration: configuration, vaultSecrets: secrets]) {
+                            sh '''
+                                ./examples/frontends-pipeline-pr-checks/frontend-build.sh
+                            '''
                         }
                     }
                 }

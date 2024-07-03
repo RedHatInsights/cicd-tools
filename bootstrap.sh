@@ -28,11 +28,7 @@ export APP_ROOT=$(pwd)
 export WORKSPACE=${WORKSPACE:-$APP_ROOT}  # if running in jenkins, use the build's workspace
 export BONFIRE_ROOT=${TMP_JOB_DIR}/.bonfire
 export CICD_ROOT=${BONFIRE_ROOT}
-
-if [[ ! -n "$IMAGE_TAG" ]]; then
-    export IMAGE_TAG=$(git rev-parse --short=7 HEAD)
-fi
-
+export IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 export BONFIRE_BOT="true"
 export BONFIRE_NS_REQUESTER="${JOB_NAME}-${BUILD_NUMBER}"
 # which branch to fetch cicd scripts from in bonfire repo
