@@ -29,7 +29,7 @@ export WORKSPACE=${WORKSPACE:-$APP_ROOT}  # if running in jenkins, use the build
 export BONFIRE_ROOT=${TMP_JOB_DIR}/.bonfire
 export CICD_ROOT=${BONFIRE_ROOT}
 
-if [[ -z "$IMAGE_TAG" ]]; then
+if [[ ! -n "$IMAGE_TAG" ]]; then
     export IMAGE_TAG=$(git rev-parse --short=7 HEAD)
 fi
 
