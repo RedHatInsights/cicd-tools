@@ -50,7 +50,7 @@ pipeline {
         }
 
         stage('Lint') {
-            agent { label 'rhel8' }
+            agent { label 'insights' }
             environment {
                 TEST_CONT="${APP_NAME}-lint-${GIT_COMMIT_HASH}"
             }
@@ -71,7 +71,7 @@ pipeline {
         }
 
         stage('Frontend Build') {
-            agent { label 'rhel8' }
+            agent { label 'insights' }
             environment {
                 COMMON_BUILDER="https://raw.githubusercontent.com/RedHatInsights/insights-frontend-builder-common/master"
                 TEST_CONT="${APP_NAME}-frontend-build-${GIT_COMMIT_HASH}"
