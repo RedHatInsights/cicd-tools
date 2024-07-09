@@ -22,6 +22,41 @@ function job_cleanup() {
     rm -fr $TMP_JOB_DIR
 }
 
+get_image_tag() {
+
+    local image_tag
+    local git_short_hash
+
+    git_short_hash=$(git rev-parse --short=7 HEAD)
+
+    if is_change_request; then
+        image_tag="pr-$(get_change_request_id)-${git_short_hash}"
+    else
+        image_tag="$git_short_hash"
+    fi
+
+    echo "$image_tag"
+}
+
+is_change_request() {
+  [ -n "$ghprbPullId" ] || [ -n "$gitlabMergeRequestId" ]
+}
+
+get_change_request_id() {
+
+    local change_id
+
+    if [[ -n "$ghprbPullId" ]]; then
+        change_id="$ghprbPullId"
+    fi
+
+    if [[ -n "$gitlabMergeRequestId" ]]; then
+        change_id="$gitlabMergeRequestId"
+    fi
+
+    echo "$change_id"
+}
+
 trap job_cleanup EXIT ERR SIGINT SIGTERM
 
 export APP_ROOT=$(pwd)
@@ -30,7 +65,7 @@ export BONFIRE_ROOT=${TMP_JOB_DIR}/.bonfire
 export CICD_ROOT=${BONFIRE_ROOT}
 
 if [[ -z "$IMAGE_TAG" ]]; then
-    export IMAGE_TAG=$(git rev-parse --short=7 HEAD)
+    export IMAGE_TAG=$(get_image_tag)
 fi
 
 export BONFIRE_BOT="true"
@@ -56,15 +91,6 @@ export KUBECONFIG="${KUBECONFIG_DIR}/config"
 mkdir "$KUBECONFIG_DIR"
 
 set +x
-
-# if this is a PR, use a different tag, since PR tags expire
-if [ -n "$ghprbPullId" ]; then
-  export IMAGE_TAG="pr-${ghprbPullId}-${IMAGE_TAG}"
-fi
-
-if [ -n "$gitlabMergeRequestIid" ]; then
-  export IMAGE_TAG="pr-${gitlabMergeRequestIid}-${IMAGE_TAG}"
-fi
 
 
 export GIT_COMMIT=$(git rev-parse HEAD)
@@ -111,7 +137,7 @@ try_login_openshift_cluster() {
 
         if [[ -z "$cluster_url" ]] || [[ -z "$cluster_token" ]]; then
             echo "Environment variables for cluster '$cluster_id' not found"
-        else 
+        else
             if _try_login_cluster "$cluster_url" "$cluster_token"; then
                 echo "Logged in to cluster '$cluster_id'"
                 success=0
