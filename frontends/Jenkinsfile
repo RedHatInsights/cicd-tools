@@ -26,11 +26,9 @@ pipeline {
     environment {
         NODE_BASE_IMAGE="registry.access.redhat.com/ubi9/nodejs-18:1-53"
         CYPRESS_TEST_IMAGE="quay.io/cloudservices/cypress-e2e-image:06b70f3"
-
         CICD_URL="https://raw.githubusercontent.com/RedHatInsights/cicd-tools/main"
-
         IMAGE="${APP_IMAGE}"
-
+        PRESERVE_IMAGE_TAG="true"
     }
 
     stages {
