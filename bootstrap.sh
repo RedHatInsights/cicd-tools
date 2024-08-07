@@ -83,6 +83,7 @@ set -x
 
 # Set up docker cfg
 export DOCKER_CONFIG="${TMP_JOB_DIR}/.docker"
+export REGISTRY_AUTH_FILE="${DOCKER_CONFIG}/config.json"
 mkdir "$DOCKER_CONFIG"
 
 # Set up kube cfg

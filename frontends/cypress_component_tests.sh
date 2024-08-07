@@ -12,6 +12,7 @@ echo "job tmp dir location: $TMP_JOB_DIR"
 
 # Set up docker cfg
 export DOCKER_CONFIG="${TMP_JOB_DIR}/.docker"
+export REGISTRY_AUTH_FILE="${DOCKER_CONFIG}/config.json"
 mkdir "$DOCKER_CONFIG"
 
 docker login -u="$QUAY_USER" -p="$QUAY_TOKEN" quay.io

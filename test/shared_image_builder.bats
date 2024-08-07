@@ -599,20 +599,25 @@ teardown() {
 @test "Image build setup doesn't force fresh DOCKER_CONF if not in CI context" {
 
     unset DOCKER_CONFIG
+    unset REGISTRY_AUTH_FILE
     unset CI
 
     source load_module.sh image_builder
     assert [ -z "$DOCKER_CONFIG" ]
+    assert [ -z "$REGISTRY_AUTH_FILE" ]
 }
 
 @test "build on CI forces fresh DOCKER_CONF creds in CI context" {
 
     CI="true"
     unset DOCKER_CONFIG
+    unset REGISTRY_AUTH_FILE
 
     source load_module.sh image_builder
     assert [ -n "$DOCKER_CONFIG" ]
     assert [ -w "${DOCKER_CONFIG}/config.json" ]
+    assert [ -n "$REGISTRY_AUTH_FILE" ]
+    assert [ -w "${REGISTRY_AUTH_FILE}" ]
 }
 
 @test "Default image tag is configured if none set" {
