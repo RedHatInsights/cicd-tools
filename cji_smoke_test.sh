@@ -52,6 +52,7 @@ else
 fi
 
 # minio client is used to fetch test artifacts from minio in the ephemeral ns
+echo "DOCKER_CONFIG: ${DOCKER_CONFIG}"
 echo "Running: docker pull ${MC_IMAGE}"
 docker pull ${MC_IMAGE}
 
@@ -162,6 +163,7 @@ mc --no-color --quiet mirror --overwrite minio/${BUCKET_NAME} /artifacts/
 "
 
 run_mc () {
+    echo "DOCKER_CONFIG: ${DOCKER_CONFIG}"
     # image was already pulled earlier in this script, use --pull=never
     echo "running: docker run -t --net=bridge --pull=never --name=$CONTAINER_NAME --entrypoint=\"/bin/sh\" $MC_IMAGE -c \"$CMD\""
     set +e
