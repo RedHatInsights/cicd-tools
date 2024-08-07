@@ -165,9 +165,9 @@ mc --no-color --quiet mirror --overwrite minio/${BUCKET_NAME} /artifacts/
 run_mc () {
     echo "DOCKER_CONFIG: ${DOCKER_CONFIG}"
     # image was already pulled earlier in this script, use --pull=never
-    echo "running: docker run -t --net=bridge --pull=never --name=$CONTAINER_NAME --entrypoint=\"/bin/sh\" $MC_IMAGE -c \"$CMD\""
+    echo "running: docker run -t --net=host --pull=never --name=$CONTAINER_NAME --entrypoint=\"/bin/sh\" $MC_IMAGE -c \"$CMD\""
     set +e
-    docker run -t --net=bridge --pull=never --name=$CONTAINER_NAME --entrypoint="/bin/sh" $MC_IMAGE -c "$CMD"
+    docker run -t --net=host --pull=never --name=$CONTAINER_NAME --entrypoint="/bin/sh" $MC_IMAGE -c "$CMD"
     RET_CODE=$?
     docker cp $CONTAINER_NAME:/artifacts/. $ARTIFACTS_DIR
     docker rm $CONTAINER_NAME
