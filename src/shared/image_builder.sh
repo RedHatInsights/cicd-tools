@@ -273,7 +273,10 @@ cicd::image_builder::_try_log_in_to_image_registries() {
   if ! cicd::image_builder::local_build; then
     DOCKER_CONFIG="$(mktemp -d -p "$HOME")"
     export DOCKER_CONFIG
-    echo -n '{}' >"${DOCKER_CONFIG}/config.json"
+    REGISTRY_AUTH_FILE="${DOCKER_CONFIG}/config.json"
+    export REGISTRY_AUTH_FILE
+
+    echo -n '{}' > "${REGISTRY_AUTH_FILE}"
   fi
 
   if cicd::image_builder::_quay_credentials_found; then
