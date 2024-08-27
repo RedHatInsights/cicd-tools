@@ -88,7 +88,7 @@ fi
 
 if [ ! -z "$IQE_IMAGE_TAG_TMP" ]; then
     set +e
-    if docker manifest inspect quay.io/cloudservices/iqe-tests:"$IQE_IMAGE_TAG_TMP"; then
+    if docker search quay.io/cloudservices/iqe-tests --list-tags --limit 5000 | grep -e "$IQE_IMAGE_TAG_TMP"; then
         echo "Found IQE_IMAGE_TAG=$IQE_IMAGE_TAG_TMP. It will be used for testing."
         export IQE_IMAGE_TAG="$IQE_IMAGE_TAG_TMP"
     fi
