@@ -149,7 +149,7 @@ cicd::image_builder::_get_context_based_image_tag() {
 }
 
 cicd::image_builder::is_change_request_context() {
-  [ -n "$ghprbPullId" ] || [ -n "$gitlabMergeRequestId" ]
+  [ -n "$ghprbPullId" ] || [ -n "$gitlabMergeRequestIid" ]
 }
 
 cicd::image_builder::get_build_id() {
@@ -158,8 +158,8 @@ cicd::image_builder::get_build_id() {
 
   if [ -n "$ghprbPullId" ]; then
     build_id="$ghprbPullId"
-  elif [ -n "$gitlabMergeRequestId" ]; then
-    build_id="$gitlabMergeRequestId"
+  elif [ -n "$gitlabMergeRequestIid" ]; then
+    build_id="$gitlabMergeRequestIid"
   fi
 
   echo -n "$build_id"

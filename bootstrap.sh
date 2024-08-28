@@ -39,7 +39,7 @@ get_image_tag() {
 }
 
 is_change_request() {
-  [ -n "$ghprbPullId" ] || [ -n "$gitlabMergeRequestId" ]
+  [ -n "$ghprbPullId" ] || [ -n "$gitlabMergeRequestIid" ]
 }
 
 get_change_request_id() {
@@ -50,8 +50,8 @@ get_change_request_id() {
         change_id="$ghprbPullId"
     fi
 
-    if [[ -n "$gitlabMergeRequestId" ]]; then
-        change_id="$gitlabMergeRequestId"
+    if [[ -n "$gitlabMergeRequestIid" ]]; then
+        change_id="$gitlabMergeRequestIid"
     fi
 
     echo "$change_id"

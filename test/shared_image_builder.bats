@@ -110,7 +110,7 @@ teardown() {
         echo "1abcdef"
     }
 
-    gitlabMergeRequestId=4321
+    gitlabMergeRequestIid=4321
 
     source load_module.sh image_builder
 
