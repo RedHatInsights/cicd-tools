@@ -15,7 +15,7 @@ def secrets = [
         [envVar: 'CHROME_ACCOUNT', vaultKey: 'account'],
         [envVar: 'CHROME_PASSWORD', vaultKey: 'password']]],
     [path: params.VAULT_PATH_RBAC_CYPRESS, engineVersion: 1, secretValues: [
-        [envVar: 'RBAC_FRONTEND_PASSWORD', vaultKey: 'account'],
+        [envVar: 'RBAC_FRONTEND_USER', vaultKey: 'account'],
         [envVar: 'RBAC_FRONTEND_PASSWORD', vaultKey: 'password']]],
 ]
 
