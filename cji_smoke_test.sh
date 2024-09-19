@@ -3,6 +3,7 @@
 # Env vars defined by caller:
 #COMPONENT_NAME -- name of ClowdApp to run tests against /  app-sre "resourceTemplate"
 #IQE_CJI_TIMEOUT="10m" -- timeout value to pass to 'oc wait', should be slightly higher than expected test run time
+#IQE_CJI_NAME -- Name of CJI when it needs to differ from $COMPONENT_NAME (default)
 #IQE_MARKER_EXPRESSION="something AND something_else" -- pytest marker, can be "" if no filter desired
 #IQE_FILTER_EXPRESSION="something AND something_else" -- pytest filter, can be "" if no filter desired
 #IQE_IMAGE_TAG="something" -- image tag to use for IQE pod, leave unset to use ClowdApp's iqePlugin value
@@ -55,7 +56,14 @@ fi
 echo "Running: docker pull ${MC_IMAGE}"
 docker pull ${MC_IMAGE}
 
-CJI_NAME="$COMPONENT_NAME"
+
+# check for $IQE_CJI_NAME. If exists use it for CJI_NAME. If DNE use $COMPONENT_NAME for CJI_NAME
+if [[ -z $IQE_CJI_NAME ]]; then
+    CJI_NAME="$COMPONENT_NAME"
+else
+    CJI_NAME="$IQE_CJI_NAME"
+fi
+
 
 if [[ -z $IQE_CJI_TIMEOUT ]]; then
     echo "Error: no timeout set; export IQE_CJI_TIMEOUT before invoking cji_smoke_test.sh"
