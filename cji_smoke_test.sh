@@ -58,7 +58,7 @@ docker pull ${MC_IMAGE}
 
 
 # check for $IQE_CJI_NAME. If exists use it for CJI_NAME. If DNE use $COMPONENT_NAME for CJI_NAME
-if [[ -z $IQE_CJI_NAME ]]; then
+if [[ -z "$IQE_CJI_NAME" ]]; then
     CJI_NAME="$COMPONENT_NAME"
 else
     CJI_NAME="$IQE_CJI_NAME"
