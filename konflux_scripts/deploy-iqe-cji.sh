@@ -26,12 +26,21 @@ main() {
     local iqe_test_importance="${IQE_TEST_IMPORTANCE}"
     local iqe_plugins="${IQE_PLUGINS}"
     local iqe_env="${IQE_ENV:-clowder_smoke}"
+    #iqe_env_vars="ENV_VAR1=value1,ENV_VAR2=value2" -- custom set of extra environment variables to set on IQE pod
+    local iqe_env_vars="${IQE_ENV_VARS}"
     local iqe_cji_timeout="${IQE_CJI_TIMEOUT:-10m}"
 
     local selenium_arg=""
     if [[ "$selenium" == "true" ]]; then
         selenium_arg="--selenium"
     fi
+
+    iqe_env_var_args=$(awk -v IQE_ENV_VARS="$iqe_env_vars" 'BEGIN {
+      split(IQE_ENV_VARS, iqe_env_vars, ",");
+      for (i in iqe_env_vars) {
+        printf "--env-var " iqe_env_vars[i] " "
+      }
+    }')
 
     export BONFIRE_NS_REQUESTER="$ns_requester"
 
@@ -47,7 +56,8 @@ main() {
     --env "$iqe_env" \
     --cji-name "$cji_name" \
     $selenium_arg \
-    --namespace "$ns")
+    --namespace "$ns" \
+    "$iqe_env_var_args")
 
     container=$(oc_wrapper get pod $pod -n $ns -o jsonpath="{.status.containerStatuses[0].name}")
     oc_wrapper logs -n $ns $pod -c $container -f &
