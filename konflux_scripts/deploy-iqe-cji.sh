@@ -34,13 +34,20 @@ main() {
     if [[ "$selenium" == "true" ]]; then
         selenium_arg="--selenium"
     fi
+    
+    local iqe_env_var_args=()
+    #Storing original Internal Field Separator
+    local original_ifs="$IFS"
 
-    iqe_env_var_args=$(awk -v IQE_ENV_VARS="$iqe_env_vars" 'BEGIN {
-      split(IQE_ENV_VARS, iqe_env_vars, ",");
-      for (i in iqe_env_vars) {
-        printf "--env-var " iqe_env_vars[i] " "
-      }
-    }')
+    #Splitting iqe_env_vars by "," to array
+    IFS=',' read -r -a iqe_env_vars_array <<< "$iqe_env_vars"
+    #Populating new array with option --env-var followed by enviroment var in next possition
+    for env_var in "${iqe_env_vars_array[@]}"; do
+        iqe_env_var_args+=("--env-var")
+        iqe_env_var_args+=("$env_var")
+    done
+
+    IFS="$original_ifs"
 
     export BONFIRE_NS_REQUESTER="$ns_requester"
 
@@ -57,7 +64,7 @@ main() {
     --cji-name "$cji_name" \
     $selenium_arg \
     --namespace "$ns" \
-    "$iqe_env_var_args")
+    "${iqe_env_var_args[@]}")
 
     container=$(oc_wrapper get pod $pod -n $ns -o jsonpath="{.status.containerStatuses[0].name}")
     oc_wrapper logs -n $ns $pod -c $container -f &
