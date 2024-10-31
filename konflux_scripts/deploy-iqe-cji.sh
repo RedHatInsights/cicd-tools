@@ -29,6 +29,7 @@ main() {
     #iqe_env_vars="ENV_VAR1=value1,ENV_VAR2=value2" -- custom set of extra environment variables to set on IQE pod
     local iqe_env_vars="${IQE_ENV_VARS}"
     local iqe_cji_timeout="${IQE_CJI_TIMEOUT:-10m}"
+    local iqe_env_vars="${IQE_ENV_VARS:=}"
 
     local selenium_arg=""
     if [[ "$selenium" == "true" ]]; then
@@ -56,8 +57,8 @@ main() {
     --env "$iqe_env" \
     --cji-name "$cji_name" \
     $selenium_arg \
-    --namespace "$ns" \
-    "$iqe_env_var_args")
+    $iqe_env_var_args \
+    --namespace "$ns")
 
     container=$(oc_wrapper get pod $pod -n $ns -o jsonpath="{.status.containerStatuses[0].name}")
     oc_wrapper logs -n $ns $pod -c $container -f &
