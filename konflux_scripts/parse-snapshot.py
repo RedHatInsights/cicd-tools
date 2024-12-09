@@ -57,7 +57,13 @@ def main() -> None:
         raise RuntimeError("SNAPSHOT environment variable wasn't declared or empty")
     snapshot: Snapshot = Snapshot.model_validate_json(snapshot_str)
     ret = []
+    # Get the the tested component name from environment variable and check if it exists in the snapshot
+    component_name = os.environ.get('COMPONENT_NAME')
+    tested_component = component_name if any(comp.name == component_name for comp in snapshot.components) else None
     for component in snapshot.components:
+        # if we found the tested_component, we skip the rest of the components from snapshot
+        if tested_component and component.name != tested_component:
+            continue
         component_name = os.environ.get('BONFIRE_COMPONENT_NAME') or component.name
         ret.extend((
             "--set-template-ref",
