@@ -50,15 +50,32 @@ class Snapshot(BaseModel):
     application: str
     components: list[Component]
 
+class BonfireComponents(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    bonfire_component: str
+
+
+def parse_bonfire_components(bonfire_components_str):
+    """Parses json translation of Konflux component name into bonfire component"""
+    bonfire_components = {}
+    if bonfire_comp_str is not None:
+        bonfire_comps: BonfireComponents = BonfireComponents.model_validate_json(bonfire_components_str)
+        for bf_comp in bonfire_comps:
+            bonfire_components[bf_comp.name] = bf_comp.bonfire_component
+    return bonfire_components
 
 def main() -> None:
     snapshot_str = os.environ.get("SNAPSHOT")
     if snapshot_str is None:
         raise RuntimeError("SNAPSHOT environment variable wasn't declared or empty")
     snapshot: Snapshot = Snapshot.model_validate_json(snapshot_str)
+    bonfire_components = parse_bonfire_components(os.environ.get('BONFIRE_COMPONENTS'))
     ret = []
+
     for component in snapshot.components:
-        component_name = os.environ.get('BONFIRE_COMPONENT_NAME') or component.name
+        component_name = bonfire_components[component.name] or component.name
         ret.extend((
             "--set-template-ref",
             f"{component_name}={component.source.git.revision}",
