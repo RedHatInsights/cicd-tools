@@ -30,6 +30,7 @@ main() {
     local iqe_env_vars="${IQE_ENV_VARS}"
     local iqe_cji_timeout="${IQE_CJI_TIMEOUT:-10m}"
     local iqe_env_vars="${IQE_ENV_VARS:=}"
+    local iqe_parallel_enabled="${IQE_PARALLEL_ENABLED}"
 
     local selenium_arg=""
     if [[ "$selenium" == "true" ]]; then
@@ -56,6 +57,7 @@ main() {
     --plugins "$iqe_plugins" \
     --env "$iqe_env" \
     --cji-name "$cji_name" \
+    --parallel-enabled "$iqe_parallel_enabled" \
     $selenium_arg \
     $iqe_env_var_args \
     --namespace "$ns")
