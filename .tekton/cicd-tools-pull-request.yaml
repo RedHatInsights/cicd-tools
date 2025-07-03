@@ -188,7 +188,7 @@ spec:
       - name: input
         value: $(params.prefetch-input)
       - name: SOURCE_ARTIFACT
-        value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
+        value: $(tasks.clone-repository.results.SOURCE_ARTIFACT)
       runAfter:
       - clone-repository
       taskRef:
@@ -405,6 +405,8 @@ spec:
         value: $(tasks.build-image-index.results.IMAGE_URL)
       - name: SOURCE_ARTIFACT
         value: $(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)
+      - name: CACHI2_ARTIFACT
+        value: $(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)
       runAfter:
       - build-image-index
       taskRef:
