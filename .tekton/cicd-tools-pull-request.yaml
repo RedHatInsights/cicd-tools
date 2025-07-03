@@ -442,6 +442,7 @@ spec:
         operator: in
         values:
         - 'false'
+      workspaces:
       - name: workspace
         workspace: workspace
     - name: clamav-scan
