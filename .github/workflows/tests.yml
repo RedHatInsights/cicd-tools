@@ -31,13 +31,13 @@ jobs:
           check_together: 'yes'
           scandir: './src'
 
-  # https://github.com/bats-core/bats-core/blob/360c1ea5371622132ab669e9cb9687d21298699b/.github/workflows/tests.yml            
+  # https://github.com/bats-core/bats-core/blob/855844b8344e67d60dc0f43fa39817ed7787f141/.github/workflows/tests.yml#L326
   coverage:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
       - run: ./test/generate_coverage.sh
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4

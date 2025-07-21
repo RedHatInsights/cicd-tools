@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 COVERAGE_DIRECTORY="$PWD/coverage"
 BATS_CMD='./test/bats/bin/bats'
 TESTS_PATH="${1:-test}"
@@ -7,7 +9,7 @@ IGNORE_TAGS='!no-kcov'
 KCOV_CMD='kcov'
 
 get_kcov() {
-  local url='https://github.com/SimonKagstrom/kcov/releases/download/v40/kcov-amd64.tar.gz'
+  local url='https://github.com/SimonKagstrom/kcov/releases/download/v42/kcov-amd64.tar.gz'
   curl -sL "$url" | tar -xz usr/local/bin/kcov --strip-components=3
 }
 
