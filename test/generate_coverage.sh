@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 COVERAGE_DIRECTORY="$PWD/coverage"
 BATS_CMD='./test/bats/bin/bats'
 TESTS_PATH="${1:-test}"
