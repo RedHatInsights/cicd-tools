@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import os
 from typing import Any, MutableMapping
 
@@ -51,21 +52,40 @@ class Snapshot(BaseModel):
     components: list[Component]
 
 
+def parse_component_mapping(mapping_str):
+    """Parses json translation of Konflux component name into bonfire component"""
+    mapping = {}
+    if mapping_str:
+         mapping = json.loads(mapping_str)
+    return mapping
+
+
 def main() -> None:
     snapshot_str = os.environ.get("SNAPSHOT")
     if snapshot_str is None:
         raise RuntimeError("SNAPSHOT environment variable wasn't declared or empty")
     snapshot: Snapshot = Snapshot.model_validate_json(snapshot_str)
+    component_mapping = parse_component_mapping(os.environ.get('BONFIRE_COMPONENTS_MAPPING'))
+    # BONFIRE_COMPONENT_NAME is deprecated, left here for backward compatibility
+    bonfire_component_name = os.environ.get('BONFIRE_COMPONENT_NAME')
     ret = []
-    for component in snapshot.components:
-        component_name = os.environ.get('BONFIRE_COMPONENT_NAME') or component.name
+
+    for snapshot_component in snapshot.components:
+        # check if the snapshot component name has a mapping defined in BONFIRE_COMPONENTS
+        # ... if not, check if BONFIRE_COMPONENT_NAME is set
+        # ... if not, just use the snapshot component name
+        component_name = component_mapping.get(
+            snapshot_component.name,
+            bonfire_component_name or snapshot_component.name
+        )
+
         ret.extend((
             "--set-template-ref",
-            f"{component_name}={component.source.git.revision}",
+            f"{component_name}={snapshot_component.source.git.revision}",
             "--set-parameter",
-            f"{component_name}/IMAGE={component.container_image.image}@sha256",
+            f"{component_name}/IMAGE={snapshot_component.container_image.image}@sha256",
             "--set-parameter",
-            f"{component_name}/IMAGE_TAG={component.container_image.sha}"
+            f"{component_name}/IMAGE_TAG={snapshot_component.container_image.sha}"
         ))
     print(" ".join(ret))
 
