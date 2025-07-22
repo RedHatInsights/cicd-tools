@@ -52,22 +52,12 @@ class Snapshot(BaseModel):
     components: list[Component]
 
 
-class BonfireComponent(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    name: str
-    bonfire_component: str
-
-
-def parse_bonfire_components(bonfire_components_str):
+def parse_component_mapping(mapping_str):
     """Parses json translation of Konflux component name into bonfire component"""
-    bonfire_components = {}
-    if bonfire_components_str:
-        components_list = json.loads(bonfire_components_str)
-        bonfire_comps = [BonfireComponent.model_validate(comp) for comp in components_list]
-        for bf_comp in bonfire_comps:
-            bonfire_components[bf_comp.name] = bf_comp.bonfire_component
-    return bonfire_components
+    mapping = {}
+    if mapping_str:
+         mapping = json.loads(mapping_str)
+    return mapping
 
 
 def main() -> None:
@@ -75,7 +65,7 @@ def main() -> None:
     if snapshot_str is None:
         raise RuntimeError("SNAPSHOT environment variable wasn't declared or empty")
     snapshot: Snapshot = Snapshot.model_validate_json(snapshot_str)
-    bonfire_components = parse_bonfire_components(os.environ.get('BONFIRE_COMPONENTS'))
+    component_mapping = parse_component_mapping(os.environ.get('BONFIRE_COMPONENTS_MAPPING'))
     # BONFIRE_COMPONENT_NAME is deprecated, left here for backward compatibility
     bonfire_component_name = os.environ.get('BONFIRE_COMPONENT_NAME')
     ret = []
@@ -84,7 +74,7 @@ def main() -> None:
         # check if the snapshot component name has a mapping defined in BONFIRE_COMPONENTS
         # ... if not, check if BONFIRE_COMPONENT_NAME is set
         # ... if not, just use the snapshot component name
-        component_name = bonfire_components.get(
+        component_name = component_mapping.get(
             snapshot_component.name,
             bonfire_component_name or snapshot_component.name
         )
