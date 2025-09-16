@@ -41,16 +41,7 @@ set -e
 : "${IQE_IBUTSU_SOURCE:='""'}"
 : "${IQE_ENV_VARS:=}"
 
-_running_in_rhel7() {
-    grep -q "Red Hat Enterprise Linux.*7\." '/etc/redhat-release'
-}
-
-# REMOVE after https://issues.redhat.com/browse/APPSRE-7886
-if _running_in_rhel7; then
-    MC_IMAGE="quay.io/cloudservices/mc:RELEASE.2023-05-30T22-41-38Z"
-else
-    MC_IMAGE="quay.io/cloudservices/mc:latest"
-fi
+MC_IMAGE="quay.io/app-sre/mc:latest"
 
 # minio client is used to fetch test artifacts from minio in the ephemeral ns
 echo "Running: docker pull ${MC_IMAGE}"
