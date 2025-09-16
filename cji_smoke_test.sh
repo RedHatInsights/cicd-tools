@@ -41,7 +41,7 @@ set -e
 : "${IQE_IBUTSU_SOURCE:='""'}"
 : "${IQE_ENV_VARS:=}"
 
-MC_IMAGE="quay.io/app-sre/mc:latest"
+MC_IMAGE="quay.io/cloudservices/mc:latest"
 
 # minio client is used to fetch test artifacts from minio in the ephemeral ns
 echo "Running: docker pull ${MC_IMAGE}"
