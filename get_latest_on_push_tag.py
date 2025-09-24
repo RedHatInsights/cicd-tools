@@ -29,10 +29,10 @@ def fetch_all_tags(repo_path: str) -> List[Dict[str, Any]]:
                 data = json.loads(response.read().decode())
 
             # Store full tag objects to access timestamps
-            all_tags.extend(data.get('tags', []))
+            all_tags.extend(data.get("tags", []))
 
             # Check if there are more pages
-            if not data.get('has_additional', False):
+            if not data.get("has_additional", False):
                 break
 
             page += 1
@@ -57,14 +57,14 @@ def find_latest_on_push_tag(tags: List[Dict[str, Any]]) -> str:
     Returns:
         Most recent 'on-push' tag or 'latest' if none found
     """
-    on_push_tags = [tag for tag in tags if 'on-push' in tag.get('name', '').lower()]
+    on_push_tags = [tag for tag in tags if "on-push" in tag.get("name", "").lower()]
 
     if not on_push_tags:
-        return 'latest'
+        return "latest"
 
     # Sort by last_modified date (most recent first)
-    latest_tag = max(on_push_tags, key=lambda tag: tag.get('last_modified', ''))
-    return latest_tag.get('name', 'latest')
+    latest_tag = max(on_push_tags, key=lambda tag: tag.get("last_modified", ""))
+    return latest_tag.get("name", "latest")
 
 
 def main():
