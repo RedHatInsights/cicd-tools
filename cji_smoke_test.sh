@@ -41,11 +41,8 @@ set -e
 : "${IQE_IBUTSU_SOURCE:='""'}"
 : "${IQE_ENV_VARS:=}"
 
-MC_IMAGE="quay.io/cloudservices/mc:latest"
-
-# minio client is used to fetch test artifacts from minio in the ephemeral ns
-echo "Running: docker pull ${MC_IMAGE}"
-docker pull ${MC_IMAGE}
+# Python script with boto3 is used to fetch test artifacts from minio in the ephemeral ns
+echo "Using Python script to fetch artifacts from minio"
 
 
 # check for $IQE_CJI_NAME. If exists use it for CJI_NAME. If DNE use $COMPONENT_NAME for CJI_NAME
@@ -150,23 +147,22 @@ if [ -z "$MINIO_ACCESS" ] || [ -z "$MINIO_SECRET_KEY" ] || [ -z "$MINIO_PORT" ];
     exit 1
 fi
 
-# Setup the minio client to auth to the local eph minio in the ns
+# Use Python script to fetch artifacts from minio
 echo "Fetching artifacts from minio..."
 
-CONTAINER_NAME="mc-${JOB_NAME}-${BUILD_NUMBER}"
 BUCKET_NAME="${POD}-artifacts"
-CMD="mkdir -p /artifacts &&
-mc --no-color --quiet alias set minio http://${MINIO_HOST}:${MINIO_PORT} ${MINIO_ACCESS} ${MINIO_SECRET_KEY} &&
-mc --no-color --quiet mirror --overwrite minio/${BUCKET_NAME} /artifacts/
-"
+ENDPOINT_URL="http://${MINIO_HOST}:${MINIO_PORT}"
 
-run_mc () {
-    echo "running: docker run -t --net=host --name=$CONTAINER_NAME --entrypoint=\"/bin/sh\" $MC_IMAGE -c \"$CMD\""
+run_python_copy () {
+    echo "running: python3 copy_minio_artifacts.py --endpoint $ENDPOINT_URL --access-key $MINIO_ACCESS --secret-key $MINIO_SECRET_KEY --bucket $BUCKET_NAME --local-dir $ARTIFACTS_DIR"
     set +e
-    docker run -t --net=host --name=$CONTAINER_NAME --entrypoint="/bin/sh" $MC_IMAGE -c "$CMD"
+    python3 copy_minio_artifacts.py \
+        --endpoint "$ENDPOINT_URL" \
+        --access-key "$MINIO_ACCESS" \
+        --secret-key "$MINIO_SECRET_KEY" \
+        --bucket "$BUCKET_NAME" \
+        --local-dir "$ARTIFACTS_DIR"
     RET_CODE=$?
-    docker cp $CONTAINER_NAME:/artifacts/. $ARTIFACTS_DIR
-    docker rm $CONTAINER_NAME
     set -e
     return $RET_CODE
 }
@@ -174,7 +170,7 @@ run_mc () {
 # Add retry logic for intermittent minio connection failures
 MINIO_SUCCESS=false
 for i in $(seq 1 5); do
-    if run_mc; then
+    if run_python_copy; then
         MINIO_SUCCESS=true
         break
     else

@@ -103,16 +103,16 @@ rm -rf "$ARTIFACTS_DIR" && mkdir -p "$ARTIFACTS_DIR"
 export LANG=en_US.utf-8
 export LC_ALL=en_US.utf-8
 
-python3 -m venv "$TMP_JOB_DIR/.bonfire_venv"
-source "$TMP_JOB_DIR/.bonfire_venv/bin/activate"
-
-python3 -m pip install --upgrade pip 'setuptools<58' wheel
-python3 -m pip install --upgrade 'crc-bonfire>=4.10.4'
 
 # clone repo to download cicd scripts
 rm -rf "$BONFIRE_ROOT"
 echo "Fetching branch '$BONFIRE_REPO_BRANCH' of https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git"
 git clone --branch "$BONFIRE_REPO_BRANCH" "https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git" "$BONFIRE_ROOT"
+
+python3 -m venv "$TMP_JOB_DIR/.bonfire_venv"
+source "$TMP_JOB_DIR/.bonfire_venv/bin/activate"a
+python3 -m pip install --upgrade pip 'setuptools<58' wheel
+python3 -m pip install --upgrade -r ${CICD_ROOT}/requirements.txt
 
 # Do a docker login to ensure our later 'docker pull' calls have an auth file created
 source "${CICD_ROOT}/_common_container_logic.sh"
