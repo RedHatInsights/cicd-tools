@@ -17,11 +17,11 @@ def setup_s3_client(endpoint_url, access_key, secret_key):
     """Setup S3 client with minio credentials"""
     try:
         client = boto3.client(
-            's3',
+            "s3",
             endpoint_url=endpoint_url,
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
-            region_name='us-east-1'  # Default region for minio
+            region_name="us-east-1",  # Default region for minio
         )
         return client
     except NoCredentialsError:
@@ -29,19 +29,22 @@ def setup_s3_client(endpoint_url, access_key, secret_key):
         return None
 
 
-def list_objects(s3_client, bucket_name, prefix=''):
+def list_objects(s3_client, bucket_name, prefix=""):
     """List all objects in the bucket with given prefix"""
     try:
-        paginator = s3_client.get_paginator('list_objects_v2')
+        paginator = s3_client.get_paginator("list_objects_v2")
         pages = paginator.paginate(Bucket=bucket_name, Prefix=prefix)
 
         objects = []
         for page in pages:
-            if 'Contents' in page:
-                objects.extend(page['Contents'])
+            if "Contents" in page:
+                objects.extend(page["Contents"])
         return objects
     except ClientError as e:
-        print(f"ERROR: Failed to list objects in bucket {bucket_name}: {e}", file=sys.stderr)
+        print(
+            f"ERROR: Failed to list objects in bucket {bucket_name}: {e}",
+            file=sys.stderr,
+        )
         return None
 
 
@@ -60,7 +63,7 @@ def download_object(s3_client, bucket_name, object_key, local_path):
         return False
 
 
-def mirror_bucket(s3_client, bucket_name, local_dir, prefix=''):
+def mirror_bucket(s3_client, bucket_name, local_dir, prefix=""):
     """Mirror S3 bucket contents to local directory (equivalent to mc mirror)"""
     objects = list_objects(s3_client, bucket_name, prefix)
     if objects is None:
@@ -70,16 +73,16 @@ def mirror_bucket(s3_client, bucket_name, local_dir, prefix=''):
     total_count = len(objects)
 
     for obj in objects:
-        object_key = obj['Key']
+        object_key = obj["Key"]
 
         # Remove prefix from object key to get relative path
         if prefix and object_key.startswith(prefix):
-            relative_path = object_key[len(prefix):].lstrip('/')
+            relative_path = object_key[len(prefix) :].lstrip("/")
         else:
             relative_path = object_key
 
         # Skip if it's just a directory marker
-        if relative_path.endswith('/') or not relative_path:
+        if relative_path.endswith("/") or not relative_path:
             continue
 
         local_path = os.path.join(local_dir, relative_path)
@@ -95,13 +98,19 @@ def mirror_bucket(s3_client, bucket_name, local_dir, prefix=''):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Copy artifacts from minio bucket to local directory')
-    parser.add_argument('--endpoint', required=True, help='Minio endpoint URL')
-    parser.add_argument('--access-key', required=True, help='Minio access key')
-    parser.add_argument('--secret-key', required=True, help='Minio secret key')
-    parser.add_argument('--bucket', required=True, help='Bucket name')
-    parser.add_argument('--local-dir', required=True, help='Local directory to copy files to')
-    parser.add_argument('--prefix', default='', help='Object key prefix to filter objects')
+    parser = argparse.ArgumentParser(
+        description="Copy artifacts from minio bucket to local directory"
+    )
+    parser.add_argument("--endpoint", required=True, help="Minio endpoint URL")
+    parser.add_argument("--access-key", required=True, help="Minio access key")
+    parser.add_argument("--secret-key", required=True, help="Minio secret key")
+    parser.add_argument("--bucket", required=True, help="Bucket name")
+    parser.add_argument(
+        "--local-dir", required=True, help="Local directory to copy files to"
+    )
+    parser.add_argument(
+        "--prefix", default="", help="Object key prefix to filter objects"
+    )
 
     args = parser.parse_args()
 
@@ -122,5 +131,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
