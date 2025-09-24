@@ -45,26 +45,8 @@ set -e
 get_latest_on_push_tag() {
     local repo="quay.io/redhat-user-workloads/hcm-eng-prod-tenant/cicd-tools/cicd-tools"
 
-    # Try docker first, then podman
-    if command -v docker >/dev/null 2>&1; then
-        CONTAINER_CMD="docker"
-    elif command -v podman >/dev/null 2>&1; then
-        CONTAINER_CMD="podman"
-    else
-        echo "Error: Neither docker nor podman found"
-        exit 1
-    fi
-
-    # Search for tags containing "on-push" and get the latest one
-    latest_tag=$($CONTAINER_CMD search $repo --list-tags --limit 1000 2>/dev/null | \
-        grep -i "on-push" | \
-        head -n 1 | \
-        awk '{print $2}' || echo "")
-
-    if [ -z "$latest_tag" ]; then
-        echo "Warning: No 'on-push' tag found, falling back to 'latest'"
-        latest_tag="latest"
-    fi
+    # Use Python script to get the most recent "on-push" tag
+    latest_tag=$(python3 "${CICD_ROOT}/get_latest_on_push_tag.py" 2>/dev/null || echo "latest")
 
     echo "${repo}:${latest_tag}"
 }
