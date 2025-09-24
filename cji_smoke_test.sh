@@ -154,9 +154,8 @@ BUCKET_NAME="${POD}-artifacts"
 ENDPOINT_URL="http://${MINIO_HOST}:${MINIO_PORT}"
 
 copy_artifacts () {
-    echo "running: python3 copy_minio_artifacts.py --endpoint $ENDPOINT_URL --access-key $MINIO_ACCESS --secret-key $MINIO_SECRET_KEY --bucket $BUCKET_NAME --local-dir $ARTIFACTS_DIR"
     set +e
-    python3 copy_minio_artifacts.py \
+    python3 ${CICD_ROOT}/copy_minio_artifacts.py \
         --endpoint "$ENDPOINT_URL" \
         --access-key "$MINIO_ACCESS" \
         --secret-key "$MINIO_SECRET_KEY" \
