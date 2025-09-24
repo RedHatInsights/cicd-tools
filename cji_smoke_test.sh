@@ -153,7 +153,7 @@ echo "Fetching artifacts from minio..."
 BUCKET_NAME="${POD}-artifacts"
 ENDPOINT_URL="http://${MINIO_HOST}:${MINIO_PORT}"
 
-run_python_copy () {
+copy_artifacts () {
     echo "running: python3 copy_minio_artifacts.py --endpoint $ENDPOINT_URL --access-key $MINIO_ACCESS --secret-key $MINIO_SECRET_KEY --bucket $BUCKET_NAME --local-dir $ARTIFACTS_DIR"
     set +e
     python3 copy_minio_artifacts.py \
@@ -170,7 +170,7 @@ run_python_copy () {
 # Add retry logic for intermittent minio connection failures
 MINIO_SUCCESS=false
 for i in $(seq 1 5); do
-    if run_python_copy; then
+    if copy_artifacts; then
         MINIO_SUCCESS=true
         break
     else
