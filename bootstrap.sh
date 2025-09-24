@@ -110,7 +110,7 @@ echo "Fetching branch '$BONFIRE_REPO_BRANCH' of https://github.com/${BONFIRE_REP
 git clone --branch "$BONFIRE_REPO_BRANCH" "https://github.com/${BONFIRE_REPO_ORG}/cicd-tools.git" "$BONFIRE_ROOT"
 
 python3 -m venv "$TMP_JOB_DIR/.bonfire_venv"
-source "$TMP_JOB_DIR/.bonfire_venv/bin/activate"a
+source "$TMP_JOB_DIR/.bonfire_venv/bin/activate"
 python3 -m pip install --upgrade pip 'setuptools<58' wheel
 python3 -m pip install --upgrade -r ${CICD_ROOT}/requirements.txt
 
