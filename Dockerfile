@@ -24,7 +24,11 @@ RUN /setup/install_python_dependencies.sh "$PYTHON_DEP_LOCATION"
 RUN /setup/install_third_party_tools.sh "$TOOLS_DEP_LOCATION"
 
 # Copy konflux scripts
-COPY --chown=tools:tools konflux_scripts/* "$KONFLUX_SCRIPTS_LOCATION/"
+COPY konflux_scripts/* "$KONFLUX_SCRIPTS_LOCATION/"
 
 # Copy local helper scripts
-COPY --chown=tools:tools bin/oc_wrapper "$TOOLS_DEP_LOCATION/"
+COPY bin/oc_wrapper "$TOOLS_DEP_LOCATION/"
+
+USER 0
+RUN chown -R tools:0 $WORKDIR
+USER tools
