@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 dependencies=(
     "awscli==1.29.28"
@@ -6,4 +7,6 @@ dependencies=(
     "pydantic"
 )
 
-pip3 install --user "${dependencies[@]}"
+python3 -m venv ${PYTHON_VENV}
+
+$PYTHON_VENV/bin/pip install --upgrade pip setuptools wheel "${dependencies[@]}"

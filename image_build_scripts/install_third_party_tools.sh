@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 install_location="${1:-/tools/bin}"
 
@@ -74,7 +75,7 @@ __install_tool() {
 
         if ! [[ -x "$cmd_path" ]]; then
             if ! chmod +x "$cmd_path"; then
-                echo "Error setting exectution permissions to '$cmd_path'" 
+                echo "Error setting exectution permissions to '$cmd_path'"
                 return 1
             fi
         fi
