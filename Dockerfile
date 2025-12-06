@@ -7,16 +7,16 @@ LABEL \
 
 COPY image_build_scripts/* /setup/
 
-ENV WORKDIR=/tools
-ENV TOOLS_DEP_LOCATION="$WORKDIR/bin"
-ENV KONFLUX_SCRIPTS_LOCATION="$WORKDIR/konflux"
-ENV PYTHON_VENV="$WORKDIR/.venv"
+ENV HOME=/tools
+ENV TOOLS_DEP_LOCATION="$HOME/bin"
+ENV KONFLUX_SCRIPTS_LOCATION="$HOME/konflux"
+ENV PYTHON_VENV="$HOME/.venv"
 ENV PATH="$PYTHON_VENV/bin:$TOOLS_DEP_LOCATION:$KONFLUX_SCRIPTS_LOCATION:$PATH"
 
 # Run install_system_dependencies.sh and create user
-RUN /setup/install_system_dependencies.sh && useradd -d "$WORKDIR" tools
+RUN /setup/install_system_dependencies.sh && useradd -d "$HOME" tools
 USER tools
-WORKDIR "$WORKDIR"
+WORKDIR "$HOME"
 
 # Install python dependencies
 RUN /setup/install_python_dependencies.sh
@@ -30,6 +30,6 @@ COPY konflux_scripts/* "$KONFLUX_SCRIPTS_LOCATION/"
 COPY bin/oc_wrapper "$TOOLS_DEP_LOCATION/"
 
 USER 0
-RUN chown -R tools:0 $WORKDIR
-RUN chmod -R g+rwx $WORKDIR
+RUN chown -R tools:0 $HOME
+RUN chmod -R g+rwx $HOME
 USER tools
