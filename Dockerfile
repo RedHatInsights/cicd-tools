@@ -31,5 +31,5 @@ COPY bin/oc_wrapper "$TOOLS_DEP_LOCATION/"
 
 USER 0
 RUN chown -R tools:0 $WORKDIR
-RUN chmod g+rx $WORKDIR
+RUN chmod -R g+rwx $WORKDIR
 USER tools
