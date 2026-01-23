@@ -7,6 +7,7 @@ dependencies=(
     "shadow-utils"
     "tar"
     "gzip"
+    "jq"
 )
 
 microdnf install -y "${dependencies[@]}"
