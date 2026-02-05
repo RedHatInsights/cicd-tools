@@ -179,16 +179,16 @@ def main() -> None:
         )
 
         if isinstance(component_names, str):
-            _add_component_to_ret(ret, component_names, snapshot_component)
+            _add_component_to_params(ret, component_names, snapshot_component)
         elif isinstance(component_names, list):
             for component_name in component_names:
-                _add_component_to_ret(ret, component_name, snapshot_component)
+                _add_component_to_params(ret, component_name, snapshot_component)
         else:
             raise ValueError(f"Invalid component mapping: {component_mapping}. Expected a string or a list of strings.")
     print(" ".join(ret))
 
-def _add_component_to_ret(ret: list[str], component_name: str, snapshot_component: Component) -> None:
-    ret.extend((
+def _add_component_to_params(params: list[str], component_name: str, snapshot_component: Component) -> None:
+    params.extend((
         "--set-template-ref",
         f"{component_name}={snapshot_component.source.git.revision}",
         "--set-parameter",
