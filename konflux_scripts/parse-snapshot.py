@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """You can test this script with:
 
 A. Single component mapping:
@@ -90,8 +92,6 @@ export SNAPSHOT='{
 export BONFIRE_COMPONENTS_MAPPING='{"konflux-component1": ["app-interface-component1", "app-interface-component2"]}'
 python parse-snapshot.py
 """
-
-#!/usr/bin/env python3
 
 import json
 import os
