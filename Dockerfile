@@ -12,9 +12,18 @@ ENV TOOLS_DEP_LOCATION="$HOME/bin"
 ENV KONFLUX_SCRIPTS_LOCATION="$HOME/konflux"
 ENV PYTHON_VENV="$HOME/.venv"
 ENV PATH="$PYTHON_VENV/bin:$TOOLS_DEP_LOCATION:$KONFLUX_SCRIPTS_LOCATION:$PATH"
+ENV REQUESTS_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt \
+    SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt \
+    CURL_CA_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt
 
 # Run install_system_dependencies.sh and create user
 RUN /setup/install_system_dependencies.sh && useradd -d "$HOME" tools
+
+# Install Red Hat IT CA certificates for internal services
+RUN curl -k https://certs.corp.redhat.com/certs/Current-IT-Root-CAs.pem \
+         -o /etc/pki/ca-trust/source/anchors/redhat-it-root-ca.pem && \
+    update-ca-trust
+
 USER tools
 WORKDIR "$HOME"
 
