@@ -8,7 +8,8 @@ source ${CICD_ROOT}/_common_deploy_logic.sh
 DB_DEPLOYMENT_NAME="${DB_DEPLOYMENT_NAME:-$COMPONENT_NAME-db}"
 
 # Deploy k8s resources for app without its dependencies
-export BONFIRE_NS_REQUESTER="${JOB_NAME}-${BUILD_NUMBER}-db"
+# K8s labels cannot contain '/'; sanitize JOB_NAME for multibranch (e.g. org-repo/PR-123)
+export BONFIRE_NS_REQUESTER="$(echo "$JOB_NAME" | tr '/' '-')-${BUILD_NUMBER}-db"
 NAMESPACE=$(bonfire namespace reserve)
 DB_NAMESPACE=$NAMESPACE  # track which namespace was used here for 'teardown' in common_deploy_logic
 # TODO: add code to bonfire to deploy an app if it is defined in 'sharedAppDbName' on the ClowdApp

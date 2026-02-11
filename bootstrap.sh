@@ -14,7 +14,9 @@ if test -f unit_test.sh; then
 fi
 
 # Create tmp dir to store data in during job run (do NOT store in $WORKSPACE)
-export TMP_JOB_DIR=$(mktemp -d -p "$HOME" -t "jenkins-${JOB_NAME}-${BUILD_NUMBER}-XXXXXX")
+JOB_NAME_SANITIZED=$(echo "$JOB_NAME" | tr '/' '-')
+TMP_JOB_BASE="${WORKSPACE:-$HOME}"
+export TMP_JOB_DIR=$(mktemp -d -p "$TMP_JOB_BASE" -t "jenkins-${JOB_NAME_SANITIZED}-${BUILD_NUMBER}-XXXXXX")
 echo "job tmp dir location: $TMP_JOB_DIR"
 
 function job_cleanup() {
@@ -69,7 +71,7 @@ if [[ -z "$IMAGE_TAG" ]] || [[ -z "$PRESERVE_IMAGE_TAG" ]]; then
 fi
 
 export BONFIRE_BOT="true"
-export BONFIRE_NS_REQUESTER="${JOB_NAME}-${BUILD_NUMBER}"
+export BONFIRE_NS_REQUESTER="${JOB_NAME_SANITIZED}-${BUILD_NUMBER}"
 # which branch to fetch cicd scripts from in bonfire repo
 export BONFIRE_REPO_BRANCH="${BONFIRE_REPO_BRANCH:-main}"
 export BONFIRE_REPO_ORG="${BONFIRE_REPO_ORG:-RedHatInsights}"
