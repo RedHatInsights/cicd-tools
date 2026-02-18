@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9-minimal:9.7-1770267347
+FROM registry.access.redhat.com/ubi9-minimal:9.7-1771346502
 
 LABEL \
     io.k8s.description=hcc-cicd-tools \
