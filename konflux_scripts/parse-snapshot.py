@@ -193,8 +193,8 @@ def _add_component_to_params(params: list[str], component_name: str, snapshot_co
         f"{component_name}={snapshot_component.source.git.revision}",
         "--set-parameter",
         f"{component_name}/IMAGE={snapshot_component.container_image.image}@sha256",
-        "--set-parameter",
-        f"{component_name}/IMAGE_TAG={snapshot_component.container_image.sha}"
+        "--set-image-tag",
+        f"{snapshot_component.container_image.image}@sha256={snapshot_component.container_image.sha}"
     ))
 
 if __name__ == "__main__":
