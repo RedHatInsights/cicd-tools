@@ -33,7 +33,7 @@ jobs:
 
   # https://github.com/bats-core/bats-core/blob/855844b8344e67d60dc0f43fa39817ed7787f141/.github/workflows/tests.yml#L326
   coverage:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
