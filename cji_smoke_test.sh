@@ -13,6 +13,7 @@
 #IQE_PLUGINS="plugin1,plugin2" -- IQE plugins to run tests for, leave unset to use ClowdApp's iqePlugin value
 #IQE_ENV="something" -- value to set for ENV_FOR_DYNACONF, default is "clowder_smoke"
 #IQE_SELENIUM="true" -- whether to run IQE pod with a selenium container, default is "false"
+#IQE_PLAYWRIGHT="true" -- whether to run IQE pod with a playwright container, default is "false"
 #IQE_RP_ARGS=True -- Turn on reporting to reportportal
 #IQE_IBUTSU_SOURCE="post_stage" -- update the ibutsu source for the current run
 #IQE_ENV_VARS="ENV_VAR1=value1,ENV_VAR2=value2" -- custom set of extra environment variables to set on IQE pod
@@ -35,6 +36,7 @@ set -e
 : "${IQE_PLUGINS:='""'}"
 : "${IQE_ENV:=clowder_smoke}"
 : "${IQE_SELENIUM:=false}"
+: "${IQE_PLAYWRIGHT:=false}"
 : "${IQE_PARALLEL_ENABLED:='""'}"
 : "${IQE_PARALLEL_WORKER_COUNT:='""'}"
 : "${IQE_RP_ARGS:='""'}"
@@ -61,6 +63,11 @@ fi
 SELENIUM_ARG=""
 if [ "$IQE_SELENIUM" = "true" ]; then
     SELENIUM_ARG=" --selenium "
+fi
+
+PLAYWRIGHT_ARG=""
+if [ "$IQE_PLAYWRIGHT" = "true" ]; then
+    PLAYWRIGHT_ARG=" --playwright "
 fi
 
 ENV_VAR_ARGS=""
@@ -105,6 +112,7 @@ POD=$(
     --env "$IQE_ENV" \
     --cji-name $CJI_NAME \
     $SELENIUM_ARG \
+    $PLAYWRIGHT_ARG \
     --parallel-enabled $IQE_PARALLEL_ENABLED \
     --parallel-worker-count $IQE_PARALLEL_WORKER_COUNT \
     --rp-args $IQE_RP_ARGS \

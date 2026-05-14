@@ -18,6 +18,7 @@ main() {
 
     # Optional arguments
     local selenium="${IQE_SELENIUM:-false}"
+    local playwright="${IQE_PLAYWRIGHT:-false}"
     local iqe_marker_expression="${IQE_MARKER_EXPRESSION}"
     local iqe_filter_expression="${IQE_FILTER_EXPRESSION}"
     local iqe_image_tag="${IQE_IMAGE_TAG}"
@@ -35,6 +36,11 @@ main() {
     local selenium_arg=""
     if [[ "$selenium" == "true" ]]; then
         selenium_arg="--selenium"
+    fi
+
+    local playwright_arg=""
+    if [[ "$playwright" == "true" ]]; then
+        playwright_arg="--playwright"
     fi
 
     iqe_env_var_args=$(awk -v IQE_ENV_VARS="$iqe_env_vars" 'BEGIN {
@@ -59,6 +65,7 @@ main() {
     --cji-name "$cji_name" \
     --parallel-enabled "$iqe_parallel_enabled" \
     $selenium_arg \
+    $playwright_arg \
     $iqe_env_var_args \
     --namespace "$ns")
 
