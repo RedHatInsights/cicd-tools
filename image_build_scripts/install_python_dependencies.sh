@@ -3,7 +3,7 @@ set -e
 
 dependencies=(
     "awscli==1.29.28"
-    "crc-bonfire"
+    "crc-bonfire[cli]"
     "pydantic"
 )
 
