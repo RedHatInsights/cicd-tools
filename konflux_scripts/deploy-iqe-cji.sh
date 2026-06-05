@@ -9,6 +9,57 @@ cleanup() {
 
 }
 
+timeout_to_seconds() {
+    local t="${1:?}"
+    if [[ "$t" =~ ^([0-9]+)h$ ]]; then
+        echo $(( "${BASH_REMATCH[1]}" * 3600 ))
+    elif [[ "$t" =~ ^([0-9]+)m$ ]]; then
+        echo $(( "${BASH_REMATCH[1]}" * 60 ))
+    elif [[ "$t" =~ ^([0-9]+)s$ ]]; then
+        echo "${BASH_REMATCH[1]}"
+    else
+        echo 600
+    fi
+}
+
+# UI sidecars (Playwright/Selenium) keep running after pytest; the K8s Job never reaches
+# Complete, so JobInvocationComplete never fires. Wait on the IQE container exit code instead.
+wait_for_iqe_main_container() {
+    local pod="${1:?}"
+    local ns="${2:?}"
+    local timeout="${3:?}"
+
+    local iqe_container
+    iqe_container="$(oc_wrapper get pod "$pod" -n "$ns" -o jsonpath='{.spec.containers[0].name}')"
+
+    local deadline=$(( SECONDS + $(timeout_to_seconds "$timeout") ))
+    while (( SECONDS < deadline )); do
+        local exit_code reason waiting_reason
+        exit_code="$(oc_wrapper get pod "$pod" -n "$ns" -o jsonpath="{.status.containerStatuses[?(@.name=='${iqe_container}')].state.terminated.exitCode}")"
+        reason="$(oc_wrapper get pod "$pod" -n "$ns" -o jsonpath="{.status.containerStatuses[?(@.name=='${iqe_container}')].state.terminated.reason}")"
+
+        if [[ -n "$exit_code" ]]; then
+            if [[ "$exit_code" == "0" ]]; then
+                echo "IQE container '${iqe_container}' completed successfully"
+                return 0
+            fi
+            echo "IQE container '${iqe_container}' failed (exit=${exit_code}, reason=${reason})"
+            return 1
+        fi
+
+        waiting_reason="$(oc_wrapper get pod "$pod" -n "$ns" -o jsonpath="{.status.containerStatuses[?(@.name=='${iqe_container}')].state.waiting.reason}")"
+        if [[ "$waiting_reason" == "CrashLoopBackOff" || "$waiting_reason" == "ErrImagePull" || "$waiting_reason" == "ImagePullBackOff" ]]; then
+            echo "IQE container '${iqe_container}' failed while waiting (${waiting_reason})"
+            return 1
+        fi
+
+        sleep 10
+    done
+
+    echo "Timed out after ${timeout} waiting for IQE container '${iqe_container}' in pod ${pod}"
+    return 1
+}
+
 main() {
     # Mandatory arguments
     local ns="${1:?Namespace was not provided}"
@@ -74,8 +125,13 @@ main() {
     pid=$!
     trap "cleanup $pid" EXIT
 
-    oc_wrapper wait "--timeout=$iqe_cji_timeout" --for=condition=JobInvocationComplete -n "$ns" "cji/$cji_name"
-    oc_wrapper get -o json -n "$ns" "cji/$cji_name" | check_cji_jobs.py
+    if [[ "$playwright" == "true" || "$selenium" == "true" ]]; then
+        echo "Sidecar mode: skipping check_cji_jobs.py"
+        wait_for_iqe_main_container "$pod" "$ns" "$iqe_cji_timeout"
+    else
+        oc_wrapper wait "--timeout=$iqe_cji_timeout" --for=condition=JobInvocationComplete -n "$ns" "cji/$cji_name"
+        oc_wrapper get -o json -n "$ns" "cji/$cji_name" | check_cji_jobs.py
+    fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
