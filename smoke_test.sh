@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # DEPRECATED: please use cji_smoke_test.sh
 
 # Spin up iqe pod and execute IQE tests in it

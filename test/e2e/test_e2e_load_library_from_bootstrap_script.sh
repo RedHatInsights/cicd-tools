@@ -13,8 +13,8 @@ load_cicd_helper_functions() {
 
     local CICD_CONTAINER_PREFER_ENGINE='docker'
     local LIBRARY_TO_LOAD=${1:-all}
-    
-    if [ "CI" != "true" ]; then
+
+    if [ "${CI}" != "true" ]; then
         CICD_BOOTSTRAP_ROOTDIR=.
         CICD_BOOTSTRAP_SKIP_GIT_CLONE=1
         CICD_BOOTSTRAP_SKIP_CLEANUP=1
@@ -40,7 +40,7 @@ fi
 
 load_cicd_helper_functions container
 
-# Assert output doesn't change 
+# Assert output doesn't change
 if ! [ "$(cicd::container::cmd --version)" == "$EXPECTED_OUTPUT" ]; then
     echo "Container command not preserved between runs!"
     exit 1
