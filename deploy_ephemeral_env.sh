@@ -1,3 +1,5 @@
+#!/bin/bash
+
 source ${CICD_ROOT}/_common_deploy_logic.sh
 
 # Caller can define any extra deploy arguments to be passed to bonfire
