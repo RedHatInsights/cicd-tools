@@ -27,11 +27,14 @@ main() {
     local iqe_test_importance="${IQE_TEST_IMPORTANCE}"
     local iqe_plugins="${IQE_PLUGINS}"
     local iqe_env="${IQE_ENV:-clowder_smoke}"
-    #iqe_env_vars="ENV_VAR1=value1,ENV_VAR2=value2" -- custom set of extra environment variables to set on IQE pod
-    local iqe_env_vars="${IQE_ENV_VARS}"
+    # IQE_ENV_VARS="ENV_VAR1=value1,ENV_VAR2=value2" -- extra env vars for the IQE pod (bonfire --env-var)
+    local iqe_env_vars="${IQE_ENV_VARS:-}"
     local iqe_cji_timeout="${IQE_CJI_TIMEOUT:-10m}"
-    local iqe_env_vars="${IQE_ENV_VARS:=}"
     local iqe_parallel_enabled="${IQE_PARALLEL_ENABLED}"
+    local iqe_rp_args="${IQE_RP_ARGS:-}"
+    local iqe_cji_template="${IQE_CJI_TEMPLATE:-}"
+    local ibutsu_mode="${IBUTSU_MODE:-}"
+    local ibutsu_source="${IQE_IBUTSU_SOURCE:-${IBUTSU_SOURCE:-}}"
 
     local selenium_arg=""
     if [[ "$selenium" == "true" ]]; then
@@ -50,6 +53,24 @@ main() {
       }
     }')
 
+    template_file_arg=""
+    if [[ -n "$iqe_cji_template" ]]; then
+        if [[ ! -f "$iqe_cji_template" ]]; then
+            echo "ERROR: IQE_CJI_TEMPLATE is set but file does not exist: ${iqe_cji_template}"
+            exit 1
+        fi
+        template_file_arg="--template-file ${iqe_cji_template}"
+    fi
+
+    if [[ -n "$ibutsu_mode" ]]; then
+        iqe_env_var_args+=" --env-var IBUTSU_MODE=${ibutsu_mode}"
+    fi
+
+    ibutsu_source_arg=""
+    if [[ -n "$ibutsu_source" ]]; then
+        ibutsu_source_arg="--ibutsu-source ${ibutsu_source}"
+    fi
+
     export BONFIRE_NS_REQUESTER="$ns_requester"
 
     # Invoke the CJI using the options set via env vars
@@ -64,8 +85,11 @@ main() {
     --env "$iqe_env" \
     --cji-name "$cji_name" \
     --parallel-enabled "$iqe_parallel_enabled" \
+    --rp-args "${iqe_rp_args}" \
     $selenium_arg \
     $playwright_arg \
+    $template_file_arg \
+    $ibutsu_source_arg \
     $iqe_env_var_args \
     --namespace "$ns")
 

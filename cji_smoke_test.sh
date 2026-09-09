@@ -16,6 +16,8 @@
 #IQE_PLAYWRIGHT="true" -- whether to run IQE pod with a playwright container, default is "false"
 #IQE_RP_ARGS=True -- Turn on reporting to reportportal
 #IQE_IBUTSU_SOURCE="post_stage" -- update the ibutsu source for the current run
+#IBUTSU_MODE="s3" -- Ibutsu upload mode passed to bonfire --env-var IBUTSU_MODE
+#IQE_CJI_TEMPLATE="/path/to/template.yaml" -- custom CJI OpenShift template (bonfire --template-file)
 #IQE_ENV_VARS="ENV_VAR1=value1,ENV_VAR2=value2" -- custom set of extra environment variables to set on IQE pod
 #NAMESPACE="mynamespace" -- namespace to deploy iqe pod into, usually already set by 'deploy_ephemeral_env.sh'
 
