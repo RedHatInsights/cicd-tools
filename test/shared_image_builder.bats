@@ -547,7 +547,7 @@ teardown() {
       echo "$@"
     }
 
-    if [ -n "CI" ]; then
+    if [ -n "$CI" ]; then
         CI="true"
     fi
 
