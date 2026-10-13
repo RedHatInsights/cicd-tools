@@ -29,6 +29,19 @@ spec:
     value: Dockerfile
   - name: path-context
     value: .
+  # sast-shell-check runs SC_JOBS (= task CPU limit = 8) parallel shellcheck
+  # (Haskell) processes; the task default of 4Gi OOM-kills the step. Raise only
+  # the step's memory. stepSpecs merges per-field, so the task's CPU request/limit
+  # (and therefore SC_JOBS) are preserved.
+  taskRunSpecs:
+  - pipelineTaskName: sast-shell-check
+    stepSpecs:
+    - name: sast-shell-check
+      computeResources:
+        requests:
+          memory: 6Gi
+        limits:
+          memory: 6Gi
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while reducing network traffic.
