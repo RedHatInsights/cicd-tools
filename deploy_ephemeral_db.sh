@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Reserve a namespace, deploy your app without dependencies just to get a DB set up
 # Stores database env vars
 

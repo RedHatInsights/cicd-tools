@@ -187,19 +187,69 @@ where:
 
 ## Template Scripts
 
-| Script                                            | Description                                                  |  
-|---------------------------------------------------|--------------------------------------------------------------| 
+| Script                                            | Description                                                  |
+|---------------------------------------------------|--------------------------------------------------------------|
 | examples/backend-pipeline-pr-checks/Jenkinsfile   | Templated example of the pr-check pipeline for backend apps  |
 | examples/frontends-pipeline-pr-checks/Jenkinsfile | Templated example of the pr-check pipeline for frontend apps |
 | examples/pr_check_template.sh                     |                                                              |
 | examples/unit_test_example.sh                     |                                                              |
 | examples/unit_test_example_ephemeral_db.sh        |                                                              |
 
-## Contributing
+## Development Setup
 
-Suggested method for testing changes to these scripts:
+### Prerequisites
 
-- Modify `bootstrap.sh` to `git clone` your fork and branch of bonfire.
-- Open a PR in a repo using bonfire pr_checks and the relevant scripts, modifying `pr_check` script
-  to clone your fork and branch of bonfire.
-- Observe modified scripts running in the relevant CI/CD pipeline.
+- Git with submodule support
+- Bash 4+
+- [ShellCheck](https://www.shellcheck.net/) (for linting `src/`)
+- [kcov](https://github.com/SimonKagstrom/kcov) (optional, for local coverage reports)
+
+### Clone with submodules
+
+BATS and its test helpers are git submodules. Fetch them at clone time:
+
+```shell
+git clone --recurse-submodules https://github.com/RedHatInsights/cicd-tools
+```
+
+Or if you already cloned without submodules:
+
+```shell
+git submodule update --init
+```
+
+### Running the tests
+
+```shell
+# Unit tests (BATS)
+./test/bats/bin/bats test
+
+# E2E tests (library loading)
+bash -x test/e2e/test_e2e_load_library_from_bootstrap_script.sh
+bash -x test/e2e/test_e2e_load_library_from_function.sh
+bash -x test/e2e/test_e2e_load_library_locally.sh
+```
+
+### Linting
+
+ShellCheck is enforced in CI on the `./src` directory. Run it locally before opening a PR:
+
+```shell
+shellcheck src/bootstrap.sh src/shared/*.sh
+```
+
+### Coverage
+
+Coverage is measured with kcov and must meet a **90.01% minimum** (enforced in CI):
+
+```shell
+./test/generate_coverage.sh
+```
+
+See `ARCHITECTURE.md` for a detailed description of the module system and internal design.
+
+## License
+
+No license file is currently present in this repository. Please consult the repository maintainers
+for licensing information.
+

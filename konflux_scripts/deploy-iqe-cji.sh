@@ -28,9 +28,8 @@ main() {
     local iqe_plugins="${IQE_PLUGINS}"
     local iqe_env="${IQE_ENV:-clowder_smoke}"
     #iqe_env_vars="ENV_VAR1=value1,ENV_VAR2=value2" -- custom set of extra environment variables to set on IQE pod
-    local iqe_env_vars="${IQE_ENV_VARS}"
+    local iqe_env_vars="${IQE_ENV_VARS:-}"
     local iqe_cji_timeout="${IQE_CJI_TIMEOUT:-10m}"
-    local iqe_env_vars="${IQE_ENV_VARS:=}"
     local iqe_parallel_enabled="${IQE_PARALLEL_ENABLED}"
 
     local selenium_arg=""
@@ -43,12 +42,15 @@ main() {
         playwright_arg="--playwright"
     fi
 
-    iqe_env_var_args=$(awk -v IQE_ENV_VARS="$iqe_env_vars" 'BEGIN {
-      split(IQE_ENV_VARS, iqe_env_vars, ",");
-      for (i in iqe_env_vars) {
-        printf "--env-var " iqe_env_vars[i] " "
-      }
-    }')
+    local iqe_env_var_args=()
+    if [[ -n "$iqe_env_vars" ]]; then
+        IFS=',' read -ra iqe_env_var_pairs <<< "$iqe_env_vars"
+        for pair in "${iqe_env_var_pairs[@]}"; do
+            if [[ -n "$pair" ]]; then
+                iqe_env_var_args+=(--env-var "$pair")
+            fi
+        done
+    fi
 
     export BONFIRE_NS_REQUESTER="$ns_requester"
 
@@ -66,7 +68,7 @@ main() {
     --parallel-enabled "$iqe_parallel_enabled" \
     $selenium_arg \
     $playwright_arg \
-    $iqe_env_var_args \
+    "${iqe_env_var_args[@]}" \
     --namespace "$ns")
 
     container=$(oc_wrapper get pod $pod -n $ns -o jsonpath="{.status.containerStatuses[0].name}")
