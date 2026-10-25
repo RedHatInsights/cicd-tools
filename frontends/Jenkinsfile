@@ -169,7 +169,7 @@ pipeline {
                         GIT_COMMIT_HASH="$ghprbActualCommit"
                         DEPLOY_FRONTENDS=true
                         IQE_CJI_TIMEOUT="30m"
-                        DEPLOY_TIMEOUT="900"  // 15min
+                        DEPLOY_TIMEOUT="1800"  // 30min
                     }
                     when {
                         expression {
